@@ -5,7 +5,7 @@ using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.GiasAdapter.Functions;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi;
-using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.AutoMapperMapping;
+using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
@@ -61,7 +61,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
 
         private void AddMapping(IServiceCollection services)
         {
-            services.AddScoped<IMapper, AutoMapperMapper>();
+            services.AddScoped<IMapper, PocoMapper>();
         }
 
         private void AddManagers(IServiceCollection services)
