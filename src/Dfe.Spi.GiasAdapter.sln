@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BF25E5F8
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.GiasAdapter.Functions.UnitTests", "Dfe.Spi.GiasAdapter.Functions.UnitTests\Dfe.Spi.GiasAdapter.Functions.UnitTests.csproj", "{765D3C8E-339C-4DDF-96D8-01D5E0FC7DF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.GiasAdapter.Application.UnitTests", "Dfe.Spi.GiasAdapter.Application.UnitTests\Dfe.Spi.GiasAdapter.Application.UnitTests.csproj", "{EF3AFDFA-5A2A-4A43-A42E-E8B16A0DD554}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,8 +40,13 @@ Global
 		{765D3C8E-339C-4DDF-96D8-01D5E0FC7DF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{765D3C8E-339C-4DDF-96D8-01D5E0FC7DF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{765D3C8E-339C-4DDF-96D8-01D5E0FC7DF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF3AFDFA-5A2A-4A43-A42E-E8B16A0DD554}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF3AFDFA-5A2A-4A43-A42E-E8B16A0DD554}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF3AFDFA-5A2A-4A43-A42E-E8B16A0DD554}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF3AFDFA-5A2A-4A43-A42E-E8B16A0DD554}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{765D3C8E-339C-4DDF-96D8-01D5E0FC7DF8} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
+		{EF3AFDFA-5A2A-4A43-A42E-E8B16A0DD554} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
 	EndGlobalSection
 EndGlobal

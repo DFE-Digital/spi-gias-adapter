@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.GiasAdapter.Domain;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using Dfe.Spi.GiasAdapter.Domain.Mapping;
 
 namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 {
@@ -14,10 +15,12 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
     public class LearningProviderManager : ILearningProviderManager
     {
         private readonly IGiasApiClient _giasApiClient;
+        private readonly IMapper _mapper;
 
-        public LearningProviderManager(IGiasApiClient giasApiClient)
+        public LearningProviderManager(IGiasApiClient giasApiClient, IMapper mapper)
         {
             _giasApiClient = giasApiClient;
+            _mapper = mapper;
         }
 
         public async Task<LearningProvider> GetLearningProviderAsync(string id, CancellationToken cancellationToken)
@@ -34,11 +37,8 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
                 return null;
             }
 
-            // TODO: Offload to mapper class
-            return new LearningProvider
-            {
-                Name = establishment.Name,
-            };
+            var learningProvider = await _mapper.MapAsync<LearningProvider>(establishment, cancellationToken);
+            return learningProvider;
         }
     }
 }
