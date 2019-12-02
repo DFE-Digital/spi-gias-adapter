@@ -16,6 +16,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.GiasAdapter.Applica
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping", "Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping\Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.csproj", "{ED4EF599-AF89-47D9-8D21-E6C0F87E1485}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Release", "Release", "{053962FA-B190-4DFC-9057-8A1005338F9F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{26C9C98C-28B1-488F-9D04-094BB82BEBFA}"
+ProjectSection(SolutionItems) = preProject
+	..\pipelines\build.yml = ..\pipelines\build.yml
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +61,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{765D3C8E-339C-4DDF-96D8-01D5E0FC7DF8} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
 		{EF3AFDFA-5A2A-4A43-A42E-E8B16A0DD554} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
+		{26C9C98C-28B1-488F-9D04-094BB82BEBFA} = {053962FA-B190-4DFC-9057-8A1005338F9F}
 	EndGlobalSection
 EndGlobal

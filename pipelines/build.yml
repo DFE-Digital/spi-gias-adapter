@@ -1,0 +1,46 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - "*"
+
+workspace:
+  clean: all
+
+variables:
+  buildConfiguration: 'release'
+  buildPlatform: 'any cpu'
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: Restore
+    inputs:
+      command: restore
+      projects: 'src/**/*.csproj'
+      noCache: true
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build code'
+    inputs:
+      projects: 'src/**/*.csproj'
+      arguments: '--configuration $(buildConfiguration) --no-restore'
+
+  - task: DotNetCoreCLI@2
+    displayName: Test
+    inputs:
+      command: test
+      projects: 'src/**/*.UnitTests.csproj'
+      arguments: '--configuration $(buildConfiguration) --no-build'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish Website'
+    inputs:
+      command: publish
+      publishWebProjects: false
+      projects: 'src/Dfe.Spi.GiasAdapter.Functions/Dfe.Spi.GiasAdapter.Functions.csproj'
+      arguments: '--configuration $(buildConfiguration) --output $(build.artifactstagingdirectory)/publish --no-restore --no-build'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact'
+    inputs:
+      PathtoPublish: '$(build.artifactstagingdirectory)/publish'
