@@ -2,8 +2,10 @@ using System.IO;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.GiasAdapter.Functions;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi;
+using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.AutoMapperMapping;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +28,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
             LoadAndAddConfiguration(services);
             AddLogging(services);
             AddGiasApi(services);
+            AddMapping(services);
             AddManagers(services);
         }
 
@@ -54,6 +57,11 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddGiasApi(IServiceCollection services)
         {
             services.AddScoped<IGiasApiClient, GiasSoapApiClient>();
+        }
+
+        private void AddMapping(IServiceCollection services)
+        {
+            services.AddScoped<IMapper, AutoMapperMapper>();
         }
 
         private void AddManagers(IServiceCollection services)

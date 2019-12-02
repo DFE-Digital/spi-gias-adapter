@@ -20,5 +20,6 @@
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Application\Dfe.Spi.GiasAdapter.Application.csproj" />
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Domain\Dfe.Spi.GiasAdapter.Domain.csproj" />
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi\Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping\Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.csproj" />
     </ItemGroup>
 </Project>
