@@ -2,9 +2,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
-using Dfe.Spi.GiasAdapter.Domain;
 using Dfe.Spi.GiasAdapter.Functions.LearningProviders;
+using Dfe.Spi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +36,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
             _cancellationToken = new CancellationToken();
         }
 
-        [Test, AutoData]
+        [Test, NonRecursiveAutoData]
         public async Task ThenItShouldReturnLearningProviderIfFound(int urn, LearningProvider provider)
         {
             _learningProviderManagerMock.Setup(x =>

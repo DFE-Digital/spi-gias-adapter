@@ -2,9 +2,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
-using Dfe.Spi.GiasAdapter.Domain;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
+using Dfe.Spi.Models;
 using NUnit.Framework;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping

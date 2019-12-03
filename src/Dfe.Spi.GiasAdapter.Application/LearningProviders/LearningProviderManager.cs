@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Dfe.Spi.GiasAdapter.Domain;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
+using Dfe.Spi.Models;
 
 namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 {

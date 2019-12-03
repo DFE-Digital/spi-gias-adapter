@@ -1,6 +1,6 @@
 using System;
-using Dfe.Spi.GiasAdapter.Domain;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using Dfe.Spi.Models;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 {

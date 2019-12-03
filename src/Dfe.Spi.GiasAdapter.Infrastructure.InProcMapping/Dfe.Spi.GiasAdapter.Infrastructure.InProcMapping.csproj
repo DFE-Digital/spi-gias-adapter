@@ -8,4 +8,8 @@
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Domain\Dfe.Spi.GiasAdapter.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Dfe.Spi.Models" Version="1.0.0" />
+    </ItemGroup>
+
 </Project>
