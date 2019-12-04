@@ -1,18 +1,70 @@
-﻿using System.Threading;
+﻿using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using RestSharp;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
 {
     public class GiasSoapApiClient : IGiasApiClient
     {
-        public Task<Establishment> GetEstablishmentAsync(int urn, CancellationToken cancellationToken)
+        private readonly IRestClient _restClient;
+        private IGiasSoapMessageBuilder<GetEstablishmentRequest> _getEstablishmentMessageBuilder;
+
+        internal GiasSoapApiClient(IRestClient restClient,
+            IGiasSoapMessageBuilder<GetEstablishmentRequest> getEstablishmentMessageBuilder)
         {
-            return Task.FromResult(new Establishment
+            _restClient = restClient;
+            _getEstablishmentMessageBuilder = getEstablishmentMessageBuilder;
+        }
+
+        public GiasSoapApiClient(GiasApiConfiguration configuration)
+            : this(new RestClient(configuration.Url),
+                new GetEstablishmentMessageBuilder(configuration.Username, configuration.Password))
+        {
+        }
+
+        public async Task<Establishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken)
+        {
+            var message = _getEstablishmentMessageBuilder.Build(new GetEstablishmentRequest
             {
                 Urn = urn,
-                Name = "Some School",
             });
+
+            var request = new RestRequest(Method.POST);
+            request.AddParameter("text/xml", message, ParameterType.RequestBody);
+            request.AddHeader("SOAPAction", "http://ws.edubase.texunatech.com/GetEstablishment");
+
+            var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+            var result = EnsureSuccessResponseAndExtractResult(response);
+
+            var establishment = result.GetElementByLocalName("Establishment");
+
+            return new Establishment
+            {
+                Urn = urn,
+                Name = establishment.GetElementByLocalName("EstablishmentName").Value,
+            };
+        }
+
+        private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response)
+        {
+            var document = XDocument.Parse(response.Content);
+            var envelope = document.Elements().Single();
+            var body = envelope.GetElementByLocalName("Body");
+
+            if (!response.IsSuccessful)
+            {
+                var fault = body.Elements().Single();
+                var faultCode = fault.GetElementByLocalName("faultcode");
+                var faultString = fault.GetElementByLocalName("faultstring");
+                throw new SoapException(faultCode.Value, faultString.Value);
+            }
+
+            return body.Elements().First();
         }
     }
 }
