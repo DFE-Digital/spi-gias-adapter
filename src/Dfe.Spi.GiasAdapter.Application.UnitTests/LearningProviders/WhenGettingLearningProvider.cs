@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
@@ -16,6 +17,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
     {
         private Mock<IGiasApiClient> _giasApiClientMock;
         private Mock<IMapper> _mapperMock;
+        private Mock<ILoggerWrapper> _loggerMock;
         private LearningProviderManager _manager;
         private CancellationToken _cancellationToken;
 
@@ -25,8 +27,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
             _giasApiClientMock = new Mock<IGiasApiClient>();
 
             _mapperMock = new Mock<IMapper>();
+            
+            _loggerMock = new Mock<ILoggerWrapper>();
 
-            _manager = new LearningProviderManager(_giasApiClientMock.Object, _mapperMock.Object);
+            _manager = new LearningProviderManager(_giasApiClientMock.Object, _mapperMock.Object, _loggerMock.Object);
 
             _cancellationToken = new CancellationToken();
         }

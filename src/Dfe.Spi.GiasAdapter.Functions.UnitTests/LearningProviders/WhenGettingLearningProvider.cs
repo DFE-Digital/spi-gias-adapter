@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
 using Dfe.Spi.GiasAdapter.Functions.LearningProviders;
@@ -9,7 +10,6 @@ using Dfe.Spi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
@@ -18,7 +18,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
     public class WhenGettingLearningProvider
     {
         private Mock<ILearningProviderManager> _learningProviderManagerMock;
-        private Mock<ILogger> _loggerMock;
+        private Mock<ILoggerWrapper> _loggerMock;
         private GetLearningProvider _function;
         private CancellationToken _cancellationToken;
 
@@ -27,7 +27,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
         {
             _learningProviderManagerMock = new Mock<ILearningProviderManager>();
 
-            _loggerMock = new Mock<ILogger>();
+            _loggerMock = new Mock<ILoggerWrapper>();
 
             _function = new GetLearningProvider(
                 _learningProviderManagerMock.Object,

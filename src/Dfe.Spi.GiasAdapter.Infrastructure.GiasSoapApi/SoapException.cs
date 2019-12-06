@@ -1,8 +1,6 @@
-using System;
-
 namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
 {
-    public class SoapException : Exception
+    public class SoapException : GiasSoapApiException
     {
         public string FaultCode { get; }
 

@@ -1,4 +1,6 @@
 using System.IO;
+using Dfe.Spi.Common.Logging;
+using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
@@ -53,6 +55,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
             services.AddScoped(typeof(ILogger<>), typeof(Logger<>));
             services.AddScoped<ILogger>(provider =>
                 provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
+            services.AddScoped<ILoggerWrapper, LoggerWrapper>();
         }
 
         private void AddGiasApi(IServiceCollection services)

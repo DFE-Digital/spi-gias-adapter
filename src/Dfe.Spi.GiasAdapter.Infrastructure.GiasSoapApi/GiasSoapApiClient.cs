@@ -52,7 +52,16 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
 
         private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response)
         {
-            var document = XDocument.Parse(response.Content);
+            XDocument document;
+            try
+            {
+                document = XDocument.Parse(response.Content);
+            }
+            catch (Exception ex)
+            {
+                throw new GiasSoapApiException($"Error deserializing SOAP response: {ex.Message} (response: {response.Content})", ex);
+            }
+            
             var envelope = document.Elements().Single();
             var body = envelope.GetElementByLocalName("Body");
 
