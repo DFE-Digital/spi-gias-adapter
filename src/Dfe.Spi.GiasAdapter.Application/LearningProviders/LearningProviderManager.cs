@@ -5,6 +5,7 @@ using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.Models;
+using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 {
@@ -39,10 +40,10 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             {
                 return null;
             }
-            _logger.Info($"read establishment {urn}: {establishment}");
+            _logger.Info($"read establishment {urn}: {JsonConvert.SerializeObject(establishment)}");
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(establishment, cancellationToken);
-            _logger.Info($"mapped establishment {urn} to {learningProvider}");
+            _logger.Info($"mapped establishment {urn} to {JsonConvert.SerializeObject(learningProvider)}");
             
             return learningProvider;
         }
