@@ -5,7 +5,6 @@ using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.Models;
-using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 {
