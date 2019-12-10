@@ -5,6 +5,7 @@ namespace Dfe.Spi.GiasAdapter.Domain.Mapping
 {
     public interface IMapper
     {
-        Task<TDestination> MapAsync<TDestination>(object source, CancellationToken cancellationToken);
+        Task<TDestination> MapAsync<TDestination>(object source, CancellationToken cancellationToken)
+            where TDestination : class, new();
     }
 }

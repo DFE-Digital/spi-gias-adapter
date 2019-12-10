@@ -5,11 +5,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AutoMapper" Version="9.0.0" />
+      <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Domain\Dfe.Spi.GiasAdapter.Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Domain\Dfe.Spi.GiasAdapter.Domain.csproj" />
+      <PackageReference Include="Dfe.Spi.Models" Version="1.0.0" />
     </ItemGroup>
 
 </Project>

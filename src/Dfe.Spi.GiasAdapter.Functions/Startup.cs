@@ -1,11 +1,13 @@
 using System.IO;
+using Dfe.Spi.Common.Logging;
+using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.GiasAdapter.Functions;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi;
-using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.AutoMapperMapping;
+using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
@@ -44,6 +46,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
             _configuration = new GiasAdapterConfiguration();
             _rawConfiguration.Bind(_configuration);
             services.AddSingleton(_configuration);
+            services.AddSingleton(_configuration.GiasApi);
         }
 
         private void AddLogging(IServiceCollection services)
@@ -52,6 +55,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
             services.AddScoped(typeof(ILogger<>), typeof(Logger<>));
             services.AddScoped<ILogger>(provider =>
                 provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
+            services.AddScoped<ILoggerWrapper, LoggerWrapper>();
         }
 
         private void AddGiasApi(IServiceCollection services)
@@ -61,7 +65,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
 
         private void AddMapping(IServiceCollection services)
         {
-            services.AddScoped<IMapper, AutoMapperMapper>();
+            services.AddScoped<IMapper, PocoMapper>();
         }
 
         private void AddManagers(IServiceCollection services)
