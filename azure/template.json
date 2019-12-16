@@ -49,7 +49,8 @@
     "storageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
     "servicePlanName": "[concat(variables('namePrefix'), '-', parameters('appName'), '-asp-01')]",
     "functionAppName": "[concat(variables('namePrefix'), '-', parameters('appName'), '-fa-01')]",
-    "appInsightsName": "[concat(variables('namePrefix'), '-ai-', parameters('appInsightsInstance'))]"
+    "appInsightsName": "[concat(variables('namePrefix'), '-ai-', parameters('appInsightsInstance'))]",
+    "sharedResourceGroupName": "concat(variables('namePrefix'), '-shared')"
   },
   "resources": [
     {
@@ -144,7 +145,7 @@
             },
             {
               "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(resourceId(concat(variables('namePrefix'), '-core'), 'microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+              "value": "[reference(resourceId(variables('sharedResourceGroupName'), 'microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
             },
             {
               "name": "SPI_GiasApi__Url",
