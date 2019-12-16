@@ -47,12 +47,12 @@ steps:
       arguments: '--configuration $(buildConfiguration) --output $(build.artifactstagingdirectory)/publish --no-restore --no-build'
       
   - task: CopyFiles@2
-      displayName: 'Copy ARM template'
-      inputs:
-        Contents: |
-          azure/*
-        TargetFolder: '$(build.artifactstagingdirectory)/publish'
-        OverWrite: true
+    displayName: 'Copy ARM template'
+    inputs:
+      Contents: |
+        azure/*
+      TargetFolder: '$(build.artifactstagingdirectory)/publish'
+      OverWrite: true
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact'
