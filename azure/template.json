@@ -50,7 +50,7 @@
     "servicePlanName": "[concat(variables('namePrefix'), '-', parameters('appName'), '-asp-01')]",
     "functionAppName": "[concat(variables('namePrefix'), '-', parameters('appName'), '-fa-01')]",
     "appInsightsName": "[concat(variables('namePrefix'), '-ai-', parameters('appInsightsInstance'))]",
-    "sharedResourceGroupName": "concat(variables('namePrefix'), '-shared')"
+    "sharedResourceGroupName": "[concat(variables('namePrefix'), '-shared')]"
   },
   "resources": [
     {
