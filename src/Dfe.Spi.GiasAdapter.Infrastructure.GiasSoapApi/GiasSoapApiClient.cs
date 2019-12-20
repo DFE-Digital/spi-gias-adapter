@@ -50,6 +50,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             };
         }
 
+        public Task<Establishment[]> DownloadEstablishmentsAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response)
         {
             XDocument document;
