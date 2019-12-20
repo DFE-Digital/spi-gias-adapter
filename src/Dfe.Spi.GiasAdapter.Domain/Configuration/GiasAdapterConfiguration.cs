@@ -4,5 +4,6 @@ namespace Dfe.Spi.GiasAdapter.Domain.Configuration
     {
         public GiasApiConfiguration GiasApi { get; set; } = new GiasApiConfiguration();
         public CacheConfiguration Cache { get; set; }
+        public MiddlewareConfiguration Middleware { get; set; }
     }
 }

@@ -69,6 +69,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
             services.AddSingleton(_configuration);
             services.AddSingleton(_configuration.GiasApi);
             services.AddSingleton(_configuration.Cache);
+            services.AddSingleton(_configuration.Middleware);
         }
 
         private void AddLogging(IServiceCollection services)
