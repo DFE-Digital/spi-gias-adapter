@@ -32,9 +32,15 @@ namespace Dfe.Spi.GiasAdapter.Functions
 
         public override void Configure(IFunctionsHostBuilder builder)
         {
+            var rawConfiguration = BuildConfiguration();
+            Configure(builder, rawConfiguration);
+        }
+
+        public void Configure(IFunctionsHostBuilder builder, IConfigurationRoot rawConfiguration)
+        {
             var services = builder.Services;
 
-            LoadAndAddConfiguration(services);
+            AddConfiguration(services, rawConfiguration);
             AddLogging(services);
             AddHttp(services);
             AddEventPublishing(services);
@@ -44,15 +50,20 @@ namespace Dfe.Spi.GiasAdapter.Functions
             AddManagers(services);
         }
 
-        private void LoadAndAddConfiguration(IServiceCollection services)
+        private IConfigurationRoot BuildConfiguration()
         {
-            _rawConfiguration = new ConfigurationBuilder()
+            return new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("local.settings.json", true)
                 .AddEnvironmentVariables(prefix: "SPI_")
                 .Build();
-            services.AddSingleton(_rawConfiguration);
+        }
 
+        private void AddConfiguration(IServiceCollection services, IConfigurationRoot rawConfiguration)
+        {
+            _rawConfiguration = rawConfiguration;
+            services.AddSingleton(_rawConfiguration);
+            
             _configuration = new GiasAdapterConfiguration();
             _rawConfiguration.Bind(_configuration);
             services.AddSingleton(_configuration);
