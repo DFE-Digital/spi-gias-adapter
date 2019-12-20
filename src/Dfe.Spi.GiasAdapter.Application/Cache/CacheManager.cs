@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,12 +7,14 @@ using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Events;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
+using Dfe.Spi.Models;
 
 namespace Dfe.Spi.GiasAdapter.Application.Cache
 {
     public interface ICacheManager
     {
         Task DownloadEstablishmentsToCacheAsync(CancellationToken cancellationToken);
+        Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
@@ -71,6 +74,55 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             _logger.Info("Finished downloading Establishments to cache");
         }
-        
+
+        public async Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken)
+        {
+            foreach (var urn in urns)
+            {
+                var current = await _establishmentRepository.GetEstablishment(urn, cancellationToken);
+                var staging = await _establishmentRepository.GetEstablishmentFromStaging(urn, cancellationToken);
+
+                if (current == null)
+                {
+                    _logger.Info($"{urn} has not been seen before. Processing as created");
+
+                    await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderCreatedAsync,
+                        cancellationToken);
+                }
+                else if (!AreSame(current, staging))
+                {
+                    _logger.Info($"{urn} has changed. Processing as updated");
+
+                    await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderUpdatedAsync,
+                        cancellationToken);
+                }
+                else
+                {
+                    _logger.Info($"{urn} has not changed. Skipping");
+                }
+            }
+        }
+
+        private bool AreSame(Establishment current, Establishment staging)
+        {
+            if (current.Name != staging.Name)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task ProcessEstablishment(Establishment staging,
+            Func<LearningProvider, CancellationToken, Task> publishEvent,
+            CancellationToken cancellationToken)
+        {
+            await _establishmentRepository.StoreAsync(staging, cancellationToken);
+            _logger.Debug($"Stored {staging.Urn} in repository");
+
+            var learningProvider = await _mapper.MapAsync<LearningProvider>(staging, cancellationToken);
+            await publishEvent(learningProvider, cancellationToken);
+            _logger.Debug($"Sent event for {staging.Urn}");
+        }
     }
 }

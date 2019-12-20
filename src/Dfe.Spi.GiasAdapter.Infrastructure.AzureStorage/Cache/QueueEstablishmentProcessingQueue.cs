@@ -16,7 +16,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         {
             var storageAccount = CloudStorageAccount.Parse(configuration.EstablishmentProcessingQueueConnectionString);
             var queueClient = storageAccount.CreateCloudQueueClient();
-            _queue = queueClient.GetQueueReference("staging-establishment");
+            _queue = queueClient.GetQueueReference(CacheQueueNames.EstablishmentProcessingQueue);
         }
         
         public async Task EnqueueBatchOfStagingAsync(long[] urns, CancellationToken cancellationToken)
