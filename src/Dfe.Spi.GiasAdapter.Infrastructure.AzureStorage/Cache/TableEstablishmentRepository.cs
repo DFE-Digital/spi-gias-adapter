@@ -64,7 +64,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             }
         }
 
-        public async Task<Establishment> GetEstablishment(long urn, CancellationToken cancellationToken)
+        public async Task<Establishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken)
         {
             var operation = TableOperation.Retrieve<EstablishmentEntity>(urn.ToString(), "current");
             var operationResult = await _table.ExecuteAsync(operation, cancellationToken);
@@ -82,7 +82,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             };
         }
 
-        public async Task<Establishment> GetEstablishmentFromStaging(long urn, CancellationToken cancellationToken)
+        public async Task<Establishment> GetEstablishmentFromStagingAsync(long urn, CancellationToken cancellationToken)
         {
             var operation = TableOperation.Retrieve<EstablishmentEntity>(GetStagingPartitionKey(urn),urn.ToString());
             var operationResult = await _table.ExecuteAsync(operation, cancellationToken);

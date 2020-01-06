@@ -79,8 +79,8 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         {
             foreach (var urn in urns)
             {
-                var current = await _establishmentRepository.GetEstablishment(urn, cancellationToken);
-                var staging = await _establishmentRepository.GetEstablishmentFromStaging(urn, cancellationToken);
+                var current = await _establishmentRepository.GetEstablishmentAsync(urn, cancellationToken);
+                var staging = await _establishmentRepository.GetEstablishmentFromStagingAsync(urn, cancellationToken);
 
                 if (current == null)
                 {
