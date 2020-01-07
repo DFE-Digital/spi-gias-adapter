@@ -1,18 +1,25 @@
 using System.IO;
 using Dfe.Spi.Common.Logging;
 using Dfe.Spi.Common.Logging.Definitions;
+using Dfe.Spi.GiasAdapter.Application.Cache;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
+using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
+using Dfe.Spi.GiasAdapter.Domain.Events;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.GiasAdapter.Functions;
+using Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
+using Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RestSharp;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -25,28 +32,44 @@ namespace Dfe.Spi.GiasAdapter.Functions
 
         public override void Configure(IFunctionsHostBuilder builder)
         {
+            var rawConfiguration = BuildConfiguration();
+            Configure(builder, rawConfiguration);
+        }
+
+        public void Configure(IFunctionsHostBuilder builder, IConfigurationRoot rawConfiguration)
+        {
             var services = builder.Services;
 
-            LoadAndAddConfiguration(services);
+            AddConfiguration(services, rawConfiguration);
             AddLogging(services);
+            AddHttp(services);
+            AddEventPublishing(services);
+            AddRepositories(services);
             AddGiasApi(services);
             AddMapping(services);
             AddManagers(services);
         }
 
-        private void LoadAndAddConfiguration(IServiceCollection services)
+        private IConfigurationRoot BuildConfiguration()
         {
-            _rawConfiguration = new ConfigurationBuilder()
+            return new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("local.settings.json", true)
                 .AddEnvironmentVariables(prefix: "SPI_")
                 .Build();
-            services.AddSingleton(_rawConfiguration);
+        }
 
+        private void AddConfiguration(IServiceCollection services, IConfigurationRoot rawConfiguration)
+        {
+            _rawConfiguration = rawConfiguration;
+            services.AddSingleton(_rawConfiguration);
+            
             _configuration = new GiasAdapterConfiguration();
             _rawConfiguration.Bind(_configuration);
             services.AddSingleton(_configuration);
             services.AddSingleton(_configuration.GiasApi);
+            services.AddSingleton(_configuration.Cache);
+            services.AddSingleton(_configuration.Middleware);
         }
 
         private void AddLogging(IServiceCollection services)
@@ -56,6 +79,21 @@ namespace Dfe.Spi.GiasAdapter.Functions
             services.AddScoped<ILogger>(provider =>
                 provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
             services.AddScoped<ILoggerWrapper, LoggerWrapper>();
+        }
+
+        private void AddHttp(IServiceCollection services)
+        {
+            services.AddScoped<IRestClient, RestClient>();
+        }
+
+        private void AddEventPublishing(IServiceCollection services)
+        {
+            services.AddScoped<IEventPublisher, MiddlewareEventPublisher>();
+        }
+
+        private void AddRepositories(IServiceCollection services)
+        {
+            services.AddScoped<IEstablishmentRepository, TableEstablishmentRepository>();
         }
 
         private void AddGiasApi(IServiceCollection services)
@@ -71,6 +109,18 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddManagers(IServiceCollection services)
         {
             services.AddScoped<ILearningProviderManager, LearningProviderManager>();
+            services.AddScoped<ICacheManager>((sp) =>
+            {
+                // TODO: Once we have SOAP extracts, this can be a "standard" registration
+                //       Currently have 2 IGiasApiClient implementations
+                var logger = sp.GetService<ILoggerWrapper>();
+                var apiClient = new GiasPublicDownloadClient(sp.GetService<IRestClient>(), logger);
+                var establishmentRepository = sp.GetService<IEstablishmentRepository>();
+                var mapper = sp.GetService<IMapper>();
+                var eventPublisher = sp.GetService<IEventPublisher>();
+                var establishmentProcessingQueue = sp.GetService<IEstablishmentProcessingQueue>();
+                return new CacheManager(apiClient, establishmentRepository, mapper, eventPublisher, establishmentProcessingQueue, logger);
+            });
         }
     }
 }

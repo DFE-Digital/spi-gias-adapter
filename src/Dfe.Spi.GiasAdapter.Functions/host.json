@@ -4,5 +4,15 @@
         "http": {
             "routePrefix": ""
         }
+    },
+    "logging": {
+        "logLevel": {
+            "default": "Debug"
+        },
+        "applicationInsights": {
+            "samplingSettings": {
+                "isEnabled": false
+            }
+        }
     }
 }
