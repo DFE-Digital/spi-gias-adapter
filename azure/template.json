@@ -41,6 +41,9 @@
     },
     "giasPassword": {
       "type": "securestring"
+    },
+    "middlewareBaseUrl": {
+      "type": "string"
     }
   },
   "variables": {
@@ -158,6 +161,22 @@
             {
               "name": "SPI_GiasApi__Password",
               "value": "[parameters('giasPassword')]"
+            },
+            {
+              "name": "SPI_Cache__TableStorageConnectionString",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "SPI_Cache__EstablishmentTableName",
+              "value": "estabishments"
+            },
+            {
+              "name": "SPI_Cache__EstablishmentProcessingQueueConnectionString",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "SPI_Middleware__BaseUrl",
+              "value": "[parameters('middlewareBaseUrl')]"
             }
           ]
         }
