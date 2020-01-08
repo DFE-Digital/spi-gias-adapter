@@ -42,6 +42,10 @@
     "giasPassword": {
       "type": "securestring"
     },
+    "establishmentSchedule": {
+      "type": "string",
+      "defaultValue": "0 0 4 * * *"
+    },
     "middlewareBaseUrl": {
       "type": "string"
     }
@@ -161,6 +165,10 @@
             {
               "name": "SPI_GiasApi__Password",
               "value": "[parameters('giasPassword')]"
+            },
+            {
+              "name": "SPI_Cache__EstablishmentSchedule",
+              "value": "[parameters('establishmentSchedule')]"
             },
             {
               "name": "SPI_Cache__TableStorageConnectionString",
