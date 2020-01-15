@@ -76,7 +76,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         [Test]
         public async Task ThenItShouldQueueBatchesOfUrnsForProcessing()
         {
-            var establishments = new Establishment[1500];
+            var establishments = new Establishment[150];
             for (var i = 0; i < establishments.Length; i++)
             {
                 establishments[i] = new Establishment
@@ -89,8 +89,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             
             await _manager.DownloadEstablishmentsToCacheAsync(_cancellationToken);
 
-            var expectedBatch1 = establishments.Take(1000).Select(e => e.Urn).ToArray();
-            var expectedBatch2 = establishments.Skip(1000).Take(1000).Select(e => e.Urn).ToArray();
+            var expectedBatch1 = establishments.Take(100).Select(e => e.Urn).ToArray();
+            var expectedBatch2 = establishments.Skip(100).Take(100).Select(e => e.Urn).ToArray();
             _establishmentProcessingQueueMock.Verify(q=>q.EnqueueBatchOfStagingAsync(
                 It.Is<long[]>(urns => AreEqual(expectedBatch1, urns)), _cancellationToken),
                 Times.Once);
