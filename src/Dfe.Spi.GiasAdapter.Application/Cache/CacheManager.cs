@@ -56,7 +56,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             
             // Queue diff check
             var position = 0;
-            const int batchSize = 1000;
+            const int batchSize = 100;
             while (position < establishments.Length)
             {
                 var batch = establishments
