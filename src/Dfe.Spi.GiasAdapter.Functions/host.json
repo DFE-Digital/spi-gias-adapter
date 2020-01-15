@@ -3,6 +3,9 @@
     "extensions": {
         "http": {
             "routePrefix": ""
+        },
+        "queues": {
+            "batchSize": 2
         }
     },
     "logging": {
