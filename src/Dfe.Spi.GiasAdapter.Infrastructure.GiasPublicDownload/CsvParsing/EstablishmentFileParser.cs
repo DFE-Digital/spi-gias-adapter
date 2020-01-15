@@ -12,6 +12,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
             {
                 Map(x => x.Urn).Name("URN");
                 Map(x => x.Name).Name("EstablishmentName");
+                Map(x => x.Ukprn).Name("UKPRN");
             }   
         }
         

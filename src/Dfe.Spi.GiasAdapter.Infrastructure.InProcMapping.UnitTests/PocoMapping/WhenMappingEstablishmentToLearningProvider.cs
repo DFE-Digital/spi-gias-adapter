@@ -31,6 +31,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
 
             Assert.IsNotNull(actual);
             Assert.AreEqual(source.Name, actual.Name);
+            Assert.AreEqual(source.Urn, actual.Urn);
+            Assert.AreEqual(source.Ukprn, actual.Ukprn);
+            Assert.AreEqual(source.Postcode, actual.Postcode);
         }
 
         [Test]

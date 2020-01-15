@@ -45,6 +45,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
             AddHttp(services);
             AddEventPublishing(services);
             AddRepositories(services);
+            AddQueues(services);
             AddGiasApi(services);
             AddMapping(services);
             AddManagers(services);
@@ -94,6 +95,11 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddRepositories(IServiceCollection services)
         {
             services.AddScoped<IEstablishmentRepository, TableEstablishmentRepository>();
+        }
+
+        private void AddQueues(IServiceCollection services)
+        {
+            services.AddScoped<IEstablishmentProcessingQueue, QueueEstablishmentProcessingQueue>();
         }
 
         private void AddGiasApi(IServiceCollection services)

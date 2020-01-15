@@ -79,6 +79,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             {
                 Urn = entity.Urn,
                 Name = entity.Name,
+                Ukprn = entity.Ukprn,
             };
         }
 
@@ -97,6 +98,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             {
                 Urn = entity.Urn,
                 Name = entity.Name,
+                Ukprn = entity.Ukprn,
             };
         }
 
@@ -123,6 +125,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 RowKey = rowKey,
                 Urn = establishment.Urn,
                 Name = establishment.Name,
+                Ukprn = establishment.Ukprn,
             };
         }
         

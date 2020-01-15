@@ -109,6 +109,10 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             {
                 return false;
             }
+            if (current.Ukprn != staging.Ukprn)
+            {
+                return false;
+            }
 
             return true;
         }

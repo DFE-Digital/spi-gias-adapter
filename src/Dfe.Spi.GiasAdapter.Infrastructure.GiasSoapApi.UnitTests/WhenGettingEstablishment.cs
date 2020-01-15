@@ -56,16 +56,18 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldReturnDeserializedEstablishment(long urn, string establishmentName)
+        public async Task ThenItShouldReturnDeserializedEstablishment(long urn, string establishmentName, long ukprn, string postcode)
         {
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(GetValidResponse(urn, establishmentName));
+                .ReturnsAsync(GetValidResponse(urn, establishmentName, ukprn, postcode));
 
             var actual = await _client.GetEstablishmentAsync(urn, new CancellationToken());
 
             Assert.IsNotNull(actual);
             Assert.AreEqual(urn, actual.Urn);
             Assert.AreEqual(establishmentName, actual.Name);
+            Assert.AreEqual(ukprn, actual.Ukprn);
+            Assert.AreEqual(postcode, actual.Postcode);
         }
 
         [Test, AutoData]
@@ -83,15 +85,24 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
 
         private XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
 
-        private IRestResponse GetValidResponse(long urn, string establishmentName)
+        private IRestResponse GetValidResponse(long urn, string establishmentName, long? ukprn = null, string postcode = null)
         {
             XNamespace giasNs = "http://ws.edubase.texunatech.com";
             XNamespace establishmentNs = "http://ws.edubase.texunatech.com/Establishment";
 
+            var establishment = new XElement(giasNs + "Establishment",
+                new XElement(establishmentNs + "URN", urn),
+                new XElement(establishmentNs + "EstablishmentName", establishmentName));
+            if (ukprn.HasValue)
+            {
+                establishment.Add(new XElement(establishmentNs + "UKPRN", ukprn.Value));
+            }
+            if (!string.IsNullOrEmpty(postcode))
+            {
+                establishment.Add(new XElement(establishmentNs + "Postcode", postcode));
+            }
             var envelope = GetSoapEnvelope(new XElement(giasNs + "GetEstablishmentResponse",
-                new XElement(giasNs + "Establishment",
-                    new XElement(establishmentNs + "URN", urn),
-                    new XElement(establishmentNs + "EstablishmentName", establishmentName))));
+                establishment));
 
             var responseMock = new Mock<IRestResponse>();
             responseMock.Setup(r => r.Content).Returns(envelope.ToString());

@@ -41,13 +41,22 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             var result = EnsureSuccessResponseAndExtractResult(response);
 
-            var establishment = result.GetElementByLocalName("Establishment");
+            var establishmentElement = result.GetElementByLocalName("Establishment");
 
-            return new Establishment
+            var establishment = new Establishment
             {
                 Urn = urn,
-                Name = establishment.GetElementByLocalName("EstablishmentName").Value,
+                Name = establishmentElement.GetElementByLocalName("EstablishmentName").Value,
+                Postcode = establishmentElement.GetElementByLocalName("Postcode")?.Value,
             };
+
+            var ukprnElement = establishmentElement.GetElementByLocalName("UKPRN");
+            if (ukprnElement != null && !string.IsNullOrEmpty(ukprnElement.Value))
+            {
+                establishment.Ukprn = long.Parse(ukprnElement.Value);
+            }
+
+            return establishment;
         }
 
         public Task<Establishment[]> DownloadEstablishmentsAsync(CancellationToken cancellationToken)

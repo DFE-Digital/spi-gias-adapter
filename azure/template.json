@@ -42,6 +42,10 @@
     "giasPassword": {
       "type": "securestring"
     },
+    "establishmentSchedule": {
+      "type": "string",
+      "defaultValue": "0 0 4 * * *"
+    },
     "middlewareBaseUrl": {
       "type": "string"
     }
@@ -163,12 +167,16 @@
               "value": "[parameters('giasPassword')]"
             },
             {
+              "name": "SPI_Cache__EstablishmentSchedule",
+              "value": "[parameters('establishmentSchedule')]"
+            },
+            {
               "name": "SPI_Cache__TableStorageConnectionString",
               "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
             },
             {
               "name": "SPI_Cache__EstablishmentTableName",
-              "value": "estabishments"
+              "value": "establishments"
             },
             {
               "name": "SPI_Cache__EstablishmentProcessingQueueConnectionString",
