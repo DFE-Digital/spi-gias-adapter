@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -40,27 +39,13 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
 
         private async Task SendEventToMiddleware(string eventType, object details, CancellationToken cancellationToken)
         {
-            var attempts = 0;
-            while (true)
+            var request = new RestRequest(eventType, Method.POST, DataFormat.Json);
+            request.AddParameter(string.Empty, JsonConvert.SerializeObject(details), ParameterType.RequestBody);
+
+            var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+            if (!response.IsSuccessful)
             {
-                var request = new RestRequest(eventType, Method.POST, DataFormat.Json);
-                request.AddParameter(string.Empty, JsonConvert.SerializeObject(details), ParameterType.RequestBody);
-
-                var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-                if (!response.IsSuccessful)
-                {
-                    if (response.StatusCode == HttpStatusCode.TooManyRequests
-                        && attempts < 3)
-                    {
-                        _logger.Info($"Received TooManyRequests response from middleware. Backing off for attempt {attempts}");
-                        attempts++;
-                        await Task.Delay(500, cancellationToken);
-                        continue;
-                    }
-                    throw new MiddlewareException(eventType, response.StatusCode, response.Content);
-                }
-
-                break;
+                throw new MiddlewareException(eventType, response.StatusCode, response.Content);
             }
         }
     }
