@@ -176,7 +176,7 @@
             },
             {
               "name": "SPI_Cache__EstablishmentTableName",
-              "value": "estabishments"
+              "value": "establishments"
             },
             {
               "name": "SPI_Cache__EstablishmentProcessingQueueConnectionString",
