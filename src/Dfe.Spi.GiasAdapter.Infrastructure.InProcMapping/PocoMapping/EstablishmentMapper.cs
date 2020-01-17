@@ -25,7 +25,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             {
                 Name = establishment.Name,
                 Urn = establishment.Urn,
-                Ukprn = establishment.Ukprn ?? 0,
+                Ukprn = establishment.Ukprn,
                 Postcode = establishment.Postcode,
             };
             return learningProvider as TDestination;
