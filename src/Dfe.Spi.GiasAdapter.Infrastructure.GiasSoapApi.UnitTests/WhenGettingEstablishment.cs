@@ -82,6 +82,17 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             Assert.AreEqual(faultString, actual.Message);
         }
 
+        [Test, AutoData]
+        public async Task ThenItShouldReturnNullIfSoapFaultReceivedAndFaultStringUnknownUrn(long urn)
+        {
+            _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(GetFaultResponse("something", "Unknown URN"));
+
+            var actual = await _client.GetEstablishmentAsync(urn, new CancellationToken());
+            
+            Assert.IsNull(actual);
+        }
+
 
         private XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
 

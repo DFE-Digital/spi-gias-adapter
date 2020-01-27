@@ -39,24 +39,38 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             request.AddHeader("SOAPAction", "http://ws.edubase.texunatech.com/GetEstablishment");
 
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-            var result = EnsureSuccessResponseAndExtractResult(response);
-
-            var establishmentElement = result.GetElementByLocalName("Establishment");
-
-            var establishment = new Establishment
+            try
             {
-                Urn = urn,
-                Name = establishmentElement.GetElementByLocalName("EstablishmentName").Value,
-                Postcode = establishmentElement.GetElementByLocalName("Postcode")?.Value,
-            };
+                var result = EnsureSuccessResponseAndExtractResult(response);
 
-            var ukprnElement = establishmentElement.GetElementByLocalName("UKPRN");
-            if (ukprnElement != null && !string.IsNullOrEmpty(ukprnElement.Value))
-            {
-                establishment.Ukprn = long.Parse(ukprnElement.Value);
+                var establishmentElement = result.GetElementByLocalName("Establishment");
+
+                var establishment = new Establishment
+                {
+                    Urn = urn,
+                    Name = establishmentElement.GetElementByLocalName("EstablishmentName").Value,
+                    Postcode = establishmentElement.GetElementByLocalName("Postcode")?.Value,
+                };
+
+                var ukprnElement = establishmentElement.GetElementByLocalName("UKPRN");
+                if (ukprnElement != null && !string.IsNullOrEmpty(ukprnElement.Value))
+                {
+                    establishment.Ukprn = long.Parse(ukprnElement.Value);
+                }
+
+                return establishment;
             }
+            catch (SoapException ex)
+            {
+                // GIAS API throws exception if not found for some reason
+                // This is the only obvious way to identify this error case
+                if (ex.Message == "Unknown URN")
+                {
+                    return null;
+                }
 
-            return establishment;
+                throw;
+            }
         }
 
         public Task<Establishment[]> DownloadEstablishmentsAsync(CancellationToken cancellationToken)
@@ -73,9 +87,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             }
             catch (Exception ex)
             {
-                throw new GiasSoapApiException($"Error deserializing SOAP response: {ex.Message} (response: {response.Content})", ex);
+                throw new GiasSoapApiException(
+                    $"Error deserializing SOAP response: {ex.Message} (response: {response.Content})", ex);
             }
-            
+
             var envelope = document.Elements().Single();
             var body = envelope.GetElementByLocalName("Body");
 
