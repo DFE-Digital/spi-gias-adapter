@@ -30,6 +30,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Release", "Release", "{85781B96-375D-4B39-B1EE-A581F83E5DE2}"
 ProjectSection(SolutionItems) = preProject
 	..\azure\template.json = ..\azure\template.json
+	..\eventing\events.json = ..\eventing\events.json
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload", "Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload\Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.csproj", "{383F5738-9A6F-4639-9F8C-CF32FBA8C53E}"
