@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -20,6 +20,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
         {
             _restClient = restClient;
             _restClient.BaseUrl = new Uri(configuration.BaseUrl, UriKind.Absolute);
+            if (!string.IsNullOrEmpty(configuration.FunctionsKey))
+            {
+                _restClient.DefaultParameters.Add(new Parameter("x-functions-key", configuration.FunctionsKey,
+                    ParameterType.HttpHeader));
+            }
+
             _logger = logger;
         }
 
