@@ -1,0 +1,47 @@
+{
+  "info": {
+    "code": "spi-gias-events",
+    "name": "SPI GIAS Sync Events",
+    "description": "Notifications about changed in GIAS data detected in the SPI GIAS adapter",
+    "version": "1.0.0"
+  },
+  "events": {
+    "learning-provider-created": {
+      "description": "New learning provider has been detected",
+      "schema": {
+        "$ref": "#/definitions/learning-provider"
+      }
+    },
+    "learning-provider-updated": {
+      "description": "Update to learning provider has been detected",
+      "schema": {
+        "$ref": "#/definitions/learning-provider"
+      }
+    }
+  },
+  "definitions": {
+    "learning-provider": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "legalName": {
+          "type": "string"
+        },
+        "urn": {
+          "type": "integer"
+        },
+        "ukprn": {
+          "type": "integer"
+        },
+        "postcode": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  }
+}

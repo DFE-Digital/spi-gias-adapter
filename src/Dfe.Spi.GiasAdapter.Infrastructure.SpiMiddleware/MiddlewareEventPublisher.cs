@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -20,6 +20,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
         {
             _restClient = restClient;
             _restClient.BaseUrl = new Uri(configuration.BaseUrl, UriKind.Absolute);
+            if (!string.IsNullOrEmpty(configuration.FunctionsKey))
+            {
+                _restClient.DefaultParameters.Add(new Parameter("x-functions-key", configuration.FunctionsKey,
+                    ParameterType.HttpHeader));
+            }
+
             _logger = logger;
         }
 
@@ -39,15 +45,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
 
         private async Task SendEventToMiddleware(string eventType, object details, CancellationToken cancellationToken)
         {
-            _logger.Info($"Would have sent {eventType} with details {details}");
-            // var request = new RestRequest(eventType, Method.POST, DataFormat.Json);
-            // request.AddParameter(string.Empty, JsonConvert.SerializeObject(details), ParameterType.RequestBody);
-            //
-            // var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-            // if (!response.IsSuccessful)
-            // {
-            //     throw new MiddlewareException(eventType, response.StatusCode, response.Content);
-            // }
+            var request = new RestRequest(eventType, Method.POST, DataFormat.Json);
+            request.AddParameter(string.Empty, JsonConvert.SerializeObject(details), ParameterType.RequestBody);
+            
+            var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+            if (!response.IsSuccessful)
+            {
+                throw new MiddlewareException(eventType, response.StatusCode, response.Content);
+            }
         }
     }
 }
