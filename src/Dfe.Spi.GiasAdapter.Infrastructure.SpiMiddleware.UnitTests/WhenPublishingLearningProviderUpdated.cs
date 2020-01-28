@@ -13,7 +13,6 @@ using RestSharp;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware.UnitTests
 {
-    [Ignore("Issues with sending events until middleware available")]
     public class WhenPublishingLearningProviderUpdated
     {
         private Mock<IRestClient> _restClientMock;

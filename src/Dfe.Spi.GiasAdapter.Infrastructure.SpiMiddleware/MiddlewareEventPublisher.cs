@@ -39,15 +39,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
 
         private async Task SendEventToMiddleware(string eventType, object details, CancellationToken cancellationToken)
         {
-            _logger.Info($"Would have sent {eventType} with details {details}");
-            // var request = new RestRequest(eventType, Method.POST, DataFormat.Json);
-            // request.AddParameter(string.Empty, JsonConvert.SerializeObject(details), ParameterType.RequestBody);
-            //
-            // var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-            // if (!response.IsSuccessful)
-            // {
-            //     throw new MiddlewareException(eventType, response.StatusCode, response.Content);
-            // }
+            var request = new RestRequest(eventType, Method.POST, DataFormat.Json);
+            request.AddParameter(string.Empty, JsonConvert.SerializeObject(details), ParameterType.RequestBody);
+            
+            var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+            if (!response.IsSuccessful)
+            {
+                throw new MiddlewareException(eventType, response.StatusCode, response.Content);
+            }
         }
     }
 }
