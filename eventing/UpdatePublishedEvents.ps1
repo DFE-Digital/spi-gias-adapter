@@ -1,7 +1,7 @@
 param (
-    [string] MiddlewareBaseUrl,
-    [string] MiddlewareFunctionsKey,
-    [string] SchemaPath
+    [string] $MiddlewareBaseUrl,
+    [string] $MiddlewareFunctionsKey,
+    [string] $SchemaPath
 )
 
 $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
