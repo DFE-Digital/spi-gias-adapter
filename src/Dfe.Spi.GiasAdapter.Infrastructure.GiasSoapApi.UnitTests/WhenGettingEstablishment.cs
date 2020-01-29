@@ -56,10 +56,13 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldReturnDeserializedEstablishment(long urn, string establishmentName, long ukprn, string postcode)
+        public async Task ThenItShouldReturnDeserializedEstablishment(long urn, string establishmentName, long ukprn,
+            string postcode,
+            int statusCode, string statusName, int typeGroupCode, string typeGroupName, int typeCode, string typeName)
         {
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(GetValidResponse(urn, establishmentName, ukprn, postcode));
+                .ReturnsAsync(GetValidResponse(urn, establishmentName, ukprn, postcode, statusCode, statusName,
+                    typeGroupCode, typeGroupName, typeCode, typeName));
 
             var actual = await _client.GetEstablishmentAsync(urn, new CancellationToken());
 
@@ -68,6 +71,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             Assert.AreEqual(establishmentName, actual.Name);
             Assert.AreEqual(ukprn, actual.Ukprn);
             Assert.AreEqual(postcode, actual.Postcode);
+            Assert.AreEqual(statusCode, actual.EstablishmentStatus.Code);
+            Assert.AreEqual(statusName, actual.EstablishmentStatus.DisplayName);
+            Assert.AreEqual(typeGroupCode, actual.EstablishmentTypeGroup.Code);
+            Assert.AreEqual(typeGroupName, actual.EstablishmentTypeGroup.DisplayName);
+            Assert.AreEqual(typeCode, actual.TypeOfEstablishment.Code);
+            Assert.AreEqual(typeName, actual.TypeOfEstablishment.DisplayName);
         }
 
         [Test, AutoData]
@@ -89,17 +98,21 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
                 .ReturnsAsync(GetFaultResponse("something", "Unknown URN"));
 
             var actual = await _client.GetEstablishmentAsync(urn, new CancellationToken());
-            
+
             Assert.IsNull(actual);
         }
 
 
         private XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
 
-        private IRestResponse GetValidResponse(long urn, string establishmentName, long? ukprn = null, string postcode = null)
+        private IRestResponse GetValidResponse(long urn, string establishmentName, long? ukprn = null,
+            string postcode = null,
+            int? statusCode = null, string statusName = null, int? typeGroupCode = null, string typeGroupName = null,
+            int? typeCode = null, string typeName = null)
         {
             XNamespace giasNs = "http://ws.edubase.texunatech.com";
             XNamespace establishmentNs = "http://ws.edubase.texunatech.com/Establishment";
+            XNamespace dataTypesNs = "http://ws.edubase.texunatech.com/DataTypes";
 
             var establishment = new XElement(giasNs + "Establishment",
                 new XElement(establishmentNs + "URN", urn),
@@ -108,10 +121,34 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             {
                 establishment.Add(new XElement(establishmentNs + "UKPRN", ukprn.Value));
             }
+
             if (!string.IsNullOrEmpty(postcode))
             {
                 establishment.Add(new XElement(establishmentNs + "Postcode", postcode));
             }
+
+            if (statusCode.HasValue)
+            {
+                establishment.Add(new XElement(establishmentNs + "EstablishmentStatus",
+                    new XElement(dataTypesNs + "Code", statusCode.Value),
+                    new XElement(dataTypesNs + "DisplayName", statusName)));
+            }
+
+            if (typeGroupCode.HasValue)
+            {
+                establishment.Add(new XElement(establishmentNs + "EstablishmentTypeGroup",
+                    new XElement(dataTypesNs + "Code", typeGroupCode.Value),
+                    new XElement(dataTypesNs + "DisplayName", typeGroupName)));
+            }
+
+            if (typeCode.HasValue)
+            {
+                establishment.Add(new XElement(establishmentNs + "TypeOfEstablishment",
+                    new XElement(dataTypesNs + "Code", typeCode.Value),
+                    new XElement(dataTypesNs + "DisplayName", typeName)));
+            }
+
+
             var envelope = GetSoapEnvelope(new XElement(giasNs + "GetEstablishmentResponse",
                 establishment));
 
