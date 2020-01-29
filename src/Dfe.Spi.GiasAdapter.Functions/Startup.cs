@@ -8,12 +8,14 @@ using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.Events;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
+using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.GiasAdapter.Functions;
 using Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
 using Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware;
+using Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
@@ -53,6 +55,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
             AddLogging(services);
             AddHttp(services);
             AddEventPublishing(services);
+            AddTranslation(services);
             AddRepositories(services);
             AddQueues(services);
             AddGiasApi(services);
@@ -80,6 +83,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
             services.AddSingleton(_configuration.GiasApi);
             services.AddSingleton(_configuration.Cache);
             services.AddSingleton(_configuration.Middleware);
+            services.AddSingleton(_configuration.Translator);
         }
 
         private void AddLogging(IServiceCollection services)
@@ -99,6 +103,11 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddEventPublishing(IServiceCollection services)
         {
             services.AddScoped<IEventPublisher, MiddlewareEventPublisher>();
+        }
+
+        private void AddTranslation(IServiceCollection services)
+        {
+            services.AddScoped<ITranslator, TranslatorApiClient>();
         }
 
         private void AddRepositories(IServiceCollection services)
