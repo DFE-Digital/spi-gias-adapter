@@ -19,6 +19,8 @@ using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using RestSharp;
 
 [assembly: FunctionsStartup(typeof(Startup))]
@@ -39,6 +41,13 @@ namespace Dfe.Spi.GiasAdapter.Functions
         public void Configure(IFunctionsHostBuilder builder, IConfigurationRoot rawConfiguration)
         {
             var services = builder.Services;
+            
+            JsonConvert.DefaultSettings =
+                () => new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    NullValueHandling = NullValueHandling.Ignore,
+                };
 
             AddConfiguration(services, rawConfiguration);
             AddLogging(services);

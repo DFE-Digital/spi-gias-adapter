@@ -31,6 +31,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload
         public async Task<Establishment[]> DownloadEstablishmentsAsync(CancellationToken cancellationToken)
         {
             var downloadLinks = await GetAvailableDownloadLinksAsync(cancellationToken);
+            var downloadLinksNames = downloadLinks.Select(x => x.Title).Aggregate((x, y) => $"{x}, {y}");
+            _logger.Debug($"Found {downloadLinks.Length} download links - {downloadLinksNames}");
+            
             var establishmentLink =
                 downloadLinks.SingleOrDefault(l =>
                     l.Title.Equals("Establishment fields", StringComparison.CurrentCultureIgnoreCase));
@@ -76,7 +79,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload
                 var fullTitle = a.InnerText.Trim();
 
                 var match = Regex.Match(fullTitle,
-                    "^([a-z\\s]{1,})\\s{0,1}\\.{0,1}csv\\,\\s[0-9]{1,}\\.[0-9]{2}\\s[MK]B\\sOpens\\sin\\snew\\swindow$",
+                    "^([a-z\\s]{1,})\\s{0,1}\\.{0,1}csv\\,\\s[0-9]{1,}\\.[0-9]{1,2}\\s[MK]B\\sOpens\\sin\\snew\\swindow$",
                     RegexOptions.IgnoreCase);
                 var title = match.Success
                     ? match.Groups[1].Value.Trim()
