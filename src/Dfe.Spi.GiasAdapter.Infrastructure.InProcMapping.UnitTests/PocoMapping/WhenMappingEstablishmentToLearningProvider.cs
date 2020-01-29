@@ -34,6 +34,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             Assert.AreEqual(source.Urn, actual.Urn);
             Assert.AreEqual(source.Ukprn, actual.Ukprn);
             Assert.AreEqual(source.Postcode, actual.Postcode);
+            Assert.AreEqual(source.OpenDate, actual.OpenDate);
+            Assert.AreEqual(source.CloseDate, actual.CloseDate);
         }
 
         [Test]

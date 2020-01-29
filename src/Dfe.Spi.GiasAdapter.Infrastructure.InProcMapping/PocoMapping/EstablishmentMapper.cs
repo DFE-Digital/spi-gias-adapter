@@ -27,6 +27,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 Urn = establishment.Urn,
                 Ukprn = establishment.Ukprn,
                 Postcode = establishment.Postcode,
+                OpenDate = establishment.OpenDate,
+                CloseDate = establishment.CloseDate,
             };
             return learningProvider as TDestination;
         }
