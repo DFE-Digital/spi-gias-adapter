@@ -48,6 +48,15 @@
     },
     "middlewareBaseUrl": {
       "type": "string"
+    },
+    "middlewareFunctionsKey": {
+      "type": "securestring"
+    },
+    "translatorBaseUrl": {
+      "type": "string"
+    },
+    "translatorFunctionsKey": {
+      "type": "securestring"
     }
   },
   "variables": {
@@ -185,6 +194,18 @@
             {
               "name": "SPI_Middleware__BaseUrl",
               "value": "[parameters('middlewareBaseUrl')]"
+            },
+            {
+              "name": "SPI_Middleware__FunctionsKey",
+              "value": "[parameters('middlewareFunctionsKey')]"
+            },
+            {
+              "name": "SPI_Translator__BaseUrl",
+              "value": "[parameters('translatorBaseUrl')]"
+            },
+            {
+              "name": "SPI_Translator__FunctionsKey",
+              "value": "[parameters('translatorFunctionsKey')]"
             }
           ]
         }

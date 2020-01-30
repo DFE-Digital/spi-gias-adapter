@@ -26,5 +26,6 @@
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi\Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.csproj" />
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping\Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.csproj" />
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware\Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator\Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.csproj" />
     </ItemGroup>
 </Project>

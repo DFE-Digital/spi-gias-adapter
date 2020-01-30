@@ -3,20 +3,31 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
 using Dfe.Spi.Models;
+using Moq;
 using NUnit.Framework;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
 {
     public class WhenMappingGenericObject
     {
+        private Mock<ITranslator> _translatorMock;
+        private PocoMapper _mapper;
+        
+        [SetUp]
+        public void Arrange()
+        {
+            _translatorMock= new Mock<ITranslator>();
+            
+            _mapper = new PocoMapper(_translatorMock.Object);
+        }
+        
         [Test, AutoData]
         public async Task ThenItShouldReturnLearningProviderWhenMappingEstablishmentToLearningProvider(Establishment source)
         {
-            var mapper = new PocoMapper();
-
-            var actual = await mapper.MapAsync<LearningProvider>(source, new CancellationToken());
+            var actual = await _mapper.MapAsync<LearningProvider>(source, new CancellationToken());
             
             Assert.IsInstanceOf<LearningProvider>(actual);
         }
@@ -24,10 +35,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         [Test]
         public void ThenItShouldThrowExceptionIfNoMapperDefined()
         {
-            var mapper = new PocoMapper();
-
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await mapper.MapAsync<Establishment>(new object(), new CancellationToken()));
+                await _mapper.MapAsync<Establishment>(new object(), new CancellationToken()));
         }
     }
 }

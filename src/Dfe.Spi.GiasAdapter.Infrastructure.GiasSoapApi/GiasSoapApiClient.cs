@@ -50,6 +50,15 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                     Urn = urn,
                     Name = establishmentElement.GetElementByLocalName("EstablishmentName").Value,
                     Postcode = establishmentElement.GetElementByLocalName("Postcode")?.Value,
+                    EstablishmentStatus =
+                        GetCodeNamePairFromElement(establishmentElement.GetElementByLocalName("EstablishmentStatus")),
+                    EstablishmentTypeGroup =
+                        GetCodeNamePairFromElement(
+                            establishmentElement.GetElementByLocalName("EstablishmentTypeGroup")),
+                    TypeOfEstablishment =
+                        GetCodeNamePairFromElement(establishmentElement.GetElementByLocalName("TypeOfEstablishment")),
+                    OpenDate = GetDateTimeFromElement(establishmentElement.GetElementByLocalName("OpenDate")),
+                    CloseDate = GetDateTimeFromElement(establishmentElement.GetElementByLocalName("CloseDate")),
                 };
 
                 var ukprnElement = establishmentElement.GetElementByLocalName("UKPRN");
@@ -103,6 +112,30 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             }
 
             return body.Elements().First();
+        }
+
+        private static CodeNamePair GetCodeNamePairFromElement(XElement element)
+        {
+            if (element == null)
+            {
+                return null;
+            }
+
+            return new CodeNamePair
+            {
+                Code = int.Parse(element.GetElementByLocalName("Code").Value),
+                DisplayName = element.GetElementByLocalName("DisplayName").Value,
+            };
+        }
+
+        private static DateTime? GetDateTimeFromElement(XElement element)
+        {
+            if (element == null || string.IsNullOrEmpty(element.Value))
+            {
+                return null;
+            }
+
+            return DateTime.Parse(element.Value);
         }
     }
 }

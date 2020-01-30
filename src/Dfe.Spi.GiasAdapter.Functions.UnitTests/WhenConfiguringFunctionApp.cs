@@ -47,6 +47,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests
                     new KeyValuePair<string, string>("Cache:EstablishmentProcessingQueueConnectionString", "UseDevelopmentStorage=true"),
                     new KeyValuePair<string, string>("Cache:EstablishmentSchedule", "0 0 5 * * *"),
                     new KeyValuePair<string, string>("Middleware:BaseUrl", "https://middleware.unit.tests"),
+                    new KeyValuePair<string, string>("Translator:BaseUrl", "https://translator.unit.tests"),
                 }).Build();
         }
 
