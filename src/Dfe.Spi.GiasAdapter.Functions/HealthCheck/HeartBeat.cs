@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 
-namespace Dfe.Spi.GiasAdapter.Functions
+namespace Dfe.Spi.GiasAdapter.Functions.HealthCheck
 {
     public static class HeartBeat
     {
