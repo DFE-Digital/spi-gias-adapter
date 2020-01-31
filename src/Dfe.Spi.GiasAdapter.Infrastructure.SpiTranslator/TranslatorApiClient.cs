@@ -35,7 +35,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
         public async Task<string> TranslateEnumValue(string enumName, string sourceValue,
             CancellationToken cancellationToken)
         {
-            var resource = $"{enumName}/{SourceSystemNames.GetInformationAboutSchools}";
+            var resource = $"enumerations/{enumName}/{SourceSystemNames.GetInformationAboutSchools}";
             _logger.Info($"Calling {resource} on translator api");
             var request = new RestRequest(resource, Method.GET);
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);

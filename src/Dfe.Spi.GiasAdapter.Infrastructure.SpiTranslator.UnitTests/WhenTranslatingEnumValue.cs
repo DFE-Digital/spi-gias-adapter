@@ -55,7 +55,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
 
             _restClientMock.Verify(c => c.ExecuteTaskAsync(It.Is<RestRequest>(r =>
                     r.Method == Method.GET &&
-                    r.Resource == $"{enumName}/{SourceSystemNames.GetInformationAboutSchools}"), _cancellationToken),
+                    r.Resource == $"enumerations/{enumName}/{SourceSystemNames.GetInformationAboutSchools}"), _cancellationToken),
                 Times.Once);
         }
 
