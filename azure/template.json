@@ -194,7 +194,7 @@
             },
             {
               "name": "SPI_Middleware__BaseUrl",
-              "value": "[parameters('middlewareBaseUrl')]"
+              "value": "[concat(parameters('middlewareBaseUrl'), 'spi-gias-events/')]"
             },
             {
               "name": "SPI_Middleware__FunctionsKey",
