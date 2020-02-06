@@ -46,6 +46,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.GiasAdapter.Infrast
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests", "Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests\Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests.csproj", "{914472CB-1985-4798-91FB-02A23152B361}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{C1FA72FE-D8B5-4D62-83D5-E01596A486DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PopulateInitialCache", "PopulateInitialCache\PopulateInitialCache.csproj", "{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -112,6 +116,10 @@ Global
 		{914472CB-1985-4798-91FB-02A23152B361}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{914472CB-1985-4798-91FB-02A23152B361}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{914472CB-1985-4798-91FB-02A23152B361}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{765D3C8E-339C-4DDF-96D8-01D5E0FC7DF8} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
@@ -122,5 +130,6 @@ Global
 		{85781B96-375D-4B39-B1EE-A581F83E5DE2} = {053962FA-B190-4DFC-9057-8A1005338F9F}
 		{E6EC18B6-437C-4A77-812D-36552F371DB2} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
 		{914472CB-1985-4798-91FB-02A23152B361} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
+		{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD} = {C1FA72FE-D8B5-4D62-83D5-E01596A486DB}
 	EndGlobalSection
 EndGlobal
