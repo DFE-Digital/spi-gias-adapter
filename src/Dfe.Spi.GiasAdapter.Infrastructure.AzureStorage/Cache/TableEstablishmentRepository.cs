@@ -24,6 +24,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             _table = tableClient.GetTableReference(configuration.EstablishmentTableName);
         }
 
+        
+        
         public async Task StoreAsync(Establishment establishment, CancellationToken cancellationToken)
         {
             await _table.CreateIfNotExistsAsync(cancellationToken);
@@ -75,12 +77,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 return null;
             }
 
-            return new Establishment
-            {
-                Urn = entity.Urn,
-                Name = entity.Name,
-                Ukprn = entity.Ukprn,
-            };
+            return EntityToModel(entity);
         }
 
         public async Task<Establishment> GetEstablishmentFromStagingAsync(long urn, CancellationToken cancellationToken)
@@ -94,16 +91,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 return null;
             }
 
-            return new Establishment
-            {
-                Urn = entity.Urn,
-                Name = entity.Name,
-                Ukprn = entity.Ukprn,
-            };
+            return EntityToModel(entity);
         }
 
 
-        
         
         
 
@@ -126,6 +117,30 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 Urn = establishment.Urn,
                 Name = establishment.Name,
                 Ukprn = establishment.Ukprn,
+                CompaniesHouseNumber = establishment.CompaniesHouseNumber,
+                CharitiesCommissionNumber = establishment.CharitiesCommissionNumber,
+                AcademyTrustCode = establishment.AcademyTrustCode,
+                LocalAuthorityCode = establishment.LocalAuthorityCode,
+                EstablishmentNumber = establishment.EstablishmentNumber,
+                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber,
+                Postcode = establishment.Postcode,
+            };
+        }
+
+        private Establishment EntityToModel(EstablishmentEntity entity)
+        {
+            return new Establishment
+            {
+                Urn = entity.Urn,
+                Name = entity.Name,
+                Ukprn = entity.Ukprn,
+                CompaniesHouseNumber = entity.CompaniesHouseNumber,
+                CharitiesCommissionNumber = entity.CharitiesCommissionNumber,
+                AcademyTrustCode = entity.AcademyTrustCode,
+                LocalAuthorityCode = entity.LocalAuthorityCode,
+                EstablishmentNumber = entity.EstablishmentNumber,
+                PreviousEstablishmentNumber = entity.PreviousEstablishmentNumber,
+                Postcode = entity.Postcode,
             };
         }
         

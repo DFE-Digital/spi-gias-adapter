@@ -113,6 +113,38 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             {
                 return false;
             }
+            if (current.Uprn != staging.Uprn)
+            {
+                return false;
+            }
+            if (current.CompaniesHouseNumber != staging.CompaniesHouseNumber)
+            {
+                return false;
+            }
+            if (current.CharitiesCommissionNumber != staging.CharitiesCommissionNumber)
+            {
+                return false;
+            }
+            if (current.AcademyTrustCode != staging.AcademyTrustCode)
+            {
+                return false;
+            }
+            if (current.LocalAuthorityCode != staging.LocalAuthorityCode)
+            {
+                return false;
+            }
+            if (current.EstablishmentNumber != staging.EstablishmentNumber)
+            {
+                return false;
+            }
+            if (current.PreviousEstablishmentNumber != staging.PreviousEstablishmentNumber)
+            {
+                return false;
+            }
+            if (current.Postcode != staging.Postcode)
+            {
+                return false;
+            }
 
             return true;
         }
