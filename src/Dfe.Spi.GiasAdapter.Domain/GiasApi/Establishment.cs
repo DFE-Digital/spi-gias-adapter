@@ -12,8 +12,8 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public string CharitiesCommissionNumber { get; set; }
         public string AcademyTrustCode { get; set; }
         public string LocalAuthorityCode { get; set; }
-        public string EstablishmentNumber { get; set; }
-        public string PreviousEstablishmentNumber { get; set; }
+        public long? EstablishmentNumber { get; set; }
+        public long? PreviousEstablishmentNumber { get; set; }
         public string Postcode { get; set; }
         public CodeNamePair EstablishmentStatus { get; set; }
         public CodeNamePair EstablishmentTypeGroup { get; set; }
