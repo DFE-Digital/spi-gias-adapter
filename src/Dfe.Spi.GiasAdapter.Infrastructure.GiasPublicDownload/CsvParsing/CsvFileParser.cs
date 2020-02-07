@@ -22,7 +22,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
             _csv.Configuration.MissingFieldFound = null;
         }
 
-        public T[] GetRecords()
+        public virtual T[] GetRecords()
         {
             return _csv.GetRecords<T>().ToArray();
         }
