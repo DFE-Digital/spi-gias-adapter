@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using AutoFixture.NUnit3;
+using Castle.Components.DictionaryAdapter;
 using Moq;
 using NUnit.Framework;
 using RestSharp;
@@ -57,12 +58,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
 
         [Test, AutoData]
         public async Task ThenItShouldReturnDeserializedEstablishment(long urn, string establishmentName, long ukprn,
-            string postcode,
+            string postcode, string uprn, string academyTrustCode, string localAuthorityCode, long establishmentNumber, 
+            long previousEstablishmentNumber,
             int statusCode, string statusName, int typeGroupCode, string typeGroupName, int typeCode, string typeName)
         {
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(GetValidResponse(urn, establishmentName, ukprn, postcode, statusCode, statusName,
-                    typeGroupCode, typeGroupName, typeCode, typeName));
+                .ReturnsAsync(GetValidResponse(urn, establishmentName, ukprn, postcode, 
+                    uprn,  academyTrustCode,  localAuthorityCode,  establishmentNumber, previousEstablishmentNumber,
+                    statusCode, statusName, typeGroupCode, typeGroupName, typeCode, typeName));
 
             var actual = await _client.GetEstablishmentAsync(urn, new CancellationToken());
 
@@ -70,6 +73,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             Assert.AreEqual(urn, actual.Urn);
             Assert.AreEqual(establishmentName, actual.Name);
             Assert.AreEqual(ukprn, actual.Ukprn);
+            Assert.AreEqual(uprn, actual.Uprn);
+            Assert.AreEqual(academyTrustCode, actual.AcademyTrustCode);
+            Assert.AreEqual(localAuthorityCode, actual.LocalAuthorityCode);
+            Assert.AreEqual(establishmentNumber, actual.EstablishmentNumber);
+            Assert.AreEqual(previousEstablishmentNumber, actual.PreviousEstablishmentNumber);
+            
             Assert.AreEqual(postcode, actual.Postcode);
             Assert.AreEqual(statusCode, actual.EstablishmentStatus.Code);
             Assert.AreEqual(statusName, actual.EstablishmentStatus.DisplayName);
@@ -106,7 +115,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
         private XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
 
         private IRestResponse GetValidResponse(long urn, string establishmentName, long? ukprn = null,
-            string postcode = null,
+            string postcode = null, string uprn = null, string academyTrustCode = null, string localAuthorityCode = null, 
+            long? establishmentNumber = null, long? previousEstablishmentNumber = null,
             int? statusCode = null, string statusName = null, int? typeGroupCode = null, string typeGroupName = null,
             int? typeCode = null, string typeName = null)
         {
@@ -117,9 +127,38 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             var establishment = new XElement(giasNs + "Establishment",
                 new XElement(establishmentNs + "URN", urn),
                 new XElement(establishmentNs + "EstablishmentName", establishmentName));
+            
             if (ukprn.HasValue)
             {
                 establishment.Add(new XElement(establishmentNs + "UKPRN", ukprn.Value));
+            }
+            
+            if (!string.IsNullOrEmpty(uprn))
+            {
+                establishment.Add(new XElement(establishmentNs + "UPRN", uprn));
+            }
+            
+            if (!string.IsNullOrEmpty(academyTrustCode))
+            {
+                establishment.Add(new XElement(establishmentNs + "Trusts", 
+                    new XElement(dataTypesNs + "Value",
+                        new XElement(dataTypesNs + "Code", academyTrustCode))));
+            }
+            
+            if (!string.IsNullOrEmpty(localAuthorityCode))
+            {
+                establishment.Add(new XElement(establishmentNs + "LA", 
+                        new XElement(dataTypesNs + "Code", localAuthorityCode)));
+            }
+            
+            if (establishmentNumber.HasValue)
+            {
+                establishment.Add(new XElement(establishmentNs + "EstablishmentNumber", establishmentNumber.Value));
+            }
+            
+            if (previousEstablishmentNumber.HasValue)
+            {
+                establishment.Add(new XElement(establishmentNs + "PreviousEstablishmentNumber", previousEstablishmentNumber.Value));
             }
 
             if (!string.IsNullOrEmpty(postcode))
