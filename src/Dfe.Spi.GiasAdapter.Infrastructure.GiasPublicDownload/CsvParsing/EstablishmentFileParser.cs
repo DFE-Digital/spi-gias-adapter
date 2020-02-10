@@ -19,7 +19,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                     x => this.BuildCodeNamePair(x, "EstablishmentStatus"));
                 Map(x => x.OpenDate).Name("OpenDate");
                 Map(x => x.CloseDate).Name("CloseDate");
-                Map(x => x.La).ConvertUsing(
+                Map(x => x.LA).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "LA"));
                 Map(x => x.Postcode).Name("Postcode");
                 Map(x => x.EstablishmentName).Name("EstablishmentName");
@@ -49,6 +49,21 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                 Map(x => x.InspectorateReport).Name("InspectorateReport");
                 Map(x => x.TeenMothName).Name("TeenMoth (name)");
                 Map(x => x.TeenMothPlaces).Name("TeenMothPlaces");
+                Map(x => x.ReasonEstablishmentOpened).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "ReasonEstablishmentOpened"));
+                Map(x => x.ReasonEstablishmentClosed).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "ReasonEstablishmentClosed"));
+                Map(x => x.PhaseOfEducation).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "PhaseOfEducation"));
+                Map(x => x.FurtherEducationTypeName).Name("FurtherEducationType (name)");
+                Map(x => x.OfficialSixthForm).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "OfficialSixthForm"));
+                // TODO: Looks like the code parts of CodeNamePairs can be
+                //       strings!
+                // Map(x => x.Diocese).ConvertUsing(
+                //    x => this.BuildCodeNamePair(x, "Diocese"));
+                Map(x => x.PreviousLA).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "PreviousLA"));
             }
 
             private CodeNamePair BuildCodeNamePair(

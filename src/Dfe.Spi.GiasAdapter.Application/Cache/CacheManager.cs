@@ -129,7 +129,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             {
                 return false;
             }
-            if (current.La?.Code != staging.La?.Code)
+            if (current.LA?.Code != staging.LA?.Code)
             {
                 return false;
             }

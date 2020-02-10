@@ -2,8 +2,6 @@
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing;
 using NUnit.Framework;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests
 {

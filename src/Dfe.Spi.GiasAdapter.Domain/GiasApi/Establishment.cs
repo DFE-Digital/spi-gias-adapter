@@ -9,7 +9,7 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public CodeNamePair EstablishmentStatus { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
-        public CodeNamePair La { get; set; }
+        public CodeNamePair LA { get; set; }
         public string Postcode { get; set; }
         public string EstablishmentName { get; set; }
         public long Urn { get; set; }
@@ -36,6 +36,13 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public string InspectorateReport { get; set; }
         public string TeenMothName { get; set; }
         public int? TeenMothPlaces { get; set; }
+        public CodeNamePair ReasonEstablishmentOpened { get; set; }
+        public CodeNamePair ReasonEstablishmentClosed { get; set; }
+        public CodeNamePair PhaseOfEducation { get; set; }
+        public string FurtherEducationTypeName { get; set; }
+        public CodeNamePair OfficialSixthForm { get; set; }
+        public CodeNamePair Diocese { get; set; }
+        public CodeNamePair PreviousLA { get; set; }
 
         // Not being populated - but leaving on the model for now, as not
         // to break things.
