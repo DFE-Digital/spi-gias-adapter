@@ -57,9 +57,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                     LA = root.GetCodeNamePairFromChildElement("LA"),
                     Postcode = root.GetValueFromChildElement("Postcode"),
                     EstablishmentName = root.GetValueFromChildElement("EstablishmentName"),
-                    Ukprn = root.GetLongFromChildElement("UKRPN"),
+                    Ukprn = root.GetLongFromChildElement("UKPRN"),
                     Uprn = root.GetValueFromChildElement("UPRN"),
-                    Trusts = root.GetCodeNamePairFromChildElement("Trusts"),
+                    Trusts = root.GetElementByLocalName("Trusts")?.GetCodeNamePairFromChildElement("Value"),
                     EstablishmentNumber = root.GetLongFromChildElement("EstablishmentNumber"),
                     PreviousEstablishmentNumber = root.GetLongFromChildElement("PreviousEstablishmentNumber"),
 
