@@ -42,12 +42,15 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                 Map(x => x.OfstedLastInsp).Name("OfstedLastInsp");
                 Map(x => x.LastChangedDate).Name("LastChangedDate");
                 Map(x => x.DateOfLastInspectionVisit).Name("DateOfLastInspectionVisit");
-                Map(x => x.OfstedRatingName).Name("OfstedRating (name)");
+                Map(x => x.OfstedRating).ConvertUsing(
+                    x=> this.BuildCodeNamePair(x, "OfstedRating"));
                 Map(x => x.AdmissionsPolicy).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "AdmissionsPolicy"));
-                Map(x => x.InspectorateNameName).Name("InspectorateName (name)");
+                Map(x => x.InspectorateName).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "InspectorateName"));
                 Map(x => x.InspectorateReport).Name("InspectorateReport");
-                Map(x => x.TeenMothName).Name("TeenMoth (name)");
+                Map(x => x.TeenMoth).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "TeenMoth"));
                 Map(x => x.TeenMothPlaces).Name("TeenMothPlaces");
                 Map(x => x.ReasonEstablishmentOpened).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "ReasonEstablishmentOpened"));
@@ -55,7 +58,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                     x => this.BuildCodeNamePair(x, "ReasonEstablishmentClosed"));
                 Map(x => x.PhaseOfEducation).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "PhaseOfEducation"));
-                Map(x => x.FurtherEducationTypeName).Name("FurtherEducationType (name)");
+                Map(x => x.FurtherEducationType).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "FurtherEducationType"));
                 Map(x => x.OfficialSixthForm).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "OfficialSixthForm"));
                 Map(x => x.Diocese).ConvertUsing(
@@ -68,16 +72,20 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                     x => this.BuildCodeNamePair(x, "AdministrativeWard"));
                 Map(x => x.Gor).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "GOR"));
-                Map(x => x.RscRegionName).Name("RSCRegion (name)");
-                Map(x => x.Section41ApprovedName).Name("Section41Approved (name)");
+                Map(x => x.RscRegion).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "RSCRegion"));
+                Map(x => x.Section41Approved).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "Section41Approved"));
                 Map(x => x.Easting).Name("Easting");
                 Map(x => x.Northing).Name("Northing");
-                Map(x => x.GsslaCodeName).Name("GSSLACode (name)");
+                Map(x => x.GsslaCode).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "GSSLACode"));
                 Map(x => x.UrbanRural).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "UrbanRural"));
                 Map(x => x.Federations).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "Federations"));
-                Map(x => x.FederationFlagName).Name("FederationFlag (name)");
+                Map(x => x.FederationFlag).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "FederationFlag"));
             }
 
             private CodeNamePair BuildCodeNamePair(

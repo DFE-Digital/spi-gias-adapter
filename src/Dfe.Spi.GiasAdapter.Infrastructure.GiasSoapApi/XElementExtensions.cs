@@ -63,5 +63,17 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
 
             return long.Parse(value);
         }
+
+        internal static decimal? GetDecimalFromChildElement(this XElement containerElement, string localName)
+        {
+            string value = containerElement.GetValueFromChildElement(localName);
+
+            if (value == null)
+            {
+                return null;
+            }
+
+            return decimal.Parse(value);
+        }
     }
 }
