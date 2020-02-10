@@ -41,19 +41,20 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         public async Task ThenItShouldMapEstablishmentToLearningProviderForBasicTypeProperties(Establishment source)
         {
             var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken);
+            string expectedDfeNumber = EstablishmentMapper.CreateDfeNumber(source);
 
             Assert.IsNotNull(actual);
-            Assert.AreEqual(source.Name, actual.Name);
+            Assert.AreEqual(source.EstablishmentName, actual.Name);
             Assert.AreEqual(source.Urn, actual.Urn);
             Assert.AreEqual(source.Ukprn, actual.Ukprn);
             Assert.AreEqual(source.Ukprn, actual.Ukprn);
             Assert.AreEqual(source.Uprn, actual.Uprn);
             Assert.AreEqual(source.CompaniesHouseNumber, actual.CompaniesHouseNumber);
             Assert.AreEqual(source.CharitiesCommissionNumber, actual.CharitiesCommissionNumber);
-            Assert.AreEqual(source.AcademyTrustCode, actual.AcademyTrustCode);
-            Assert.AreEqual($"{source.LocalAuthorityCode}/{source.EstablishmentNumber}", actual.DfeNumber);
-            Assert.AreEqual(source.EstablishmentNumber, actual.EstablishmentNumber);
-            Assert.AreEqual(source.EstablishmentNumber, actual.EstablishmentNumber);
+            Assert.AreEqual(source.Trusts.Code?.ToString(), actual.AcademyTrustCode);
+            Assert.AreEqual(expectedDfeNumber, actual.DfeNumber);
+            Assert.AreEqual(source.EstablishmentNumber?.ToString(), actual.EstablishmentNumber);
+            Assert.AreEqual(source.PreviousEstablishmentNumber?.ToString(), actual.PreviousEstablishmentNumber);
             Assert.AreEqual(source.Postcode, actual.Postcode);
             Assert.AreEqual(source.OpenDate, actual.OpenDate);
             Assert.AreEqual(source.CloseDate, actual.CloseDate);

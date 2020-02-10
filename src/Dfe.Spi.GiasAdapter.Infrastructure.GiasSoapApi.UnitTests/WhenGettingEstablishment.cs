@@ -68,7 +68,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
 
             Assert.IsNotNull(actual);
             Assert.AreEqual(urn, actual.Urn);
-            Assert.AreEqual(establishmentName, actual.Name);
+            Assert.AreEqual(establishmentName, actual.EstablishmentName);
             Assert.AreEqual(ukprn, actual.Ukprn);
             Assert.AreEqual(postcode, actual.Postcode);
             Assert.AreEqual(statusCode, actual.EstablishmentStatus.Code);

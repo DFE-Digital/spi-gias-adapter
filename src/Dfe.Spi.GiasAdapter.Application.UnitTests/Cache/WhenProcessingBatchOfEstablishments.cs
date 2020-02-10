@@ -37,7 +37,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Establishment establishment, CancellationToken cancellationToken) => new LearningProvider
                 {
-                    Name = establishment.Name,
+                    Name = establishment.EstablishmentName,
                 });
 
             _eventPublisherMock = new Mock<IEventPublisher>();
@@ -50,7 +50,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync((long urn, CancellationToken cancellationToken) => new Establishment
                 {
                     Urn = urn,
-                    Name = urn.ToString()
+                    EstablishmentName = urn.ToString()
                 });
 
             _loggerMock = new Mock<ILoggerWrapper>();
@@ -124,7 +124,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new Establishment
                 {
                     Urn = urn,
-                    Name = urn.ToString()
+                    EstablishmentName = urn.ToString()
                 }); 
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(learningProvider);
@@ -143,14 +143,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new Establishment
                 {
                     Urn = urn,
-                    Name = "old name"
+                    EstablishmentName = "old name"
                 });
             _establishmentRepositoryMock.Setup(r =>
                     r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Establishment
                 {
                     Urn = urn,
-                    Name = urn.ToString()
+                    EstablishmentName = urn.ToString()
                 }); 
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(learningProvider);
@@ -169,14 +169,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new Establishment
                 {
                     Urn = urn,
-                    Name = urn.ToString()
+                    EstablishmentName = urn.ToString()
                 });
             _establishmentRepositoryMock.Setup(r =>
                     r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Establishment
                 {
                     Urn = urn,
-                    Name = urn.ToString()
+                    EstablishmentName = urn.ToString()
                 }); 
             
             await _manager.ProcessBatchOfEstablishments(new[]{urn}, _cancellationToken);

@@ -115,14 +115,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
                 Urn = establishment.Urn,
-                Name = establishment.Name,
+                Name = establishment.EstablishmentName,
                 Ukprn = establishment.Ukprn,
                 CompaniesHouseNumber = establishment.CompaniesHouseNumber,
                 CharitiesCommissionNumber = establishment.CharitiesCommissionNumber,
-                AcademyTrustCode = establishment.AcademyTrustCode,
-                LocalAuthorityCode = establishment.LocalAuthorityCode,
-                EstablishmentNumber = establishment.EstablishmentNumber,
-                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber,
+                AcademyTrustCode = establishment.Trusts.Code?.ToString(),
+                LocalAuthorityCode = establishment.La.Code?.ToString(),
+                EstablishmentNumber = establishment.EstablishmentNumber?.ToString(),
+                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber?.ToString(),
                 Postcode = establishment.Postcode,
             };
         }
@@ -132,16 +132,39 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             return new Establishment
             {
                 Urn = entity.Urn,
-                Name = entity.Name,
+                EstablishmentName = entity.Name,
                 Ukprn = entity.Ukprn,
                 CompaniesHouseNumber = entity.CompaniesHouseNumber,
                 CharitiesCommissionNumber = entity.CharitiesCommissionNumber,
-                AcademyTrustCode = entity.AcademyTrustCode,
-                LocalAuthorityCode = entity.LocalAuthorityCode,
-                EstablishmentNumber = entity.EstablishmentNumber,
-                PreviousEstablishmentNumber = entity.PreviousEstablishmentNumber,
+                Trusts = this.CreateCodeNamePair(entity.AcademyTrustCode),
+                La = this.CreateCodeNamePair(entity.LocalAuthorityCode),
+                EstablishmentNumber = this.ParseNullable(entity.EstablishmentNumber),
+                PreviousEstablishmentNumber = this.ParseNullable(entity.PreviousEstablishmentNumber),
                 Postcode = entity.Postcode,
             };
+        }
+
+        private CodeNamePair CreateCodeNamePair(string value)
+        {
+            CodeNamePair toReturn = new CodeNamePair()
+            {
+                Code = this.ParseNullable(value),
+            };
+
+            return toReturn;
+        }
+
+        private int? ParseNullable(string value)
+        {
+            int? toReturn = null;
+
+            int parsedCode;
+            if (int.TryParse(value, out parsedCode))
+            {
+                toReturn = parsedCode;
+            }
+
+            return toReturn;
         }
         
         private string GetStagingPartitionKey(long urn)

@@ -36,16 +36,16 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 
             var learningProvider = new LearningProvider
             {
-                Name = establishment.Name,
+                Name = establishment.EstablishmentName,
                 Urn = establishment.Urn,
                 Ukprn = establishment.Ukprn,
                 Uprn = establishment.Uprn,
                 CompaniesHouseNumber = establishment.CompaniesHouseNumber,
                 CharitiesCommissionNumber = establishment.CharitiesCommissionNumber,
-                AcademyTrustCode = establishment.AcademyTrustCode,
-                DfeNumber = $"{establishment.LocalAuthorityCode}/{establishment.EstablishmentNumber}",
-                EstablishmentNumber = establishment.EstablishmentNumber,
-                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber,
+                AcademyTrustCode = establishment.Trusts.Code?.ToString(),
+                DfeNumber = CreateDfeNumber(establishment),
+                EstablishmentNumber = establishment.EstablishmentNumber?.ToString(),
+                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber?.ToString(),
                 Postcode = establishment.Postcode,
                 OpenDate = establishment.OpenDate,
                 CloseDate = establishment.CloseDate,
@@ -59,6 +59,18 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 establishment.TypeOfEstablishment, cancellationToken);
             
             return learningProvider as TDestination;
+        }
+
+        public static string CreateDfeNumber(Establishment establishment)
+        {
+            string toReturn = null;
+
+            if (establishment.La.Code.HasValue && establishment.EstablishmentNumber.HasValue)
+            {
+                toReturn = $"{establishment.La.Code}/{establishment.EstablishmentNumber}";
+            }
+
+            return toReturn;
         }
 
         private async Task<string> TranslateCodeNamePairAsync(string enumName, CodeNamePair codeNamePair,

@@ -48,7 +48,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                 var establishment = new Establishment
                 {
                     Urn = urn,
-                    Name = establishmentElement.GetElementByLocalName("EstablishmentName").Value,
+                    EstablishmentName = establishmentElement.GetElementByLocalName("EstablishmentName").Value,
                     Postcode = establishmentElement.GetElementByLocalName("Postcode")?.Value,
                     EstablishmentStatus =
                         GetCodeNamePairFromElement(establishmentElement.GetElementByLocalName("EstablishmentStatus")),
