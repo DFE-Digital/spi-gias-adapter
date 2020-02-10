@@ -23,6 +23,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests
 
             Establishment[] establishments =
                 establishmentFileParser.GetRecords();
+
+            Assert.AreEqual(establishments.Length, 48354);
         }
     }
 }

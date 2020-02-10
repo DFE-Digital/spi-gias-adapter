@@ -12,7 +12,15 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public string SchoolWebsite { get; set; }
         public CodeNamePair Gender { get; set; }
         public decimal? PercentageFsm { get; set; }
+        public DateTime? OpenDate { get; set; }
+        public DateTime? CloseDate { get; set; }
         public CodeNamePair EstablishmentStatus { get; set; }
+        public DateTime? OfstedLastInsp { get; set; }
+        public DateTime? LastChangedDate { get; set; }
+        public DateTime? DateOfLastInspectionVisit { get; set; }
+        public string OfstedRatingName { get; set; }
+        public CodeNamePair EstablishmentTypeGroup { get; set; }
+        public CodeNamePair TypeOfEstablishment { get; set; }
 
         public long Urn { get; set; }
         public long? Ukprn { get; set; }
@@ -24,9 +32,5 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public string EstablishmentNumber { get; set; }
         public string PreviousEstablishmentNumber { get; set; }
         public string Postcode { get; set; }
-        public CodeNamePair EstablishmentTypeGroup { get; set; }
-        public CodeNamePair TypeOfEstablishment { get; set; }
-        public DateTime? OpenDate { get; set; }
-        public DateTime? CloseDate { get; set; }
     }
 }

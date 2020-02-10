@@ -30,6 +30,17 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                 Map(x => x.EstablishmentStatus).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "EstablishmentStatus"));
 
+                Map(x => x.OfstedLastInsp).Name("OfstedLastInsp");
+                Map(x => x.LastChangedDate).Name("LastChangedDate");
+                Map(x => x.DateOfLastInspectionVisit).Name("DateOfLastInspectionVisit");
+                Map(x => x.OfstedRatingName).Name("OfstedRating (name)");
+
+                Map(x => x.EstablishmentTypeGroup).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "EstablishmentTypeGroup"));
+
+                Map(x => x.TypeOfEstablishment).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "TypeOfEstablishment"));
+
                 // End, in-line with spreadsheet.
                 Map(x => x.Urn).Name("URN");
                 Map(x => x.Ukprn).Name("UKPRN");
