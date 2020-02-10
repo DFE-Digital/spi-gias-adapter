@@ -7,6 +7,7 @@ using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Microsoft.Azure.Cosmos.Table;
+using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
@@ -114,55 +115,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             {
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
-                Urn = establishment.Urn,
-                Name = establishment.EstablishmentName,
-                Ukprn = establishment.Ukprn,
-                CompaniesHouseNumber = establishment.CompaniesHouseNumber,
-                CharitiesCommissionNumber = establishment.CharitiesCommissionNumber,
-                AcademyTrustCode = establishment.Trusts.Code?.ToString(),
-                LocalAuthorityCode = establishment.LA.Code?.ToString(),
-                EstablishmentNumber = establishment.EstablishmentNumber?.ToString(),
-                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber?.ToString(),
-                Postcode = establishment.Postcode,
+                Establishment = JsonConvert.SerializeObject(establishment),
             };
         }
 
         private Establishment EntityToModel(EstablishmentEntity entity)
         {
-            return new Establishment
-            {
-                Urn = entity.Urn,
-                EstablishmentName = entity.Name,
-                Ukprn = entity.Ukprn,
-                CompaniesHouseNumber = entity.CompaniesHouseNumber,
-                CharitiesCommissionNumber = entity.CharitiesCommissionNumber,
-                Trusts = this.CreateCodeNamePair(entity.AcademyTrustCode),
-                LA = this.CreateCodeNamePair(entity.LocalAuthorityCode),
-                EstablishmentNumber = this.ParseNullableInt(entity.EstablishmentNumber),
-                PreviousEstablishmentNumber = this.ParseNullableInt(entity.PreviousEstablishmentNumber),
-                Postcode = entity.Postcode,
-            };
-        }
-
-        private CodeNamePair CreateCodeNamePair(string value)
-        {
-            return new CodeNamePair()
-            {
-                Code = value,
-            };
-        }
-
-        private int? ParseNullableInt(string value)
-        {
-            int? toReturn = null;
-
-            int parsedCode;
-            if (int.TryParse(value, out parsedCode))
-            {
-                toReturn = parsedCode;
-            }
-
-            return toReturn;
+            return JsonConvert.DeserializeObject<Establishment>(
+                entity.Establishment);
         }
         
         private string GetStagingPartitionKey(long urn)
