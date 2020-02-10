@@ -43,65 +43,26 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             {
                 var result = EnsureSuccessResponseAndExtractResult(response);
 
-                var establishmentElement = result.GetElementByLocalName("Establishment");
+                var root = result.GetElementByLocalName("Establishment");
 
                 var establishment = new Establishment
                 {
                     Urn = urn,
-                    EstablishmentName = establishmentElement.GetElementByLocalName("EstablishmentName").Value,
-                    Postcode = establishmentElement.GetElementByLocalName("Postcode")?.Value,
-                    EstablishmentStatus =
-                        GetCodeNamePairFromElement(establishmentElement.GetElementByLocalName("EstablishmentStatus")),
-                    EstablishmentTypeGroup =
-                        GetCodeNamePairFromElement(
-                            establishmentElement.GetElementByLocalName("EstablishmentTypeGroup")),
-                    TypeOfEstablishment =
-                        GetCodeNamePairFromElement(establishmentElement.GetElementByLocalName("TypeOfEstablishment")),
-                    OpenDate = GetDateTimeFromElement(establishmentElement.GetElementByLocalName("OpenDate")),
-                    CloseDate = GetDateTimeFromElement(establishmentElement.GetElementByLocalName("CloseDate")),
+
+                    EstablishmentTypeGroup = root.GetCodeNamePairFromChildElement("EstablishmentTypeGroup"),
+                    TypeOfEstablishment = root.GetCodeNamePairFromChildElement("TypeOfEstablishment"),
+                    EstablishmentStatus = root.GetCodeNamePairFromChildElement("EstablishmentStatus"),
+                    OpenDate = root.GetDateTimeFromChildElement("OpenDate"),
+                    CloseDate = root.GetDateTimeFromChildElement("CloseDate"),
+                    LA = root.GetCodeNamePairFromChildElement("LA"),
+                    Postcode = root.GetValueFromChildElement("Postcode"),
+                    EstablishmentName = root.GetValueFromChildElement("EstablishmentName"),
+                    Ukprn = root.GetLongFromChildElement("UKRPN"),
+                    Uprn = root.GetValueFromChildElement("UPRN"),
+                    Trusts = root.GetCodeNamePairFromChildElement("Trusts"),
+                    EstablishmentNumber = root.GetLongFromChildElement("EstablishmentNumber"),
+                    PreviousEstablishmentNumber = root.GetLongFromChildElement("PreviousEstablishmentNumber"),
                 };
-
-                var ukprnElement = establishmentElement.GetElementByLocalName("UKPRN");
-                if (ukprnElement != null && !string.IsNullOrEmpty(ukprnElement.Value))
-                {
-                    establishment.Ukprn = long.Parse(ukprnElement.Value);
-                }
-
-                var uprnElement = establishmentElement.GetElementByLocalName("UPRN");
-                if (uprnElement != null && !string.IsNullOrEmpty(uprnElement.Value))
-                {
-                    establishment.Uprn = uprnElement.Value;
-                }
-
-                var trustElement = establishmentElement.GetElementByLocalName("Trusts");
-                if (trustElement != null && !string.IsNullOrEmpty(trustElement.Value))
-                {
-                    establishment.Trusts = new CodeNamePair()
-                    {
-                        Code = trustElement.GetElementByLocalName("Value").GetElementByLocalName("Code").Value
-                    };
-                }
-
-                var laElement = establishmentElement.GetElementByLocalName("LA");
-                if (laElement != null && !string.IsNullOrEmpty(laElement.Value))
-                {
-                    establishment.LA = new CodeNamePair()
-                    {
-                        Code = laElement.GetElementByLocalName("Code").Value,
-                    };
-                }
-
-                var establishmentNumberElement = establishmentElement.GetElementByLocalName("EstablishmentNumber");
-                if (establishmentNumberElement != null && !string.IsNullOrEmpty(establishmentNumberElement.Value))
-                {
-                    establishment.EstablishmentNumber = long.Parse(establishmentNumberElement.Value);
-                }
-
-                var previousEstablishmentNumberElement = establishmentElement.GetElementByLocalName("PreviousEstablishmentNumber");
-                if (previousEstablishmentNumberElement != null && !string.IsNullOrEmpty(previousEstablishmentNumberElement.Value))
-                {
-                    establishment.PreviousEstablishmentNumber = long.Parse(previousEstablishmentNumberElement.Value);
-                }
 
                 return establishment;
             }
@@ -148,30 +109,6 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             }
 
             return body.Elements().First();
-        }
-
-        private static CodeNamePair GetCodeNamePairFromElement(XElement element)
-        {
-            if (element == null)
-            {
-                return null;
-            }
-
-            return new CodeNamePair
-            {
-                Code = element.GetElementByLocalName("Code").Value,
-                DisplayName = element.GetElementByLocalName("DisplayName").Value,
-            };
-        }
-
-        private static DateTime? GetDateTimeFromElement(XElement element)
-        {
-            if (element == null || string.IsNullOrEmpty(element.Value))
-            {
-                return null;
-            }
-
-            return DateTime.Parse(element.Value);
         }
     }
 }
