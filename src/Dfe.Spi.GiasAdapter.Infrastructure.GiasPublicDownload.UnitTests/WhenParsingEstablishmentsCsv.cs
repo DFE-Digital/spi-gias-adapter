@@ -11,7 +11,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests
         public void ThenItShouldParseWithSuccess()
         {
             FileInfo sampleFile = new FileInfo(
-                "Samples\\edubasealldata20200210.csv");
+                "Samples/edubasealldata20200210.csv");
 
             FileStream fileStream = sampleFile.OpenRead();
             StreamReader streamReader = new StreamReader(fileStream);
