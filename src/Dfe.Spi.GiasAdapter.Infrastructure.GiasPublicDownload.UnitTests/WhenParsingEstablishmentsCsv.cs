@@ -8,6 +8,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests
     public class WhenParsingEstablishmentsCsv
     {
         [Test]
+        [SetCulture("en-GB")]
         public void ThenItShouldParseWithSuccess()
         {
             FileInfo sampleFile = new FileInfo(
