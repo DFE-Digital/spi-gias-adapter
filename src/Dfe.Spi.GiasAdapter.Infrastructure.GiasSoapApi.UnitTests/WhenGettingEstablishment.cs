@@ -58,7 +58,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
         [Test, AutoData]
         public async Task ThenItShouldReturnDeserializedEstablishment(long urn, string establishmentName, long ukprn,
             string postcode,
-            int statusCode, string statusName, int typeGroupCode, string typeGroupName, int typeCode, string typeName)
+            string statusCode, string statusName, string typeGroupCode, string typeGroupName, string typeCode, string typeName)
         {
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(GetValidResponse(urn, establishmentName, ukprn, postcode, statusCode, statusName,
@@ -107,8 +107,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
 
         private IRestResponse GetValidResponse(long urn, string establishmentName, long? ukprn = null,
             string postcode = null,
-            int? statusCode = null, string statusName = null, int? typeGroupCode = null, string typeGroupName = null,
-            int? typeCode = null, string typeName = null)
+            string statusCode = null, string statusName = null, string typeGroupCode = null, string typeGroupName = null,
+            string typeCode = null, string typeName = null)
         {
             XNamespace giasNs = "http://ws.edubase.texunatech.com";
             XNamespace establishmentNs = "http://ws.edubase.texunatech.com/Establishment";
@@ -127,24 +127,24 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
                 establishment.Add(new XElement(establishmentNs + "Postcode", postcode));
             }
 
-            if (statusCode.HasValue)
+            if (!string.IsNullOrEmpty(statusCode))
             {
                 establishment.Add(new XElement(establishmentNs + "EstablishmentStatus",
-                    new XElement(dataTypesNs + "Code", statusCode.Value),
+                    new XElement(dataTypesNs + "Code", statusCode),
                     new XElement(dataTypesNs + "DisplayName", statusName)));
             }
 
-            if (typeGroupCode.HasValue)
+            if (!string.IsNullOrEmpty(typeGroupCode))
             {
                 establishment.Add(new XElement(establishmentNs + "EstablishmentTypeGroup",
-                    new XElement(dataTypesNs + "Code", typeGroupCode.Value),
+                    new XElement(dataTypesNs + "Code", typeGroupCode),
                     new XElement(dataTypesNs + "DisplayName", typeGroupName)));
             }
 
-            if (typeCode.HasValue)
+            if (!string.IsNullOrEmpty(typeCode))
             {
                 establishment.Add(new XElement(establishmentNs + "TypeOfEstablishment",
-                    new XElement(dataTypesNs + "Code", typeCode.Value),
+                    new XElement(dataTypesNs + "Code", typeCode),
                     new XElement(dataTypesNs + "DisplayName", typeName)));
             }
 

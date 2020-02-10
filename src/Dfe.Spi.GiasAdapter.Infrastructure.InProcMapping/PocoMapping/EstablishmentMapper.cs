@@ -65,7 +65,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
         {
             string toReturn = null;
 
-            if (establishment.LA.Code.HasValue && establishment.EstablishmentNumber.HasValue)
+            if ((!string.IsNullOrEmpty(establishment.LA.Code)) && establishment.EstablishmentNumber.HasValue)
             {
                 toReturn = $"{establishment.LA.Code}/{establishment.EstablishmentNumber}";
             }

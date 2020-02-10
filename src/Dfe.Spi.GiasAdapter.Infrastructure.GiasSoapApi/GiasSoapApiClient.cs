@@ -123,7 +123,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
 
             return new CodeNamePair
             {
-                Code = int.Parse(element.GetElementByLocalName("Code").Value),
+                Code = element.GetElementByLocalName("Code").Value,
                 DisplayName = element.GetElementByLocalName("DisplayName").Value,
             };
         }

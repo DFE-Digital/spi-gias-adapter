@@ -72,7 +72,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
             {
                 CodeNamePair toReturn = new CodeNamePair()
                 {
-                    Code = readerRow.GetField<int?>($"{fieldName} (code)"),
+                    Code = readerRow.GetField<string>($"{fieldName} (code)"),
                     DisplayName = readerRow.GetField<string>($"{fieldName} (name)"),
                 };
 

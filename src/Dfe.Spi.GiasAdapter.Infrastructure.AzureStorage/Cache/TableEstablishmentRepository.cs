@@ -138,23 +138,21 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 CharitiesCommissionNumber = entity.CharitiesCommissionNumber,
                 Trusts = this.CreateCodeNamePair(entity.AcademyTrustCode),
                 LA = this.CreateCodeNamePair(entity.LocalAuthorityCode),
-                EstablishmentNumber = this.ParseNullable(entity.EstablishmentNumber),
-                PreviousEstablishmentNumber = this.ParseNullable(entity.PreviousEstablishmentNumber),
+                EstablishmentNumber = this.ParseNullableInt(entity.EstablishmentNumber),
+                PreviousEstablishmentNumber = this.ParseNullableInt(entity.PreviousEstablishmentNumber),
                 Postcode = entity.Postcode,
             };
         }
 
         private CodeNamePair CreateCodeNamePair(string value)
         {
-            CodeNamePair toReturn = new CodeNamePair()
+            return new CodeNamePair()
             {
-                Code = this.ParseNullable(value),
+                Code = value,
             };
-
-            return toReturn;
         }
 
-        private int? ParseNullable(string value)
+        private int? ParseNullableInt(string value)
         {
             int? toReturn = null;
 
