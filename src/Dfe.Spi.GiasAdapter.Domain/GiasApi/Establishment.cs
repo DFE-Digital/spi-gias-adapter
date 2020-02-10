@@ -20,7 +20,6 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public int? PreviousEstablishmentNumber { get; set; }
 
         public CodeNamePair Boarders { get; set; }
-        public string BoardersName { get; set; }
         public int? StatutoryLowAge { get; set; }
         public int? StatutoryHighAge { get; set; }
         public string SchoolWebsite { get; set; }
@@ -43,6 +42,17 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public CodeNamePair OfficialSixthForm { get; set; }
         public CodeNamePair Diocese { get; set; }
         public CodeNamePair PreviousLA { get; set; }
+        public CodeNamePair DistrictAdministrative { get; set; }
+        public CodeNamePair AdministrativeWard { get; set; }
+        public CodeNamePair Gor { get; set; }
+        public string RscRegionName { get; set; }
+        public string Section41ApprovedName { get; set; }
+        public long? Easting { get; set; }
+        public long? Northing { get; set; }
+        public string GsslaCodeName { get; set; }
+        public CodeNamePair UrbanRural { get; set; }
+        public CodeNamePair Federations { get; set; }
+        public string FederationFlagName { get; set; }
 
         // Not being populated - but leaving on the model for now, as not
         // to break things.

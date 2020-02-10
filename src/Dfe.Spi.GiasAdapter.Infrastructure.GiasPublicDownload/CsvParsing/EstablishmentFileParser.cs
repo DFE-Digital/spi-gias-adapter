@@ -58,12 +58,26 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                 Map(x => x.FurtherEducationTypeName).Name("FurtherEducationType (name)");
                 Map(x => x.OfficialSixthForm).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "OfficialSixthForm"));
-                // TODO: Looks like the code parts of CodeNamePairs can be
-                //       strings!
-                // Map(x => x.Diocese).ConvertUsing(
-                //    x => this.BuildCodeNamePair(x, "Diocese"));
+                Map(x => x.Diocese).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "Diocese"));
                 Map(x => x.PreviousLA).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "PreviousLA"));
+                Map(x => x.DistrictAdministrative).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "DistrictAdministrative"));
+                Map(x => x.AdministrativeWard).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "AdministrativeWard"));
+                Map(x => x.Gor).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "GOR"));
+                Map(x => x.RscRegionName).Name("RSCRegion (name)");
+                Map(x => x.Section41ApprovedName).Name("Section41Approved (name)");
+                Map(x => x.Easting).Name("Easting");
+                Map(x => x.Northing).Name("Northing");
+                Map(x => x.GsslaCodeName).Name("GSSLACode (name)");
+                Map(x => x.UrbanRural).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "UrbanRural"));
+                Map(x => x.Federations).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "Federations"));
+                Map(x => x.FederationFlagName).Name("FederationFlag (name)");
             }
 
             private CodeNamePair BuildCodeNamePair(
