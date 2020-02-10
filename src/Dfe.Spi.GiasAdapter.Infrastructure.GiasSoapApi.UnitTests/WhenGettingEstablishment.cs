@@ -58,7 +58,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
 
         [Test, AutoData]
         public async Task ThenItShouldReturnDeserializedEstablishment(long urn, string establishmentName, long ukprn,
-            string postcode,
+            string postcode, string uprn, string academyTrustCode, string localAuthorityCode, long establishmentNumber,
+            long previousEstablishmentNumber,
             string statusCode, string statusName, string typeGroupCode, string typeGroupName, string typeCode, string typeName)
         {
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
@@ -73,8 +74,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             Assert.AreEqual(establishmentName, actual.EstablishmentName);
             Assert.AreEqual(ukprn, actual.Ukprn);
             Assert.AreEqual(uprn, actual.Uprn);
-            Assert.AreEqual(academyTrustCode, actual.AcademyTrustCode);
-            Assert.AreEqual(localAuthorityCode, actual.LocalAuthorityCode);
+            Assert.AreEqual(academyTrustCode, actual.Trusts.Code);
+            Assert.AreEqual(localAuthorityCode, actual.LA.Code);
             Assert.AreEqual(establishmentNumber, actual.EstablishmentNumber);
             Assert.AreEqual(previousEstablishmentNumber, actual.PreviousEstablishmentNumber);
             
@@ -114,7 +115,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
         private XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
 
         private IRestResponse GetValidResponse(long urn, string establishmentName, long? ukprn = null,
-            string postcode = null,
+            string postcode = null, string uprn = null, string academyTrustCode = null, string localAuthorityCode = null,
+            long? establishmentNumber = null, long? previousEstablishmentNumber = null,
             string statusCode = null, string statusName = null, string typeGroupCode = null, string typeGroupName = null,
             string typeCode = null, string typeName = null)
         {
@@ -125,35 +127,35 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             var establishment = new XElement(giasNs + "Establishment",
                 new XElement(establishmentNs + "URN", urn),
                 new XElement(establishmentNs + "EstablishmentName", establishmentName));
-            
+
             if (ukprn.HasValue)
             {
                 establishment.Add(new XElement(establishmentNs + "UKPRN", ukprn.Value));
             }
-            
+
             if (!string.IsNullOrEmpty(uprn))
             {
                 establishment.Add(new XElement(establishmentNs + "UPRN", uprn));
             }
-            
+
             if (!string.IsNullOrEmpty(academyTrustCode))
             {
-                establishment.Add(new XElement(establishmentNs + "Trusts", 
+                establishment.Add(new XElement(establishmentNs + "Trusts",
                     new XElement(dataTypesNs + "Value",
                         new XElement(dataTypesNs + "Code", academyTrustCode))));
             }
-            
+
             if (!string.IsNullOrEmpty(localAuthorityCode))
             {
-                establishment.Add(new XElement(establishmentNs + "LA", 
+                establishment.Add(new XElement(establishmentNs + "LA",
                         new XElement(dataTypesNs + "Code", localAuthorityCode)));
             }
-            
+
             if (establishmentNumber.HasValue)
             {
                 establishment.Add(new XElement(establishmentNs + "EstablishmentNumber", establishmentNumber.Value));
             }
-            
+
             if (previousEstablishmentNumber.HasValue)
             {
                 establishment.Add(new XElement(establishmentNs + "PreviousEstablishmentNumber", previousEstablishmentNumber.Value));

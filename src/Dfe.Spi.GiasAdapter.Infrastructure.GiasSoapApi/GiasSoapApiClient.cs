@@ -76,13 +76,19 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                 var trustElement = establishmentElement.GetElementByLocalName("Trusts");
                 if (trustElement != null && !string.IsNullOrEmpty(trustElement.Value))
                 {
-                    establishment.AcademyTrustCode = trustElement.GetElementByLocalName("Value").GetElementByLocalName("Code").Value;
+                    establishment.Trusts = new CodeNamePair()
+                    {
+                        Code = trustElement.GetElementByLocalName("Value").GetElementByLocalName("Code").Value
+                    };
                 }
 
                 var laElement = establishmentElement.GetElementByLocalName("LA");
                 if (laElement != null && !string.IsNullOrEmpty(laElement.Value))
                 {
-                    establishment.LocalAuthorityCode = laElement.GetElementByLocalName("Code").Value;
+                    establishment.LA = new CodeNamePair()
+                    {
+                        Code = laElement.GetElementByLocalName("Code").Value,
+                    };
                 }
 
                 var establishmentNumberElement = establishmentElement.GetElementByLocalName("EstablishmentNumber");

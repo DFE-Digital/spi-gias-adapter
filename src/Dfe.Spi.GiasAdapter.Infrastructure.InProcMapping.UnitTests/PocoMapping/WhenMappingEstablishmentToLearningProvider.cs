@@ -53,8 +53,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             Assert.AreEqual(source.CharitiesCommissionNumber, actual.CharitiesCommissionNumber);
             Assert.AreEqual(source.Trusts.Code?.ToString(), actual.AcademyTrustCode);
             Assert.AreEqual(expectedDfeNumber, actual.DfeNumber);
-            Assert.AreEqual(source.EstablishmentNumber?.ToString(), actual.EstablishmentNumber);
-            Assert.AreEqual(source.PreviousEstablishmentNumber?.ToString(), actual.PreviousEstablishmentNumber);
+            Assert.AreEqual(source.EstablishmentNumber, actual.EstablishmentNumber);
+            Assert.AreEqual(source.PreviousEstablishmentNumber, actual.PreviousEstablishmentNumber);
             Assert.AreEqual(source.Postcode, actual.Postcode);
             Assert.AreEqual(source.OpenDate, actual.OpenDate);
             Assert.AreEqual(source.CloseDate, actual.CloseDate);

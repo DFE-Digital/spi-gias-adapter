@@ -16,8 +16,8 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public long? Ukprn { get; set; }
         public string Uprn { get; set; }
         public CodeNamePair Trusts { get; set; }
-        public int? EstablishmentNumber { get; set; }
-        public int? PreviousEstablishmentNumber { get; set; }
+        public long? EstablishmentNumber { get; set; }
+        public long? PreviousEstablishmentNumber { get; set; }
 
         public CodeNamePair Boarders { get; set; }
         public int? StatutoryLowAge { get; set; }
