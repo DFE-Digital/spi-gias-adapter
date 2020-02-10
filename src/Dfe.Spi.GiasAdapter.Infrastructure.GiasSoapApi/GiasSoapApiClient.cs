@@ -67,6 +67,36 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                     establishment.Ukprn = long.Parse(ukprnElement.Value);
                 }
 
+                var uprnElement = establishmentElement.GetElementByLocalName("UPRN");
+                if (uprnElement != null && !string.IsNullOrEmpty(uprnElement.Value))
+                {
+                    establishment.Uprn = uprnElement.Value;
+                }
+
+                var trustElement = establishmentElement.GetElementByLocalName("Trusts");
+                if (trustElement != null && !string.IsNullOrEmpty(trustElement.Value))
+                {
+                    establishment.AcademyTrustCode = trustElement.GetElementByLocalName("Value").GetElementByLocalName("Code").Value;
+                }
+
+                var laElement = establishmentElement.GetElementByLocalName("LA");
+                if (laElement != null && !string.IsNullOrEmpty(laElement.Value))
+                {
+                    establishment.LocalAuthorityCode = laElement.GetElementByLocalName("Code").Value;
+                }
+
+                var establishmentNumberElement = establishmentElement.GetElementByLocalName("EstablishmentNumber");
+                if (establishmentNumberElement != null && !string.IsNullOrEmpty(establishmentNumberElement.Value))
+                {
+                    establishment.EstablishmentNumber = long.Parse(establishmentNumberElement.Value);
+                }
+
+                var previousEstablishmentNumberElement = establishmentElement.GetElementByLocalName("PreviousEstablishmentNumber");
+                if (previousEstablishmentNumberElement != null && !string.IsNullOrEmpty(previousEstablishmentNumberElement.Value))
+                {
+                    establishment.PreviousEstablishmentNumber = long.Parse(previousEstablishmentNumberElement.Value);
+                }
+
                 return establishment;
             }
             catch (SoapException ex)
