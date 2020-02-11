@@ -13,12 +13,12 @@ namespace PopulateInitialCache
         {
         }
 
-        public void Debug(string message)
+        public void Debug(string message, Exception exception = null)
         {
             Console.WriteLine(message);
         }
 
-        public void Info(string message)
+        public void Info(string message, Exception exception = null)
         {
             Console.WriteLine(message);
         }

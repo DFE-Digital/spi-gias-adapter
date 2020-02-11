@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
@@ -14,11 +15,13 @@ namespace Dfe.Spi.GiasAdapter.Functions.Cache
         private const string FunctionName = nameof(ProcessBatchOfEstablishments);
 
         private readonly ICacheManager _cacheManager;
+        private readonly IHttpSpiExecutionContextManager _httpSpiExecutionContextManager;
         private readonly ILoggerWrapper _logger;
 
-        public ProcessBatchOfEstablishments(ICacheManager cacheManager, ILoggerWrapper logger)
+        public ProcessBatchOfEstablishments(ICacheManager cacheManager, IHttpSpiExecutionContextManager httpSpiExecutionContextManager, ILoggerWrapper logger)
         {
             _cacheManager = cacheManager;
+            _httpSpiExecutionContextManager = httpSpiExecutionContextManager;
             _logger = logger;
         }
         
@@ -29,7 +32,8 @@ namespace Dfe.Spi.GiasAdapter.Functions.Cache
             string queueContent, 
             CancellationToken cancellationToken)
         {
-            _logger.SetInternalRequestId(Guid.NewGuid());
+            _httpSpiExecutionContextManager.SetInternalRequestId(Guid.NewGuid());
+
             _logger.Info($"{FunctionName} trigger with: {queueContent}");
 
             var urns = JsonConvert.DeserializeObject<long[]>(queueContent);

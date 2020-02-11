@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.Cache;
 using Dfe.Spi.GiasAdapter.Functions.Cache;
@@ -17,6 +18,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
     public class WhenProcesingABatchOfEstablishments
     {
         private Mock<ICacheManager> _cacheManagerMock;
+        private Mock<IHttpSpiExecutionContextManager> _httpSpiExecutionContextManagerMock;
         private Mock<ILoggerWrapper> _loggerMock;
         private ProcessBatchOfEstablishments _function;
         private CancellationToken _cancellationToken;
@@ -26,10 +28,13 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
         {
             _cacheManagerMock = new Mock<ICacheManager>();
 
+            _httpSpiExecutionContextManagerMock = new Mock<IHttpSpiExecutionContextManager>();
+
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _function = new ProcessBatchOfEstablishments(
                 _cacheManagerMock.Object,
+                _httpSpiExecutionContextManagerMock.Object,
                 _loggerMock.Object);
 
             _cancellationToken = default(CancellationToken);
