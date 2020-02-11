@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
@@ -17,6 +18,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
 {
     public class WhenGettingLearningProvider
     {
+        private Mock<IHttpSpiExecutionContextManager> _httpSpiExecutionContextManagerMock;
         private Mock<ILearningProviderManager> _learningProviderManagerMock;
         private Mock<ILoggerWrapper> _loggerMock;
         private GetLearningProvider _function;
@@ -27,9 +29,12 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
         {
             _learningProviderManagerMock = new Mock<ILearningProviderManager>();
 
+            _httpSpiExecutionContextManagerMock = new Mock<IHttpSpiExecutionContextManager>();
+
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _function = new GetLearningProvider(
+                _httpSpiExecutionContextManagerMock.Object,
                 _learningProviderManagerMock.Object,
                 _loggerMock.Object);
 

@@ -1,4 +1,7 @@
 using System.IO;
+using Dfe.Spi.Common.Context.Definitions;
+using Dfe.Spi.Common.Http.Server;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.Cache;
@@ -145,6 +148,8 @@ namespace Dfe.Spi.GiasAdapter.Functions
                 var establishmentProcessingQueue = sp.GetService<IEstablishmentProcessingQueue>();
                 return new CacheManager(apiClient, establishmentRepository, mapper, eventPublisher, establishmentProcessingQueue, logger);
             });
+            services.AddScoped<IHttpSpiExecutionContextManager, HttpSpiExecutionContextManager>();
+            services.AddScoped<ISpiExecutionContextManager>(x => x.GetService<IHttpSpiExecutionContextManager>());
         }
     }
 }

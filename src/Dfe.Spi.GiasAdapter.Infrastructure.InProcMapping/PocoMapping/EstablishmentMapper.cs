@@ -36,19 +36,25 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 
             var learningProvider = new LearningProvider
             {
+                Type = establishment.EstablishmentTypeGroup.Code,
+                SubType = establishment.TypeOfEstablishment.Code,
+                Status = establishment.EstablishmentStatus.Code,
+                OpenDate = establishment.OpenDate,
+                CloseDate = establishment.CloseDate,
+                LocalAuthorityCode = establishment.LA.Code,
+                ManagementGroupType = null, // Note: Not on establishment model.
+                Postcode = establishment.Postcode,
                 Name = establishment.EstablishmentName,
                 Urn = establishment.Urn,
                 Ukprn = establishment.Ukprn,
                 Uprn = establishment.Uprn,
                 CompaniesHouseNumber = establishment.CompaniesHouseNumber,
                 CharitiesCommissionNumber = establishment.CharitiesCommissionNumber,
-                AcademyTrustCode = establishment.Trusts.Code?.ToString(),
+                AcademyTrustCode = establishment.Trusts.Code,
+                Id = null, // Note: Not on establishment model.
                 DfeNumber = CreateDfeNumber(establishment),
                 EstablishmentNumber = establishment.EstablishmentNumber,
                 PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber,
-                Postcode = establishment.Postcode,
-                OpenDate = establishment.OpenDate,
-                CloseDate = establishment.CloseDate,
             };
 
             learningProvider.Status = await TranslateCodeNamePairAsync(EnumerationNames.ProviderStatus,
