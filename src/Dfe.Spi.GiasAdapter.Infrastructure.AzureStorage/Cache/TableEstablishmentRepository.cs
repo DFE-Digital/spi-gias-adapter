@@ -7,6 +7,7 @@ using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Microsoft.Azure.Cosmos.Table;
+using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
@@ -114,34 +115,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             {
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
-                Urn = establishment.Urn,
-                Name = establishment.Name,
-                Ukprn = establishment.Ukprn,
-                CompaniesHouseNumber = establishment.CompaniesHouseNumber,
-                CharitiesCommissionNumber = establishment.CharitiesCommissionNumber,
-                AcademyTrustCode = establishment.AcademyTrustCode,
-                LocalAuthorityCode = establishment.LocalAuthorityCode,
-                EstablishmentNumber = establishment.EstablishmentNumber,
-                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber,
-                Postcode = establishment.Postcode,
+                Establishment = JsonConvert.SerializeObject(establishment),
             };
         }
 
         private Establishment EntityToModel(EstablishmentEntity entity)
         {
-            return new Establishment
-            {
-                Urn = entity.Urn,
-                Name = entity.Name,
-                Ukprn = entity.Ukprn,
-                CompaniesHouseNumber = entity.CompaniesHouseNumber,
-                CharitiesCommissionNumber = entity.CharitiesCommissionNumber,
-                AcademyTrustCode = entity.AcademyTrustCode,
-                LocalAuthorityCode = entity.LocalAuthorityCode,
-                EstablishmentNumber = entity.EstablishmentNumber,
-                PreviousEstablishmentNumber = entity.PreviousEstablishmentNumber,
-                Postcode = entity.Postcode,
-            };
+            return JsonConvert.DeserializeObject<Establishment>(
+                entity.Establishment);
         }
         
         private string GetStagingPartitionKey(long urn)

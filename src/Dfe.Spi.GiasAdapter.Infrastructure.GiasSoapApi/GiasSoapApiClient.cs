@@ -43,59 +43,60 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             {
                 var result = EnsureSuccessResponseAndExtractResult(response);
 
-                var establishmentElement = result.GetElementByLocalName("Establishment");
+                var root = result.GetElementByLocalName("Establishment");
 
                 var establishment = new Establishment
                 {
                     Urn = urn,
-                    Name = establishmentElement.GetElementByLocalName("EstablishmentName").Value,
-                    Postcode = establishmentElement.GetElementByLocalName("Postcode")?.Value,
-                    EstablishmentStatus =
-                        GetCodeNamePairFromElement(establishmentElement.GetElementByLocalName("EstablishmentStatus")),
-                    EstablishmentTypeGroup =
-                        GetCodeNamePairFromElement(
-                            establishmentElement.GetElementByLocalName("EstablishmentTypeGroup")),
-                    TypeOfEstablishment =
-                        GetCodeNamePairFromElement(establishmentElement.GetElementByLocalName("TypeOfEstablishment")),
-                    OpenDate = GetDateTimeFromElement(establishmentElement.GetElementByLocalName("OpenDate")),
-                    CloseDate = GetDateTimeFromElement(establishmentElement.GetElementByLocalName("CloseDate")),
+
+                    EstablishmentTypeGroup = root.GetCodeNamePairFromChildElement("EstablishmentTypeGroup"),
+                    TypeOfEstablishment = root.GetCodeNamePairFromChildElement("TypeOfEstablishment"),
+                    EstablishmentStatus = root.GetCodeNamePairFromChildElement("EstablishmentStatus"),
+                    OpenDate = root.GetDateTimeFromChildElement("OpenDate"),
+                    CloseDate = root.GetDateTimeFromChildElement("CloseDate"),
+                    LA = root.GetCodeNamePairFromChildElement("LA"),
+                    Postcode = root.GetValueFromChildElement("Postcode"),
+                    EstablishmentName = root.GetValueFromChildElement("EstablishmentName"),
+                    Ukprn = root.GetLongFromChildElement("UKPRN"),
+                    Uprn = root.GetValueFromChildElement("UPRN"),
+                    Trusts = root.GetElementByLocalName("Trusts")?.GetCodeNamePairFromChildElement("Value"),
+                    EstablishmentNumber = root.GetLongFromChildElement("EstablishmentNumber"),
+                    PreviousEstablishmentNumber = root.GetLongFromChildElement("PreviousEstablishmentNumber"),
+
+                    Boarders = root.GetCodeNamePairFromChildElement("Boarders"),
+                    StatutoryLowAge = root.GetLongFromChildElement("StatutoryLowAge"),
+                    StatutoryHighAge = root.GetLongFromChildElement("StatutoryHighAge"),
+                    SchoolWebsite = root.GetValueFromChildElement("SchoolWebsite"),
+                    Gender = root.GetCodeNamePairFromChildElement("Gender"),
+                    PercentageFsm = root.GetDecimalFromChildElement("PercentageFSM"),
+                    OfstedLastInsp = root.GetDateTimeFromChildElement("OfstedLastInsp"),
+                    LastChangedDate = root.GetDateTimeFromChildElement("LastChangedDate"),
+                    DateOfLastInspectionVisit = root.GetDateTimeFromChildElement("DateOfLastInspectionVisit"),
+                    OfstedRating = root.GetCodeNamePairFromChildElement("OfstedRating"),
+                    AdmissionsPolicy = root.GetCodeNamePairFromChildElement("AdmissionsPolicy"),
+                    InspectorateName = root.GetCodeNamePairFromChildElement("InspectorateName"),
+                    InspectorateReport = root.GetValueFromChildElement("InspectorateReport"),
+                    TeenMoth = root.GetCodeNamePairFromChildElement("TeenMoth"),
+                    TeenMothPlaces = root.GetLongFromChildElement("TeenMothPlaces"),
+                    ReasonEstablishmentOpened = root.GetCodeNamePairFromChildElement("ReasonEstablishmentOpened"),
+                    ReasonEstablishmentClosed = root.GetCodeNamePairFromChildElement("ReasonEstablishmentClosed"),
+                    PhaseOfEducation = root.GetCodeNamePairFromChildElement("PhaseOfEducation"),
+                    FurtherEducationType = root.GetCodeNamePairFromChildElement("FurtherEducationType"),
+                    OfficialSixthForm = root.GetCodeNamePairFromChildElement("OfficialSixthForm"),
+                    Diocese = root.GetCodeNamePairFromChildElement("Diocese"),
+                    PreviousLA = null,  // NOTE: Does not seem to exist in the SOAP response!
+                    DistrictAdministrative = root.GetCodeNamePairFromChildElement("DistrictAdministrative"),
+                    AdministrativeWard = root.GetCodeNamePairFromChildElement("AdministrativeWard"),
+                    Gor = root.GetCodeNamePairFromChildElement("GOR"),
+                    RscRegion = root.GetCodeNamePairFromChildElement("RSCRegion"),
+                    Section41Approved = root.GetCodeNamePairFromChildElement("Section41Approved"),
+                    Easting = root.GetLongFromChildElement("Easting"),
+                    Northing = root.GetLongFromChildElement("Northing"),
+                    GsslaCode = root.GetCodeNamePairFromChildElement("GSSLACode"),
+                    UrbanRural = root.GetCodeNamePairFromChildElement("UrbanRural"),
+                    Federations = root.GetCodeNamePairFromChildElement("Federations"),
+                    FederationFlag = root.GetCodeNamePairFromChildElement("FederationFlag"),
                 };
-
-                var ukprnElement = establishmentElement.GetElementByLocalName("UKPRN");
-                if (ukprnElement != null && !string.IsNullOrEmpty(ukprnElement.Value))
-                {
-                    establishment.Ukprn = long.Parse(ukprnElement.Value);
-                }
-
-                var uprnElement = establishmentElement.GetElementByLocalName("UPRN");
-                if (uprnElement != null && !string.IsNullOrEmpty(uprnElement.Value))
-                {
-                    establishment.Uprn = uprnElement.Value;
-                }
-
-                var trustElement = establishmentElement.GetElementByLocalName("Trusts");
-                if (trustElement != null && !string.IsNullOrEmpty(trustElement.Value))
-                {
-                    establishment.AcademyTrustCode = trustElement.GetElementByLocalName("Value").GetElementByLocalName("Code").Value;
-                }
-
-                var laElement = establishmentElement.GetElementByLocalName("LA");
-                if (laElement != null && !string.IsNullOrEmpty(laElement.Value))
-                {
-                    establishment.LocalAuthorityCode = laElement.GetElementByLocalName("Code").Value;
-                }
-
-                var establishmentNumberElement = establishmentElement.GetElementByLocalName("EstablishmentNumber");
-                if (establishmentNumberElement != null && !string.IsNullOrEmpty(establishmentNumberElement.Value))
-                {
-                    establishment.EstablishmentNumber = long.Parse(establishmentNumberElement.Value);
-                }
-
-                var previousEstablishmentNumberElement = establishmentElement.GetElementByLocalName("PreviousEstablishmentNumber");
-                if (previousEstablishmentNumberElement != null && !string.IsNullOrEmpty(previousEstablishmentNumberElement.Value))
-                {
-                    establishment.PreviousEstablishmentNumber = long.Parse(previousEstablishmentNumberElement.Value);
-                }
 
                 return establishment;
             }
@@ -142,30 +143,6 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             }
 
             return body.Elements().First();
-        }
-
-        private static CodeNamePair GetCodeNamePairFromElement(XElement element)
-        {
-            if (element == null)
-            {
-                return null;
-            }
-
-            return new CodeNamePair
-            {
-                Code = int.Parse(element.GetElementByLocalName("Code").Value),
-                DisplayName = element.GetElementByLocalName("DisplayName").Value,
-            };
-        }
-
-        private static DateTime? GetDateTimeFromElement(XElement element)
-        {
-            if (element == null || string.IsNullOrEmpty(element.Value))
-            {
-                return null;
-            }
-
-            return DateTime.Parse(element.Value);
         }
     }
 }

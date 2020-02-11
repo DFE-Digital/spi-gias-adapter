@@ -105,7 +105,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
         private bool AreSame(Establishment current, Establishment staging)
         {
-            if (current.Name != staging.Name)
+            if (current.EstablishmentName != staging.EstablishmentName)
             {
                 return false;
             }
@@ -125,11 +125,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             {
                 return false;
             }
-            if (current.AcademyTrustCode != staging.AcademyTrustCode)
+            if (current.Trusts?.Code != staging.Trusts?.Code)
             {
                 return false;
             }
-            if (current.LocalAuthorityCode != staging.LocalAuthorityCode)
+            if (current.LA?.Code != staging.LA?.Code)
             {
                 return false;
             }
