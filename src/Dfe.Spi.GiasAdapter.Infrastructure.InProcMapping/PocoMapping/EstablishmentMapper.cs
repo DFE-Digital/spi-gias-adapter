@@ -94,12 +94,36 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 FederationFlag = establishment.FederationFlag.DisplayName,
             };
 
-            learningProvider.Status = await TranslateCodeNamePairAsync(EnumerationNames.ProviderStatus,
-                establishment.EstablishmentStatus, cancellationToken);
-            learningProvider.Type = await TranslateCodeNamePairAsync(EnumerationNames.ProviderType,
-                establishment.EstablishmentTypeGroup, cancellationToken);
-            learningProvider.SubType = await TranslateCodeNamePairAsync(EnumerationNames.ProviderSubType,
-                establishment.TypeOfEstablishment, cancellationToken);
+            // Do the Translation bit...
+            learningProvider.Type = await TranslateCodeNamePairAsync(
+                EnumerationNames.ProviderType,
+                establishment.EstablishmentTypeGroup,
+                cancellationToken);
+
+            learningProvider.SubType = await TranslateCodeNamePairAsync(
+                EnumerationNames.ProviderSubType,
+                establishment.TypeOfEstablishment,
+                cancellationToken);
+
+            learningProvider.Status = await TranslateCodeNamePairAsync(
+                EnumerationNames.ProviderStatus,
+                establishment.EstablishmentStatus,
+                cancellationToken);
+
+            learningProvider.LocalAuthorityCode = await TranslateCodeNamePairAsync(
+                EnumerationNames.LocalAuthorityCode,
+                establishment.EstablishmentStatus,
+                cancellationToken);
+
+            learningProvider.BoardersCode = await TranslateCodeNamePairAsync(
+                EnumerationNames.BoardersCode,
+                establishment.Boarders,
+                cancellationToken);
+
+            learningProvider.GenderOfEntry = await TranslateCodeNamePairAsync(
+                EnumerationNames.GenderOfEntry,
+                establishment.Gender,
+                cancellationToken);
             
             return learningProvider as TDestination;
         }
