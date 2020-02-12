@@ -100,7 +100,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
 
         private void AddHttp(IServiceCollection services)
         {
-            services.AddScoped<IRestClient, RestClient>();
+            services.AddTransient<IRestClient, RestClient>();
         }
 
         private void AddEventPublishing(IServiceCollection services)

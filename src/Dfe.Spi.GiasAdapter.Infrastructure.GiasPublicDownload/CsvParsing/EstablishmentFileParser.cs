@@ -11,14 +11,16 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
         {
             public EstablishmentCsvMapping()
             {
+                var dateTimeConverter = new DateTimeConverter();
+                
                 Map(x => x.EstablishmentTypeGroup).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "EstablishmentTypeGroup"));
                 Map(x => x.TypeOfEstablishment).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "TypeOfEstablishment"));
                 Map(x => x.EstablishmentStatus).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "EstablishmentStatus"));
-                Map(x => x.OpenDate).Name("OpenDate");
-                Map(x => x.CloseDate).Name("CloseDate");
+                Map(x => x.OpenDate).Name("OpenDate").TypeConverter(dateTimeConverter);
+                Map(x => x.CloseDate).Name("CloseDate").TypeConverter(dateTimeConverter);
                 Map(x => x.LA).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "LA"));
                 Map(x => x.Postcode).Name("Postcode");
@@ -39,9 +41,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                 Map(x => x.Gender).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "Gender"));
                 Map(x => x.PercentageFsm).Name("PercentageFSM");
-                Map(x => x.OfstedLastInsp).Name("OfstedLastInsp");
-                Map(x => x.LastChangedDate).Name("LastChangedDate");
-                Map(x => x.DateOfLastInspectionVisit).Name("DateOfLastInspectionVisit");
+                Map(x => x.OfstedLastInsp).Name("OfstedLastInsp").TypeConverter(dateTimeConverter);
+                Map(x => x.LastChangedDate).Name("LastChangedDate").TypeConverter(dateTimeConverter);
+                Map(x => x.DateOfLastInspectionVisit).Name("DateOfLastInspectionVisit").TypeConverter(dateTimeConverter);
                 Map(x => x.OfstedRating).ConvertUsing(
                     x=> this.BuildCodeNamePair(x, "OfstedRating"));
                 Map(x => x.AdmissionsPolicy).ConvertUsing(
