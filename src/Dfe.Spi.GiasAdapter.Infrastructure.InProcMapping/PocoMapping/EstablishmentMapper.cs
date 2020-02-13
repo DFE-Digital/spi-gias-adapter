@@ -58,9 +58,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 
                 BoardersCode = establishment.Boarders?.Code,
                 BoardersName = establishment.Boarders?.DisplayName,
+                LowestAge = establishment.StatutoryLowAge,
+                HighestAge = establishment.StatutoryHighAge,
                 Website = establishment.SchoolWebsite,
                 GenderOfEntry = establishment.Gender.Code,
                 PercentageOfPupilsReceivingFreeSchoolMeals = establishment.PercentageFsm,
+                OfstedLastInspection = establishment.OfstedLastInsp,
                 UpdatedDate = establishment.LastChangedDate,
                 InspectionDate = establishment.DateOfLastInspectionVisit,
                 OfstedRating = establishment.OfstedRating?.DisplayName,
@@ -74,7 +77,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 ClosingReason = establishment.ReasonEstablishmentClosed?.Code,
                 PhaseOfEducation = establishment.PhaseOfEducation?.Code,
                 FurtherEducationType = establishment.FurtherEducationType?.DisplayName,
-                SixthForm = establishment.OfficialSixthForm.Code,
+                SixthFormStatus = establishment.OfficialSixthForm?.Code,
                 DioceseCode = establishment.Diocese?.Code,
                 DioceseName = establishment.Diocese?.DisplayName,
                 PreviousLocalAuthorityCode = null, // Note: Not in the underlying GIAS API response.
@@ -83,15 +86,31 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 DistrictAdministrativeName = establishment.DistrictAdministrative?.DisplayName,
                 AdministrativeWardCode = establishment.AdministrativeWard?.Code,
                 AdministrativeWardName = establishment.AdministrativeWard?.DisplayName,
-                GorRegion = establishment.Gor?.Code,
-                RscRegion = establishment.RscRegion?.DisplayName,
+                GovernmentOfficeRegion = establishment.Gor?.Code,
+                LowerLayerSuperOutputArea = establishment.Lsoa?.Code,
+                MiddleLayerSuperOutputArea = establishment.Msoa?.Code,
+                RegionalSchoolsCommissionerRegion = establishment.RscRegion?.DisplayName,
                 Section41Approved = establishment.Section41Approved?.DisplayName,
                 Easting = establishment.Easting,
                 Northing = establishment.Northing,
-                GsslaCode = establishment.GsslaCode?.DisplayName,
+                GovernmentStatisticalServiceLocalAuthorityCode = establishment.GsslaCode?.DisplayName,
                 UrbanRuralName = establishment.UrbanRural?.DisplayName,
                 UrbanRuralCode = establishment.UrbanRural?.Code,
+                Federations = establishment.Federations?.Code,
                 FederationFlag = establishment.FederationFlag?.DisplayName,
+                TelephoneNumber = establishment.TelephoneNum,
+                ContactEmail = establishment.ContactEmail,
+                AddressLine1 = establishment.Street,
+                AddressLine2 = establishment.Locality,
+                AddressLine3 = establishment.Address3,
+                Town = establishment.Town,
+                County = establishment.County,
+                SchoolCapacity = establishment.SchoolCapacity,
+                NumberOfPupils = establishment.NumberOfPupils,
+                NumberOfBoys = establishment.NumberOfBoys,
+                NumberOfGirls = establishment.NumberOfGirls,
+                ResourcedProvisionCapacity = establishment.ResourcedProvisionCapacity,
+                ResourcedProvisionNumberOnRoll = establishment.ResourcedProvisionOnRoll,
             };
 
             // Do the Translation bit...
@@ -112,7 +131,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 
             learningProvider.LocalAuthorityCode = await TranslateCodeNamePairAsync(
                 EnumerationNames.LocalAuthorityCode,
-                establishment.EstablishmentStatus,
+                establishment.LA,
                 cancellationToken);
 
             learningProvider.BoardersCode = await TranslateCodeNamePairAsync(
