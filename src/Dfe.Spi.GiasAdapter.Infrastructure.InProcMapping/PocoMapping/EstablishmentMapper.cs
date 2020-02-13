@@ -77,7 +77,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 ClosingReason = establishment.ReasonEstablishmentClosed?.Code,
                 PhaseOfEducation = establishment.PhaseOfEducation?.Code,
                 FurtherEducationType = establishment.FurtherEducationType?.DisplayName,
-                SixthFormStatus = establishment.OfficialSixthForm.Code,
+                SixthFormStatus = establishment.OfficialSixthForm?.Code,
                 DioceseCode = establishment.Diocese?.Code,
                 DioceseName = establishment.Diocese?.DisplayName,
                 PreviousLocalAuthorityCode = null, // Note: Not in the underlying GIAS API response.
