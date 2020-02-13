@@ -44,14 +44,30 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public CodeNamePair DistrictAdministrative { get; set; }
         public CodeNamePair AdministrativeWard { get; set; }
         public CodeNamePair Gor { get; set; }
+        public CodeNamePair Msoa { get; set; }
+        public CodeNamePair Lsoa { get; set; }
         public CodeNamePair RscRegion { get; set; }
         public CodeNamePair Section41Approved { get; set; }
         public long? Easting { get; set; }
         public long? Northing { get; set; }
+        public CodeNamePair ParliamentaryConstituency { get; set; }
         public CodeNamePair GsslaCode { get; set; }
         public CodeNamePair UrbanRural { get; set; }
         public CodeNamePair Federations { get; set; }
         public CodeNamePair FederationFlag { get; set; }
+        public string TelephoneNum { get; set; }
+        public string ContactEmail { get; set; }
+        public string Address1 { get; set; }
+        public string Address2 { get; set; }
+        public string Address3 { get; set; }
+        public string Town { get; set; }
+        public string County { get; set; }
+        public long? SchoolCapacity { get; set; }
+        public long? NumberOfPupils { get; set; }
+        public long? NumberOfBoys { get; set; }
+        public long? NumberOfGirls { get; set; }
+        public long? ResourcedProvisionCapacity { get; set; }
+        public long? ResourcedProvisionOnRoll { get; set; }
 
         // Not being populated - but leaving on the model for now, as not
         // to break things.
