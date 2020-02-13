@@ -74,12 +74,18 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                     x => this.BuildCodeNamePair(x, "AdministrativeWard"));
                 Map(x => x.Gor).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "GOR"));
+                Map(x => x.Msoa).ConvertUsing(
+                    x => this.BuildCodeNamePair(x, "MSOA"));
+                Map(x => x.Lsoa)
+                    .ConvertUsing(x => this.BuildCodeNamePair(x, "LSOA"));
                 Map(x => x.RscRegion).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "RSCRegion"));
                 Map(x => x.Section41Approved).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "Section41Approved"));
                 Map(x => x.Easting).Name("Easting");
                 Map(x => x.Northing).Name("Northing");
+                Map(x => x.ParliamentaryConstituency)
+                    .ConvertUsing(x => this.BuildCodeNamePair(x, "ParliamentaryConstituency"));
                 Map(x => x.GsslaCode).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "GSSLACode"));
                 Map(x => x.UrbanRural).ConvertUsing(
@@ -88,6 +94,19 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
                     x => this.BuildCodeNamePair(x, "Federations"));
                 Map(x => x.FederationFlag).ConvertUsing(
                     x => this.BuildCodeNamePair(x, "FederationFlag"));
+                Map(x => x.TelephoneNum).Name("TelephoneNum");
+                Map(x => x.ContactEmail).Name("ContactEmail");
+                Map(x => x.Street).Name("Street");
+                Map(x => x.Locality).Name("Locality");
+                Map(x => x.Address3).Name("Address3");
+                Map(x => x.Town).Name("Town");
+                Map(x => x.County).Name("County");
+                Map(x => x.SchoolCapacity).Name("SchoolCapacity");
+                Map(x => x.NumberOfPupils).Name("NumberOfPupils");
+                Map(x => x.NumberOfBoys).Name("NumberOfBoys");
+                Map(x => x.NumberOfGirls).Name("NumberOfGirls");
+                Map(x => x.ResourcedProvisionCapacity).Name("ResourcedProvisionCapacity");
+                Map(x => x.ResourcedProvisionOnRoll).Name("ResourcedProvisionOnRoll");
             }
 
             private CodeNamePair BuildCodeNamePair(

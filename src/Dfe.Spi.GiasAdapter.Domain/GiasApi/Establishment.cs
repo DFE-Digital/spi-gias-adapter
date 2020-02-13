@@ -57,8 +57,8 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public CodeNamePair FederationFlag { get; set; }
         public string TelephoneNum { get; set; }
         public string ContactEmail { get; set; }
-        public string Address1 { get; set; }
-        public string Address2 { get; set; }
+        public string Street { get; set; }
+        public string Locality { get; set; }
         public string Address3 { get; set; }
         public string Town { get; set; }
         public string County { get; set; }
