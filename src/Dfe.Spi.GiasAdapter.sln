@@ -55,6 +55,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PopulateInitialCache", "Pop
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests", "Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests\Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests.csproj", "{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvertEstablishmentFileToLearningProviderFile", "ConvertEstablishmentFileToLearningProviderFile\ConvertEstablishmentFileToLearningProviderFile.csproj", "{A050DA56-BBD3-4CCA-B587-D313C8620624}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -129,6 +131,10 @@ Global
 		{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A050DA56-BBD3-4CCA-B587-D313C8620624}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A050DA56-BBD3-4CCA-B587-D313C8620624}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A050DA56-BBD3-4CCA-B587-D313C8620624}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A050DA56-BBD3-4CCA-B587-D313C8620624}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -144,6 +150,7 @@ Global
 		{914472CB-1985-4798-91FB-02A23152B361} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
 		{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD} = {C1FA72FE-D8B5-4D62-83D5-E01596A486DB}
 		{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
+		{A050DA56-BBD3-4CCA-B587-D313C8620624} = {C1FA72FE-D8B5-4D62-83D5-E01596A486DB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CFA95EB2-3EA6-4613-A9A5-911CD95DBD67}
