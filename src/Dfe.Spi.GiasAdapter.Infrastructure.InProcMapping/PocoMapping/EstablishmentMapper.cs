@@ -112,7 +112,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 
             learningProvider.LocalAuthorityCode = await TranslateCodeNamePairAsync(
                 EnumerationNames.LocalAuthorityCode,
-                establishment.EstablishmentStatus,
+                establishment.LA,
                 cancellationToken);
 
             learningProvider.BoardersCode = await TranslateCodeNamePairAsync(
