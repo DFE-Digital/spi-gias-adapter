@@ -49,7 +49,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             // little more involved.
             Dictionary<string, LineageEntry> lineage =
                 _propertyInfos
-                    .Where(x => x.Name != nameof(LearningProvider._Lineage))
+                    .Where(x => !x.Name.StartsWith("_"))
                     .ToDictionary(
                         x => x.Name,
                         x => new LineageEntry()
