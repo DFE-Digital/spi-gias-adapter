@@ -36,9 +36,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldGetEstablishmentFromApi(int urn)
+        public async Task ThenItShouldGetEstablishmentFromApi(int urn, string fields)
         {
-            await _manager.GetLearningProviderAsync(urn.ToString(), _cancellationToken);
+            await _manager.GetLearningProviderAsync(urn.ToString(), fields, _cancellationToken);
 
             _giasApiClientMock.Verify(c => c.GetEstablishmentAsync(urn, _cancellationToken),
                 Times.Once);
@@ -48,41 +48,41 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
         public void ThenItShouldThrowExceptionIfIdIsNotNumeric()
         {
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _manager.GetLearningProviderAsync("NotANumber", _cancellationToken));
+                await _manager.GetLearningProviderAsync("NotANumber", null, _cancellationToken));
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapEstablishmentToLearningProvider(int urn, Establishment establishment)
+        public async Task ThenItShouldMapEstablishmentToLearningProvider(int urn, string fields, Establishment establishment)
         {
             _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(urn, _cancellationToken))
                 .ReturnsAsync(establishment);
 
-            await _manager.GetLearningProviderAsync(urn.ToString(), _cancellationToken);
+            await _manager.GetLearningProviderAsync(urn.ToString(), fields, _cancellationToken);
 
             _mapperMock.Verify(m => m.MapAsync<LearningProvider>(establishment, _cancellationToken),
                 Times.Once);
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldReturnMappedLearningProvider(int urn, LearningProvider learningProvider)
+        public async Task ThenItShouldReturnMappedLearningProvider(int urn, string fields, LearningProvider learningProvider)
         {
             _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(urn, _cancellationToken))
                 .ReturnsAsync(new Establishment());
             _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), _cancellationToken))
                 .ReturnsAsync(learningProvider);
 
-            var actual = await _manager.GetLearningProviderAsync(urn.ToString(), _cancellationToken);
+            var actual = await _manager.GetLearningProviderAsync(urn.ToString(), fields, _cancellationToken);
 
             Assert.AreSame(learningProvider, actual);
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldReturnNullIfEstablishmentNotFoundOnApi(int urn)
+        public async Task ThenItShouldReturnNullIfEstablishmentNotFoundOnApi(int urn, string fields)
         {
             _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(urn, _cancellationToken))
                 .ReturnsAsync((Establishment) null);
 
-            var actual = await _manager.GetLearningProviderAsync(urn.ToString(), _cancellationToken);
+            var actual = await _manager.GetLearningProviderAsync(urn.ToString(), fields, _cancellationToken);
 
             Assert.IsNull(actual);
         }

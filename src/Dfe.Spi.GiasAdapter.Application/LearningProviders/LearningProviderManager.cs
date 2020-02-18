@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Extensions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
+using Dfe.Spi.Models;
 using Dfe.Spi.Models.Entities;
 using Newtonsoft.Json;
 
@@ -52,8 +54,22 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             {
                 // Then we need to limit the fields we send back...
                 string[] requestedFields = fields.Split(',');
+                string[] requestedFieldsUpper = requestedFields
+                    .Select(x => x.ToUpperInvariant())
+                    .ToArray();
 
-                learningProvider = learningProvider.PruneModel(requestedFields);
+                learningProvider =
+                    learningProvider.PruneModel(requestedFields);
+
+                // If lineage was requested then...
+                if (learningProvider._Lineage != null)
+                {
+                    // ... prune the lineage too.
+                    learningProvider._Lineage = learningProvider
+                        ._Lineage
+                        .Where(x => requestedFieldsUpper.Contains(x.Key.ToUpperInvariant()))
+                        .ToDictionary(x => x.Key, x => x.Value);
+                }
 
                 _logger.Info(
                     $"Pruned mapped establishment: {learningProvider}.");

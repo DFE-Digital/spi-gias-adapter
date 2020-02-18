@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.WellKnownIdentifiers;
@@ -11,10 +14,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 {
     internal class EstablishmentMapper : ObjectMapper
     {
+        private static PropertyInfo[] _propertyInfos;
+
         private readonly ITranslator _translator;
 
         public EstablishmentMapper(ITranslator translator)
         {
+            _propertyInfos = typeof(LearningProvider).GetProperties();
+
             _translator = translator;
         }
 
@@ -35,8 +42,25 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                     nameof(source));
             }
 
+            DateTime readDate = DateTime.UtcNow;
+
+            // This is is about as complicated as it gets for now.
+            // When we do stuff with management groups, might have to get a
+            // little more involved.
+            Dictionary<string, LineageEntry> lineage =
+                _propertyInfos
+                    .Where(x => x.Name != nameof(LearningProvider._Lineage))
+                    .ToDictionary(
+                        x => x.Name,
+                        x => new LineageEntry()
+                        {
+                            ReadDate = readDate,
+                        });
+
             var learningProvider = new LearningProvider
             {
+                _Lineage = lineage,
+
                 Type = establishment.EstablishmentTypeGroup?.Code,
                 SubType = establishment.TypeOfEstablishment?.Code,
                 Status = establishment.EstablishmentStatus?.Code,
