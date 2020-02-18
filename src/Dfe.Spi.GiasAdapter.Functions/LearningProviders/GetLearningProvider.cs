@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Dfe.Spi.Common.Http.Server.Definitions;
+using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
 {
@@ -35,11 +36,13 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
         {
             _httpSpiExecutionContextManager.SetContext(req.Headers);
 
+            string fields = req.Query["fields"];
+
             _logger.Info($"{FunctionName} triggered at {DateTime.Now} with id {id}");
 
             try
             {
-                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, cancellationToken);
+                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, fields, cancellationToken);
 
                 if (learningProvider == null)
                 {
@@ -48,7 +51,9 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
                 }
 
                 _logger.Info($"{FunctionName} found learning provider with id {id}. Returning ok");
-                return new OkObjectResult(learningProvider);
+                return new JsonResult(
+                    learningProvider,
+                    JsonConvert.DefaultSettings());
             }
             catch (ArgumentException ex)
             {
