@@ -9,7 +9,7 @@ using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
 using Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Newtonsoft.Json;
 using RestSharp;
 
