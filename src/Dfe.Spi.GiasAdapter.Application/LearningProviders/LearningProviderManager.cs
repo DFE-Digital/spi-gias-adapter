@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Application.LearningProviders

@@ -7,7 +7,7 @@ using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
 using Dfe.Spi.GiasAdapter.Functions.LearningProviders;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;

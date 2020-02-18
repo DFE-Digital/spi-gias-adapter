@@ -7,7 +7,7 @@ using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Moq;
 using NUnit.Framework;
 

@@ -5,7 +5,7 @@ using AutoFixture.NUnit3;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Moq;
 using NUnit.Framework;
 

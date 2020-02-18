@@ -6,7 +6,7 @@ using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Moq;
 using NUnit.Framework;
 

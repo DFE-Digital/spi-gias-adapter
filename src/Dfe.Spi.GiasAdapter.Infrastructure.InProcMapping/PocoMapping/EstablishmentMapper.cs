@@ -5,6 +5,7 @@ using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 {
@@ -100,11 +101,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 FederationFlag = establishment.FederationFlag?.DisplayName,
                 TelephoneNumber = establishment.TelephoneNum,
                 ContactEmail = establishment.ContactEmail,
-                AddressLine1 = establishment.Street,
-                AddressLine2 = establishment.Locality,
-                AddressLine3 = establishment.Address3,
-                Town = establishment.Town,
-                County = establishment.County,
+                Address = new Address()
+                {
+                    AddressLine1 = establishment.Street,
+                    AddressLine2 = establishment.Locality,
+                    AddressLine3 = establishment.Address3,
+                    Town = establishment.Town,
+                    County = establishment.County,
+                },
                 SchoolCapacity = establishment.SchoolCapacity,
                 NumberOfPupils = establishment.NumberOfPupils,
                 NumberOfBoys = establishment.NumberOfBoys,
