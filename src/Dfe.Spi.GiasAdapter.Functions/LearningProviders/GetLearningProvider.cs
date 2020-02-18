@@ -51,9 +51,16 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
                 }
 
                 _logger.Info($"{FunctionName} found learning provider with id {id}. Returning ok");
-                return new JsonResult(
-                    learningProvider,
-                    JsonConvert.DefaultSettings());
+                if (JsonConvert.DefaultSettings != null)
+                {
+                    return new JsonResult(
+                        learningProvider,
+                        JsonConvert.DefaultSettings());
+                }
+                else
+                {
+                    return new JsonResult(learningProvider);
+                }
             }
             catch (ArgumentException ex)
             {

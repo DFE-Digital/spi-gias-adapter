@@ -42,18 +42,18 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldReturnLearningProviderIfFound(int urn, string fields, LearningProvider provider)
+        public async Task ThenItShouldReturnLearningProviderIfFound(int urn, LearningProvider provider)
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), fields, It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(provider);
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), urn.ToString(),
                 _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.IsInstanceOf<OkObjectResult>(actual);
-            Assert.AreSame(provider, ((OkObjectResult) actual).Value);
+            Assert.IsInstanceOf<JsonResult>(actual);
+            Assert.AreSame(provider, ((JsonResult) actual).Value);
         }
 
         [Test]
