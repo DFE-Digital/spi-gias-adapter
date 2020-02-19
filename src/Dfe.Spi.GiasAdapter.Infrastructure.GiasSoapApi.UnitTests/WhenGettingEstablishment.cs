@@ -29,7 +29,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             _getEstablishmentMessageBuilderMock.Setup(b => b.Build(It.IsAny<GetEstablishmentRequest>()))
                 .Returns("some-soap-xml-request");
 
-            _client = new GiasSoapApiClient(_restClientMock.Object, _getEstablishmentMessageBuilderMock.Object);
+            _client = new GiasSoapApiClient(null, _restClientMock.Object, _getEstablishmentMessageBuilderMock.Object, null);
         }
 
         [Test, AutoData]
