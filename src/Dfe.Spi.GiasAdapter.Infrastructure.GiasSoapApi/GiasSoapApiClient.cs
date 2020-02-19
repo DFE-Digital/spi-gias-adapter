@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -42,7 +45,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             try
             {
-                var result = EnsureSuccessResponseAndExtractResult(response);
+                var result = EnsureSuccessResponseAndExtractResult(response).Result;
 
                 var root = result.GetElementByLocalName("Establishment");
 
@@ -85,7 +88,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                     FurtherEducationType = root.GetCodeNamePairFromChildElement("FurtherEducationType"),
                     OfficialSixthForm = root.GetCodeNamePairFromChildElement("OfficialSixthForm"),
                     Diocese = root.GetCodeNamePairFromChildElement("Diocese"),
-                    PreviousLA = null,  // NOTE: Does not seem to exist in the SOAP response!
+                    PreviousLA = null, // NOTE: Does not seem to exist in the SOAP response!
                     DistrictAdministrative = root.GetCodeNamePairFromChildElement("DistrictAdministrative"),
                     AdministrativeWard = root.GetCodeNamePairFromChildElement("AdministrativeWard"),
                     Gor = root.GetCodeNamePairFromChildElement("GOR"),
@@ -135,12 +138,21 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             throw new NotImplementedException();
         }
 
-        private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response)
+        private static SoapResponse EnsureSuccessResponseAndExtractResult(IRestResponse response)
         {
             XDocument document;
             try
             {
-                document = XDocument.Parse(response.Content);
+                var contentParts = ParseResponseContent(response);
+                var soapPart = contentParts.SingleOrDefault(p =>
+                    p.Headers["Content-Type"] == "application/xop+xml" ||
+                    p.Headers["Content-Type"] == "text/xml");
+                if (soapPart == null)
+                {
+                    throw new Exception("Response does not appear to contain any soap content");
+                }
+
+                document = XDocument.Parse(Encoding.UTF8.GetString(soapPart.Data));
             }
             catch (Exception ex)
             {
@@ -159,7 +171,45 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                 throw new SoapException(faultCode.Value, faultString.Value);
             }
 
-            return body.Elements().First();
+            return new SoapResponse
+            {
+                Result = body.Elements().First(),
+            };
+        }
+
+        private static ContentPart[] ParseResponseContent(IRestResponse response)
+        {
+            if (response.ContentType.StartsWith("Multipart/Related"))
+            {
+                return null;
+            }
+            else
+            {
+                return new[]
+                {
+                    new ContentPart
+                    {
+                        Headers = new Dictionary<string, string>
+                        {
+                            {"Content-Type", response.ContentType}
+                        },
+                        Data = response.RawBytes,
+                    },
+                };
+            }
+        }
+
+
+        private class SoapResponse
+        {
+            public XElement Result { get; set; }
+            public object[] Attachments { get; set; }
+        }
+
+        private class ContentPart
+        {
+            public Dictionary<string, string> Headers { get; set; }
+            public byte[] Data { get; set; }
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -193,7 +194,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
                 establishment));
 
             var responseMock = new Mock<IRestResponse>();
-            responseMock.Setup(r => r.Content).Returns(envelope.ToString());
+            responseMock.Setup(r => r.ContentType).Returns("text/xml");
+            responseMock.Setup(r => r.RawBytes).Returns(Encoding.UTF8.GetBytes(envelope.ToString()));
             responseMock.Setup(r => r.IsSuccessful).Returns(true);
             return responseMock.Object;
         }
@@ -205,7 +207,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
                 new XElement("faultstring", faultString)));
 
             var responseMock = new Mock<IRestResponse>();
-            responseMock.Setup(r => r.Content).Returns(envelope.ToString());
+            responseMock.Setup(r => r.ContentType).Returns("text/xml");
+            responseMock.Setup(r => r.RawBytes).Returns(Encoding.UTF8.GetBytes(envelope.ToString()));
             responseMock.Setup(r => r.IsSuccessful).Returns(false);
             return responseMock.Object;
         }
