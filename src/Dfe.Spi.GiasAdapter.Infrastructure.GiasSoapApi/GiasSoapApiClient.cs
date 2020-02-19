@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests;
 using RestSharp;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi

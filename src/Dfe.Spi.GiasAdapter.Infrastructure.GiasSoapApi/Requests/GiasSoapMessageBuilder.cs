@@ -1,7 +1,7 @@
 using System;
 using System.Xml.Linq;
 
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests
 {
     internal interface IGiasSoapMessageBuilder<TParameters>
     {

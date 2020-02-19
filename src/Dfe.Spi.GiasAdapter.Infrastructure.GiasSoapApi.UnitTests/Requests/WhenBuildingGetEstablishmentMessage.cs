@@ -1,8 +1,9 @@
 using System.Xml.Linq;
 using AutoFixture.NUnit3;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests;
 using NUnit.Framework;
 
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests.Requests
 {
     public class WhenBuildingGetEstablishmentMessage
     {

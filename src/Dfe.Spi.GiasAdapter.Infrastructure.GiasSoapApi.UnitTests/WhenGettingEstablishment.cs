@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using AutoFixture.NUnit3;
 using Castle.Components.DictionaryAdapter;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests;
 using Moq;
 using NUnit.Framework;
 using RestSharp;
