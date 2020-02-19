@@ -42,25 +42,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                     nameof(source));
             }
 
-            DateTime readDate = DateTime.UtcNow;
-
-            // This is is about as complicated as it gets for now.
-            // When we do stuff with management groups, might have to get a
-            // little more involved.
-            Dictionary<string, LineageEntry> lineage =
-                _propertyInfos
-                    .Where(x => !x.Name.StartsWith("_"))
-                    .ToDictionary(
-                        x => x.Name,
-                        x => new LineageEntry()
-                        {
-                            ReadDate = readDate,
-                        });
-
             var learningProvider = new LearningProvider
             {
-                _Lineage = lineage,
-
                 Type = establishment.EstablishmentTypeGroup?.Code,
                 SubType = establishment.TypeOfEstablishment?.Code,
                 Status = establishment.EstablishmentStatus?.Code,
@@ -140,6 +123,23 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 ResourcedProvisionCapacity = establishment.ResourcedProvisionCapacity,
                 ResourcedProvisionNumberOnRoll = establishment.ResourcedProvisionOnRoll,
             };
+
+            DateTime readDate = DateTime.UtcNow;
+
+            // This is is about as complicated as it gets for now.
+            // When we do stuff with management groups, might have to get a
+            // little more involved.
+            Dictionary<string, LineageEntry> lineage =
+                _propertyInfos
+                    .Where(x => !x.Name.StartsWith("_") && (x.GetValue(learningProvider) != null))
+                    .ToDictionary(
+                        x => x.Name,
+                        x => new LineageEntry()
+                        {
+                            ReadDate = readDate,
+                        });
+
+            learningProvider._Lineage = lineage;
 
             // Do the Translation bit...
             learningProvider.Type = await TranslateCodeNamePairAsync(
