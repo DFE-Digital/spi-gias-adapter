@@ -12,7 +12,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
     {
         
         public TableLocalAuthorityRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
-            : base(configuration.TableStorageConnectionString, configuration.LocalAuthorityTableName, logger)
+            : base(configuration.TableStorageConnectionString, configuration.LocalAuthorityTableName, logger, "local authorities")
         {
         }
         
