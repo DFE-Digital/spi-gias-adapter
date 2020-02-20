@@ -8,5 +8,6 @@ namespace Dfe.Spi.GiasAdapter.Domain.Configuration
         
         public int ExtractId { get; set; }
         public string ExtractEstablishmentsFileName { get; set; }
+        public string ExtractGroupsFileName { get; set; }
     }
 }
