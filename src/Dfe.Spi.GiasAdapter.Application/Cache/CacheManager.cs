@@ -205,6 +205,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _logger.Debug($"Stored {staging.Urn} in repository");
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(staging, cancellationToken);
+            learningProvider._Lineage = null;
             await publishEvent(learningProvider, cancellationToken);
             _logger.Debug($"Sent event for {staging.Urn}");
         }
