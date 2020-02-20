@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
-using Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing;
 using HtmlAgilityPack;
 using RestSharp;
 

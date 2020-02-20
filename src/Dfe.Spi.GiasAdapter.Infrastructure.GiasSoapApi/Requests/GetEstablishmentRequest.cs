@@ -1,4 +1,4 @@
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests
 {
     internal class GetEstablishmentRequest
     {

@@ -4,7 +4,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using NodaTime.Text;
 
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing
 {
     public class DateTimeConverter : DefaultTypeConverter
     {

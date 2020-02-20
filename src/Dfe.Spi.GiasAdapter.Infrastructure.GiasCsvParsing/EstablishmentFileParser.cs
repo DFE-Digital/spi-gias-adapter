@@ -3,9 +3,9 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing
 {
-    internal class EstablishmentFileParser : CsvFileParser<Establishment>
+    public class EstablishmentFileParser : CsvFileParser<Establishment>
     {
         private class EstablishmentCsvMapping : ClassMap<Establishment>
         {

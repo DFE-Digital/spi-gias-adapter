@@ -1,9 +1,8 @@
 ﻿using Dfe.Spi.GiasAdapter.Domain.GiasApi;
-using Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing;
 using NUnit.Framework;
 using System.IO;
 
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing.UnitTests
 {
     public class WhenParsingEstablishmentsCsv
     {

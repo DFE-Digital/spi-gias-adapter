@@ -1,9 +1,11 @@
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using AutoFixture.NUnit3;
 using Castle.Components.DictionaryAdapter;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests;
 using Moq;
 using NUnit.Framework;
 using RestSharp;
@@ -27,7 +29,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             _getEstablishmentMessageBuilderMock.Setup(b => b.Build(It.IsAny<GetEstablishmentRequest>()))
                 .Returns("some-soap-xml-request");
 
-            _client = new GiasSoapApiClient(_restClientMock.Object, _getEstablishmentMessageBuilderMock.Object);
+            _client = new GiasSoapApiClient(null, _restClientMock.Object, _getEstablishmentMessageBuilderMock.Object, null);
         }
 
         [Test, AutoData]
@@ -192,7 +194,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
                 establishment));
 
             var responseMock = new Mock<IRestResponse>();
-            responseMock.Setup(r => r.Content).Returns(envelope.ToString());
+            responseMock.Setup(r => r.ContentType).Returns("text/xml");
+            responseMock.Setup(r => r.RawBytes).Returns(Encoding.UTF8.GetBytes(envelope.ToString()));
             responseMock.Setup(r => r.IsSuccessful).Returns(true);
             return responseMock.Object;
         }
@@ -204,7 +207,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
                 new XElement("faultstring", faultString)));
 
             var responseMock = new Mock<IRestResponse>();
-            responseMock.Setup(r => r.Content).Returns(envelope.ToString());
+            responseMock.Setup(r => r.ContentType).Returns("text/xml");
+            responseMock.Setup(r => r.RawBytes).Returns(Encoding.UTF8.GetBytes(envelope.ToString()));
             responseMock.Setup(r => r.IsSuccessful).Returns(false);
             return responseMock.Object;
         }

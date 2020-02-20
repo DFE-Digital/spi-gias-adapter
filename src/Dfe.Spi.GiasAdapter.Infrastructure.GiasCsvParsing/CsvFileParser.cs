@@ -4,9 +4,9 @@ using System.Linq;
 using CsvHelper;
 using CsvHelper.Configuration;
 
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing
 {
-    internal abstract class CsvFileParser<T> : IDisposable
+    public abstract class CsvFileParser<T> : IDisposable
     {
         private readonly StreamReader _reader;
         private readonly CsvReader _csv;

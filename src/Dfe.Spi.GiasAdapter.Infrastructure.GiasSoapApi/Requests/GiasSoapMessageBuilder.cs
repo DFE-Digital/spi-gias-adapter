@@ -1,14 +1,14 @@
 using System;
 using System.Xml.Linq;
 
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests
 {
     internal interface IGiasSoapMessageBuilder<TParameters>
     {
         string Build(TParameters parameters);
     }
 
-    internal abstract class GiasSoapMessageBuilder<TParameters> : IGiasSoapMessageBuilder<TParameters>
+    public abstract class GiasSoapMessageBuilder<TParameters> : IGiasSoapMessageBuilder<TParameters>
     {
         protected static readonly string UsernameTokenType = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText";
         protected static readonly string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
