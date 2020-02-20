@@ -241,6 +241,20 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 return false;
             }
 
+            if (current.GroupLinks?.Length != staging.GroupLinks?.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < current.GroupLinks?.Length; i++)
+            {
+                var currentLink = current.GroupLinks[i];
+                if (!staging.GroupLinks.Any(l => l.Uid == currentLink.Uid && l.GroupType == currentLink.GroupType))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
