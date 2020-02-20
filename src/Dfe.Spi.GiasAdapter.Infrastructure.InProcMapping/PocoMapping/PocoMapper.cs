@@ -36,6 +36,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             {
                 return new EstablishmentMapper(_translator);
             }
+            if (type == typeof(Group))
+            {
+                return new GroupMapper(_translator);
+            }
 
             return null;
         }

@@ -42,6 +42,9 @@
     "giasPassword": {
       "type": "securestring"
     },
+    "giasExtractId": {
+      "type": "int"
+    },
     "establishmentSchedule": {
       "type": "string",
       "defaultValue": "0 0 4 * * *"
@@ -177,7 +180,19 @@
               "value": "[parameters('giasPassword')]"
             },
             {
-              "name": "SPI_Cache__EstablishmentSchedule",
+              "name": "SPI_GiasApi__ExtractId",
+              "value": "[parameters('giasExtractId')]"
+            },
+            {
+              "name": "SPI_GiasApi__ExtractEstablishmentsFileName",
+              "value": "Eapim_Daily_Download.csv"
+            },
+            {
+              "name": "SPI_GiasApi__ExtractGroupsFileName",
+              "value": "groups.csv"
+            },
+            {
+              "name": "SPI_Cache__DownloadSchedule",
               "value": "[parameters('establishmentSchedule')]"
             },
             {
@@ -189,7 +204,11 @@
               "value": "establishments"
             },
             {
-              "name": "SPI_Cache__EstablishmentProcessingQueueConnectionString",
+              "name": "SPI_Cache__GroupTableName",
+              "value": "groups"
+            },
+            {
+              "name": "SPI_Cache__ProcessingQueueConnectionString",
               "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
             },
             {

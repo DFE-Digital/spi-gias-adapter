@@ -8,16 +8,16 @@ using Microsoft.Azure.WebJobs;
 
 namespace Dfe.Spi.GiasAdapter.Functions.Cache
 {
-    public class DownloadEstablishmentsScheduled
+    public class DownloadFullDatasetScheduled
     {
-        private const string FunctionName = nameof(DownloadEstablishmentsScheduled);
-        private const string ScheduleExpression = "%SPI_Cache:EstablishmentSchedule%";
+        private const string FunctionName = nameof(DownloadFullDatasetScheduled);
+        private const string ScheduleExpression = "%SPI_Cache:DownloadSchedule%";
 
         private readonly ICacheManager _cacheManager;
         private readonly IHttpSpiExecutionContextManager _httpSpiExecutionContextManager;
         private readonly ILoggerWrapper _logger;
 
-        public DownloadEstablishmentsScheduled(ICacheManager cacheManager, IHttpSpiExecutionContextManager httpSpiExecutionContextManager, ILoggerWrapper logger)
+        public DownloadFullDatasetScheduled(ICacheManager cacheManager, IHttpSpiExecutionContextManager httpSpiExecutionContextManager, ILoggerWrapper logger)
         {
             _cacheManager = cacheManager;
             _httpSpiExecutionContextManager = httpSpiExecutionContextManager;
@@ -31,7 +31,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.Cache
 
             _logger.Info($"{FunctionName} started at {DateTime.UtcNow}. Past due: {timerInfo.IsPastDue}");
 
-            await _cacheManager.DownloadEstablishmentsToCacheAsync(cancellationToken);
+            await _cacheManager.DownloadAllGiasDataToCacheAsync(cancellationToken);
         }
     }
 }

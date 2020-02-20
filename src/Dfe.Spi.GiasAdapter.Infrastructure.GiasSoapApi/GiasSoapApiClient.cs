@@ -13,6 +13,7 @@ using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests;
 using RestSharp;
+using Group = Dfe.Spi.GiasAdapter.Domain.GiasApi.Group;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
 {
@@ -167,6 +168,28 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             {
                 var establishments = parser.GetRecords();
                 return establishments;
+            }
+        }
+
+        public async Task<Group[]> DownloadGroupsAsync(CancellationToken cancellationToken)
+        {
+            if (_zip == null)
+            {
+                await AcquireExtract(cancellationToken);
+            }
+
+            var zipEntry = _zip.Entries.SingleOrDefault(e => e.Name == _configuration.ExtractGroupsFileName);
+            if (zipEntry == null)
+            {
+                throw new Exception($"Extract does not contain entry for {_configuration.ExtractGroupsFileName}");
+            }
+
+            using (var stream = zipEntry.Open())
+            using (var reader = new StreamReader(stream))
+            using (var parser = new GroupFileParser(reader))
+            {
+                var groups = parser.GetRecords();
+                return groups;
             }
         }
 

@@ -8,5 +8,8 @@ namespace Dfe.Spi.GiasAdapter.Domain.Events
     {
         Task PublishLearningProviderCreatedAsync(LearningProvider learningProvider, CancellationToken cancellationToken);
         Task PublishLearningProviderUpdatedAsync(LearningProvider learningProvider, CancellationToken cancellationToken);
+        
+        Task PublishManagementGroupCreatedAsync(ManagementGroup managementGroup, CancellationToken cancellationToken);
+        Task PublishManagementGroupUpdatedAsync(ManagementGroup managementGroup, CancellationToken cancellationToken);
     }
 }

@@ -116,11 +116,13 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddRepositories(IServiceCollection services)
         {
             services.AddScoped<IEstablishmentRepository, TableEstablishmentRepository>();
+            services.AddScoped<IGroupRepository, TableGroupRepository>();
         }
 
         private void AddQueues(IServiceCollection services)
         {
             services.AddScoped<IEstablishmentProcessingQueue, QueueEstablishmentProcessingQueue>();
+            services.AddScoped<IGroupProcessingQueue, QueueGroupProcessingQueue>();
         }
 
         private void AddGiasApi(IServiceCollection services)
@@ -136,18 +138,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddManagers(IServiceCollection services)
         {
             services.AddScoped<ILearningProviderManager, LearningProviderManager>();
-            services.AddScoped<ICacheManager>((sp) =>
-            {
-                // TODO: Once we have SOAP extracts, this can be a "standard" registration
-                //       Currently have 2 IGiasApiClient implementations
-                var logger = sp.GetService<ILoggerWrapper>();
-                var apiClient = new GiasPublicDownloadClient(sp.GetService<IRestClient>(), logger);
-                var establishmentRepository = sp.GetService<IEstablishmentRepository>();
-                var mapper = sp.GetService<IMapper>();
-                var eventPublisher = sp.GetService<IEventPublisher>();
-                var establishmentProcessingQueue = sp.GetService<IEstablishmentProcessingQueue>();
-                return new CacheManager(apiClient, establishmentRepository, mapper, eventPublisher, establishmentProcessingQueue, logger);
-            });
+            services.AddScoped<ICacheManager, CacheManager>();
             services.AddScoped<IHttpSpiExecutionContextManager, HttpSpiExecutionContextManager>();
             services.AddScoped<ISpiExecutionContextManager>(x => x.GetService<IHttpSpiExecutionContextManager>());
         }

@@ -8,22 +8,22 @@ using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    public class QueueEstablishmentProcessingQueue : IEstablishmentProcessingQueue
+    public class QueueGroupProcessingQueue : IGroupProcessingQueue
     {
         private CloudQueue _queue;
         
-        public QueueEstablishmentProcessingQueue(CacheConfiguration configuration)
+        public QueueGroupProcessingQueue(CacheConfiguration configuration)
         {
             var storageAccount = CloudStorageAccount.Parse(configuration.ProcessingQueueConnectionString);
             var queueClient = storageAccount.CreateCloudQueueClient();
-            _queue = queueClient.GetQueueReference(CacheQueueNames.EstablishmentProcessingQueue);
+            _queue = queueClient.GetQueueReference(CacheQueueNames.GroupProcessingQueue);
         }
         
-        public async Task EnqueueBatchOfStagingAsync(long[] urns, CancellationToken cancellationToken)
+        public async Task EnqueueBatchOfStagingAsync(long[] uids, CancellationToken cancellationToken)
         {
             await _queue.CreateIfNotExistsAsync(cancellationToken);
                 
-            var message = new CloudQueueMessage(JsonConvert.SerializeObject(urns));
+            var message = new CloudQueueMessage(JsonConvert.SerializeObject(uids));
             await _queue.AddMessageAsync(message, cancellationToken);
         }
     }

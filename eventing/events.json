@@ -17,6 +17,18 @@
       "schema": {
         "$ref": "#/definitions/learning-provider"
       }
+    },
+    "management-group-created": {
+      "description": "New management group has been detected",
+      "schema": {
+        "$ref": "#/definitions/management-group"
+      }
+    },
+    "management-group-updated": {
+      "description": "Update to management group has been detected",
+      "schema": {
+        "$ref": "#/definitions/management-group"
+      }
     }
   },
   "definitions": {
@@ -36,6 +48,29 @@
           "type": "integer"
         },
         "postcode": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "management-group": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "companiesHouseNumber": {
           "type": "string"
         }
       },
