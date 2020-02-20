@@ -177,7 +177,7 @@
               "value": "[parameters('giasPassword')]"
             },
             {
-              "name": "SPI_Cache__EstablishmentSchedule",
+              "name": "SPI_Cache__DownloadSchedule",
               "value": "[parameters('establishmentSchedule')]"
             },
             {

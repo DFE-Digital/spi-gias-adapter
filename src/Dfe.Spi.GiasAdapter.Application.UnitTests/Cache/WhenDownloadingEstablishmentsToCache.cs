@@ -55,7 +55,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         [Test]
         public async Task ThenItShouldGetEstablishmentsFromGias()
         {
-            await _manager.DownloadEstablishmentsToCacheAsync(_cancellationToken);
+            await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
             
             _giasApiClientMock.Verify(c=>c.DownloadEstablishmentsAsync(_cancellationToken),
                 Times.Once);
@@ -67,7 +67,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _giasApiClientMock.Setup(c => c.DownloadEstablishmentsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(establishments);
             
-            await _manager.DownloadEstablishmentsToCacheAsync(_cancellationToken);
+            await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
             
             _establishmentRepositoryMock.Verify(r=>r.StoreInStagingAsync(establishments, _cancellationToken),
                 Times.Once);
@@ -87,7 +87,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _giasApiClientMock.Setup(c => c.DownloadEstablishmentsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(establishments);
             
-            await _manager.DownloadEstablishmentsToCacheAsync(_cancellationToken);
+            await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
 
             var expectedBatch1 = establishments.Take(100).Select(e => e.Urn).ToArray();
             var expectedBatch2 = establishments.Skip(100).Take(100).Select(e => e.Urn).ToArray();

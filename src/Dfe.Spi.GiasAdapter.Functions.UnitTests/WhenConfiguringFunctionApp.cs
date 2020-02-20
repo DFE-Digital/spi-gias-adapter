@@ -42,10 +42,12 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests
                     new KeyValuePair<string, string>("GiasApi:Url", "https://gias.unit.tests"),
                     new KeyValuePair<string, string>("GiasApi:Username", "unit_tests"),
                     new KeyValuePair<string, string>("GiasApi:Password", "some-secure-password"),
+                    new KeyValuePair<string, string>("GiasApi:ExtractId", "1234"),
+                    new KeyValuePair<string, string>("GiasApi:ExtractEstablishmentsFileName", "establishments.csv"),
                     new KeyValuePair<string, string>("Cache:TableStorageConnectionString", "UseDevelopmentStorage=true"),
                     new KeyValuePair<string, string>("Cache:EstablishmentTableName", "unitests"),
                     new KeyValuePair<string, string>("Cache:EstablishmentProcessingQueueConnectionString", "UseDevelopmentStorage=true"),
-                    new KeyValuePair<string, string>("Cache:EstablishmentSchedule", "0 0 5 * * *"),
+                    new KeyValuePair<string, string>("Cache:DownloadSchedule", "0 0 5 * * *"),
                     new KeyValuePair<string, string>("Middleware:BaseUrl", "https://middleware.unit.tests"),
                     new KeyValuePair<string, string>("Translator:BaseUrl", "https://translator.unit.tests"),
                 }).Build();
@@ -56,7 +58,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests
             return new[]
             {
                 typeof(ProcessBatchOfEstablishments),
-                typeof(DownloadEstablishmentsScheduled),
+                typeof(DownloadFullDatasetScheduled),
                 typeof(GetLearningProvider),
             };
         }

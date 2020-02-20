@@ -13,7 +13,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 {
     public interface ICacheManager
     {
-        Task DownloadEstablishmentsToCacheAsync(CancellationToken cancellationToken);
+        Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken);
         Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken);
     }
 
@@ -42,7 +42,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _logger = logger;
         }
         
-        public async Task DownloadEstablishmentsToCacheAsync(CancellationToken cancellationToken)
+        public async Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring establishments file from GIAS...");
 

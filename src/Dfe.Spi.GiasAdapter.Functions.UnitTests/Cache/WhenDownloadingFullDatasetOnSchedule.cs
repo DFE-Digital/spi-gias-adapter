@@ -12,12 +12,12 @@ using NUnit.Framework;
 
 namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
 {
-    public class WhenDownloadingEstablishmentsOnSchedule
+    public class WhenDownloadingFullDatasetOnSchedule
     {
         private Mock<ICacheManager> _cacheManagerMock;
         private Mock<IHttpSpiExecutionContextManager> _httpSpiExecutionContextManagerMock;
         private Mock<ILoggerWrapper> _loggerMock;
-        private DownloadEstablishmentsScheduled _function;
+        private DownloadFullDatasetScheduled _function;
         private TimerInfo _timerInfo;
         private CancellationToken _cancellationToken;
 
@@ -30,7 +30,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
 
             _loggerMock = new Mock<ILoggerWrapper>();
 
-            _function = new DownloadEstablishmentsScheduled(
+            _function = new DownloadFullDatasetScheduled(
                 _cacheManagerMock.Object,
                 _httpSpiExecutionContextManagerMock.Object,
                 _loggerMock.Object);
@@ -47,7 +47,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
         {
             await _function.Run(_timerInfo, _cancellationToken);
 
-            _cacheManagerMock.Verify(m => m.DownloadEstablishmentsToCacheAsync(_cancellationToken), Times.Once);
+            _cacheManagerMock.Verify(m => m.DownloadAllGiasDataToCacheAsync(_cancellationToken), Times.Once);
         }
     }
 }
