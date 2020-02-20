@@ -7,6 +7,7 @@ using Microsoft.Azure.Cosmos.Table;
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
     public abstract class TableCacheRepository<TModel, TEntity>
+        where TModel : class
         where TEntity : TableEntity
     {
         protected TableCacheRepository(string connectionString, string tableName, ILoggerWrapper logger)
@@ -24,6 +25,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         protected abstract TEntity ModelToEntity(TModel model);
         protected abstract TEntity ModelToEntityForStaging(TModel model);
+        protected abstract TModel EntityToModel(TEntity entity);
 
         protected async Task InsertOrUpdateAsync(TModel model, CancellationToken cancellationToken)
         {
@@ -32,6 +34,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             var operation = TableOperation.InsertOrReplace(ModelToEntity(model));
             await Table.ExecuteAsync(operation, cancellationToken);
         }
+        
         protected async Task InsertOrUpdateStagingAsync(TModel[] models, CancellationToken cancellationToken)
         {
             const int batchSize = 100;
@@ -62,6 +65,15 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                     position += batchSize;
                 }
             }
+        }
+
+        protected async Task<TModel> RetrieveAsync(string partitionKey, string rowKey, CancellationToken cancellationToken)
+        {
+            var operation = TableOperation.Retrieve<TEntity>(partitionKey,rowKey);
+            var operationResult = await Table.ExecuteAsync(operation, cancellationToken);
+            var entity = (TEntity) operationResult.Result;
+
+            return entity == null ? null : EntityToModel(entity);
         }
     }
 }

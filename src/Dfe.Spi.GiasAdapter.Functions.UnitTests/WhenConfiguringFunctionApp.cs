@@ -58,6 +58,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests
         {
             return new[]
             {
+                typeof(ProcessBatchOfGroups),
                 typeof(ProcessBatchOfEstablishments),
                 typeof(DownloadFullDatasetScheduled),
                 typeof(GetLearningProvider),

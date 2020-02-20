@@ -15,6 +15,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
     {
         Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken);
         Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken);
+        Task ProcessBatchOfGroups(long[] uids, CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
@@ -64,21 +65,49 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
                 if (current == null)
                 {
-                    _logger.Info($"{urn} has not been seen before. Processing as created");
+                    _logger.Info($"Establishment {urn} has not been seen before. Processing as created");
 
                     await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderCreatedAsync,
                         cancellationToken);
                 }
                 else if (!AreSame(current, staging))
                 {
-                    _logger.Info($"{urn} has changed. Processing as updated");
+                    _logger.Info($"Establishment {urn} has changed. Processing as updated");
 
                     await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderUpdatedAsync,
                         cancellationToken);
                 }
                 else
                 {
-                    _logger.Info($"{urn} has not changed. Skipping");
+                    _logger.Info($"Establishment {urn} has not changed. Skipping");
+                }
+            }
+        }
+
+        public async Task ProcessBatchOfGroups(long[] uids, CancellationToken cancellationToken)
+        {
+            foreach (var uid in uids)
+            {
+                var current = await _groupRepository.GetGroupAsync(uid, cancellationToken);
+                var staging = await _groupRepository.GetGroupFromStagingAsync(uid, cancellationToken);
+            
+                if (current == null)
+                {
+                    _logger.Info($"Group {uid} has not been seen before. Processing as created");
+            
+                    await ProcessGroup(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
+                        cancellationToken);
+                }
+                else if (!AreSame(current, staging))
+                {
+                    _logger.Info($"Group {uid} has changed. Processing as updated");
+            
+                    await ProcessGroup(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
+                        cancellationToken);
+                }
+                else
+                {
+                    _logger.Info($"Group {uid} has not changed. Skipping");
                 }
             }
         }
@@ -197,17 +226,37 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             return true;
         }
 
+        private bool AreSame(Group current, Group staging)
+        {
+            return current.GroupName == staging.GroupName &&
+                   current.GroupType == staging.GroupType &&
+                   current.CompaniesHouseNumber == staging.CompaniesHouseNumber;
+        }
+
         private async Task ProcessEstablishment(Establishment staging,
             Func<LearningProvider, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
             await _establishmentRepository.StoreAsync(staging, cancellationToken);
-            _logger.Debug($"Stored {staging.Urn} in repository");
+            _logger.Debug($"Stored establishment {staging.Urn} in repository");
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(staging, cancellationToken);
             learningProvider._Lineage = null;
             await publishEvent(learningProvider, cancellationToken);
-            _logger.Debug($"Sent event for {staging.Urn}");
+            _logger.Debug($"Sent event for establishment {staging.Urn}");
+        }
+
+        private async Task ProcessGroup(Group staging,
+            Func<ManagementGroup, CancellationToken, Task> publishEvent,
+            CancellationToken cancellationToken)
+        {
+            await _groupRepository.StoreAsync(staging, cancellationToken);
+            _logger.Debug($"Stored group {staging.Uid} in repository");
+
+            var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);
+            managementGroup._Lineage = null;
+            await publishEvent(managementGroup, cancellationToken);
+            _logger.Debug($"Sent event for group {staging.Uid}");
         }
     }
 }

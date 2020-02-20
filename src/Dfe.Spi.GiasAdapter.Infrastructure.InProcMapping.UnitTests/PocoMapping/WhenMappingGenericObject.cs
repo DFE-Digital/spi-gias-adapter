@@ -31,6 +31,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             
             Assert.IsInstanceOf<LearningProvider>(actual);
         }
+        
+        [Test, AutoData]
+        public async Task ThenItShouldReturnManagementGroupWhenMappingGroupToManagementGroup(Group source)
+        {
+            var actual = await _mapper.MapAsync<ManagementGroup>(source, new CancellationToken());
+            
+            Assert.IsInstanceOf<ManagementGroup>(actual);
+        }
 
         [Test]
         public void ThenItShouldThrowExceptionIfNoMapperDefined()

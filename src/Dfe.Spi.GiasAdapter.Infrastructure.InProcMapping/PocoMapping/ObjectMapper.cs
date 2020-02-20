@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 {
-    internal abstract class ObjectMapper
+    public abstract class ObjectMapper
     {
         internal virtual Task<TDestination> MapAsync<TDestination>(object source, CancellationToken cancellationToken)
             where TDestination : class, new()
