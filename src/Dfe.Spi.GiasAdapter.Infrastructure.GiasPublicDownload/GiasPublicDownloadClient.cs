@@ -62,6 +62,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload
             throw new NotImplementedException();
         }
 
+        public Task<GroupLink[]> DownloadGroupLinksAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
 
         private async Task<DownloadLink[]> GetAvailableDownloadLinksAsync(CancellationToken cancellationToken)
         {

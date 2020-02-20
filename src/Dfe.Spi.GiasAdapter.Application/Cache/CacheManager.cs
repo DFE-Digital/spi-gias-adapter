@@ -30,8 +30,8 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         private readonly ILoggerWrapper _logger;
 
         public CacheManager(
-            IGiasApiClient giasApiClient, 
-            IEstablishmentRepository establishmentRepository, 
+            IGiasApiClient giasApiClient,
+            IEstablishmentRepository establishmentRepository,
             IGroupRepository groupRepository,
             IMapper mapper,
             IEventPublisher eventPublisher,
@@ -48,12 +48,14 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _groupProcessingQueue = groupProcessingQueue;
             _logger = logger;
         }
-        
-        
+
+
         public async Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken)
         {
+            var groupLinks = await _giasApiClient.DownloadGroupLinksAsync(cancellationToken);
+
             await DownloadGroupsToCacheAsync(cancellationToken);
-            await DownloadEstablishmentsToCacheAsync(cancellationToken);
+            await DownloadEstablishmentsToCacheAsync(groupLinks, cancellationToken);
         }
 
         public async Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken)
@@ -90,18 +92,18 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             {
                 var current = await _groupRepository.GetGroupAsync(uid, cancellationToken);
                 var staging = await _groupRepository.GetGroupFromStagingAsync(uid, cancellationToken);
-            
+
                 if (current == null)
                 {
                     _logger.Info($"Group {uid} has not been seen before. Processing as created");
-            
+
                     await ProcessGroup(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
                         cancellationToken);
                 }
                 else if (!AreSame(current, staging))
                 {
                     _logger.Info($"Group {uid} has changed. Processing as updated");
-            
+
                     await ProcessGroup(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
                         cancellationToken);
                 }
@@ -113,7 +115,6 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         }
 
 
-
         private async Task DownloadGroupsToCacheAsync(CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring groups file from GIAS...");
@@ -121,11 +122,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             // Download
             var groups = await _giasApiClient.DownloadGroupsAsync(cancellationToken);
             _logger.Info($"Downloaded {groups.Length} groups from GIAS");
-            
+
             // Store
             await _groupRepository.StoreInStagingAsync(groups, cancellationToken);
             _logger.Info($"Stored {groups.Length} groups in staging");
-            
+
             // Queue diff check
             var position = 0;
             const int batchSize = 100;
@@ -134,9 +135,9 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 var batch = groups
                     .Skip(position)
                     .Take(batchSize)
-                    .Select(e=>e.Uid)
+                    .Select(e => e.Uid)
                     .ToArray();
-                
+
                 _logger.Debug(
                     $"Queuing {position} to {position + batch.Length} of groups for processing");
                 await _groupProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
@@ -146,19 +147,27 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             _logger.Info("Finished downloading groups to cache");
         }
-        
-        private async Task DownloadEstablishmentsToCacheAsync(CancellationToken cancellationToken)
+
+        private async Task DownloadEstablishmentsToCacheAsync(GroupLink[] groupLinks,
+            CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring establishments file from GIAS...");
 
             // Download
             var establishments = await _giasApiClient.DownloadEstablishmentsAsync(cancellationToken);
             _logger.Info($"Downloaded {establishments.Length} establishments from GIAS");
-            
+
+            // Add links
+            foreach (var establishment in establishments)
+            {
+                establishment.GroupLinks = groupLinks.Where(l => l.Urn == establishment.Urn).ToArray();
+                _logger.Debug($"Added {establishment.GroupLinks.Length} links to establishment {establishment.Urn}");
+            }
+
             // Store
             await _establishmentRepository.StoreInStagingAsync(establishments, cancellationToken);
             _logger.Info($"Stored {establishments.Length} establishments in staging");
-            
+
             // Queue diff check
             var position = 0;
             const int batchSize = 100;
@@ -167,9 +176,9 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 var batch = establishments
                     .Skip(position)
                     .Take(batchSize)
-                    .Select(e=>e.Urn)
+                    .Select(e => e.Urn)
                     .ToArray();
-                
+
                 _logger.Debug(
                     $"Queuing {position} to {position + batch.Length} of establishments for processing");
                 await _establishmentProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
@@ -179,45 +188,54 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             _logger.Info("Finished downloading Establishments to cache");
         }
-        
+
         private bool AreSame(Establishment current, Establishment staging)
         {
             if (current.EstablishmentName != staging.EstablishmentName)
             {
                 return false;
             }
+
             if (current.Ukprn != staging.Ukprn)
             {
                 return false;
             }
+
             if (current.Uprn != staging.Uprn)
             {
                 return false;
             }
+
             if (current.CompaniesHouseNumber != staging.CompaniesHouseNumber)
             {
                 return false;
             }
+
             if (current.CharitiesCommissionNumber != staging.CharitiesCommissionNumber)
             {
                 return false;
             }
+
             if (current.Trusts?.Code != staging.Trusts?.Code)
             {
                 return false;
             }
+
             if (current.LA?.Code != staging.LA?.Code)
             {
                 return false;
             }
+
             if (current.EstablishmentNumber != staging.EstablishmentNumber)
             {
                 return false;
             }
+
             if (current.PreviousEstablishmentNumber != staging.PreviousEstablishmentNumber)
             {
                 return false;
             }
+
             if (current.Postcode != staging.Postcode)
             {
                 return false;
