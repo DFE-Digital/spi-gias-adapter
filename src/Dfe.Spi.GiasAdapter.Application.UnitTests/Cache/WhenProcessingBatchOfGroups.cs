@@ -18,10 +18,12 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         private Mock<IGiasApiClient> _giasApiClientMock;
         private Mock<IEstablishmentRepository> _establishmentRepositoryMock;
         private Mock<IGroupRepository> _groupRepositoryMock;
+        private Mock<ILocalAuthorityRepository> _localAuthorityRepositoryMock;
         private Mock<IMapper> _mapperMock;
         private Mock<IEventPublisher> _eventPublisherMock;
         private Mock<IEstablishmentProcessingQueue> _establishmentProcessingQueueMock;
         private Mock<IGroupProcessingQueue> _groupProcessingQueueMock;
+        private Mock<ILocalAuthorityProcessingQueue> _localAuthorityProcessingQueueMock;
         private Mock<ILoggerWrapper> _loggerMock;
         private CacheManager _manager;
         private CancellationToken _cancellationToken;
@@ -43,6 +45,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                     Uid = uid,
                     GroupName = uid.ToString()
                 });
+            
+            _localAuthorityRepositoryMock = new Mock<ILocalAuthorityRepository>();
 
             _mapperMock = new Mock<IMapper>();
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<Group>(), It.IsAny<CancellationToken>()))
@@ -56,6 +60,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _establishmentProcessingQueueMock = new Mock<IEstablishmentProcessingQueue>();
             
             _groupProcessingQueueMock = new Mock<IGroupProcessingQueue>();
+            
+            _localAuthorityProcessingQueueMock = new Mock<ILocalAuthorityProcessingQueue>();
 
             _loggerMock = new Mock<ILoggerWrapper>();
 
@@ -63,10 +69,12 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 _giasApiClientMock.Object,
                 _establishmentRepositoryMock.Object,
                 _groupRepositoryMock.Object,
+                _localAuthorityRepositoryMock.Object,
                 _mapperMock.Object,
                 _eventPublisherMock.Object,
                 _establishmentProcessingQueueMock.Object,
                 _groupProcessingQueueMock.Object,
+                _localAuthorityProcessingQueueMock.Object,
                 _loggerMock.Object);
 
             _cancellationToken = new CancellationToken();

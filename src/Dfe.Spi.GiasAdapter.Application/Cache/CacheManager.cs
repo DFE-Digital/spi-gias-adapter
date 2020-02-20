@@ -23,29 +23,35 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         private readonly IGiasApiClient _giasApiClient;
         private readonly IEstablishmentRepository _establishmentRepository;
         private readonly IGroupRepository _groupRepository;
+        private readonly ILocalAuthorityRepository _localAuthorityRepository;
         private readonly IMapper _mapper;
         private readonly IEventPublisher _eventPublisher;
         private readonly IEstablishmentProcessingQueue _establishmentProcessingQueue;
         private readonly IGroupProcessingQueue _groupProcessingQueue;
+        private readonly ILocalAuthorityProcessingQueue _localAuthorityProcessingQueue;
         private readonly ILoggerWrapper _logger;
 
         public CacheManager(
             IGiasApiClient giasApiClient,
             IEstablishmentRepository establishmentRepository,
             IGroupRepository groupRepository,
+            ILocalAuthorityRepository localAuthorityRepository,
             IMapper mapper,
             IEventPublisher eventPublisher,
             IEstablishmentProcessingQueue establishmentProcessingQueue,
             IGroupProcessingQueue groupProcessingQueue,
+            ILocalAuthorityProcessingQueue localAuthorityProcessingQueue,
             ILoggerWrapper logger)
         {
             _giasApiClient = giasApiClient;
             _establishmentRepository = establishmentRepository;
             _groupRepository = groupRepository;
+            _localAuthorityRepository = localAuthorityRepository;
             _mapper = mapper;
             _eventPublisher = eventPublisher;
             _establishmentProcessingQueue = establishmentProcessingQueue;
             _groupProcessingQueue = groupProcessingQueue;
+            _localAuthorityProcessingQueue = localAuthorityProcessingQueue;
             _logger = logger;
         }
 
@@ -164,6 +170,9 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 _logger.Debug($"Added {establishment.GroupLinks.Length} links to establishment {establishment.Urn}");
             }
 
+            // Process local authorities
+            await ProcessEstablishmentLocalAuthoritiesToCacheAsync(establishments, cancellationToken);
+
             // Store
             await _establishmentRepository.StoreInStagingAsync(establishments, cancellationToken);
             _logger.Info($"Stored {establishments.Length} establishments in staging");
@@ -187,6 +196,43 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             }
 
             _logger.Info("Finished downloading Establishments to cache");
+        }
+
+        private async Task ProcessEstablishmentLocalAuthoritiesToCacheAsync(Establishment[] establishments,
+            CancellationToken cancellationToken)
+        {
+            // Get unique list of local authorities from establishments
+            var localAuthorities = establishments
+                .Where(e => e.LA != null)
+                .Select(e => new LocalAuthority {Code = int.Parse(e.LA.Code), Name = e.LA.DisplayName})
+                .GroupBy(la => la.Code)
+                .Select(grp => grp.First())
+                .ToArray();
+            _logger.Info($"Found {localAuthorities.Length} local authorities in GIAS establishment data");
+
+            // Store
+            await _localAuthorityRepository.StoreInStagingAsync(localAuthorities, cancellationToken);
+            _logger.Info($"Stored {localAuthorities.Length} local authorities in staging");
+
+            // Queue diff check
+            var position = 0;
+            const int batchSize = 100;
+            while (position < localAuthorities.Length)
+            {
+                var batch = localAuthorities
+                    .Skip(position)
+                    .Take(batchSize)
+                    .Select(e => e.Code)
+                    .ToArray();
+
+                _logger.Debug(
+                    $"Queuing {position} to {position + batch.Length} of local authorities for processing");
+                await _localAuthorityProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
+
+                position += batchSize;
+            }
+
+            _logger.Info("Finished processing local authorities to cache");
         }
 
         private bool AreSame(Establishment current, Establishment staging)

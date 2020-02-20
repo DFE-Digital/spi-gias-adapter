@@ -212,6 +212,10 @@
               "value": "groups"
             },
             {
+              "name": "SPI_Cache__LocalAuthorityTableName",
+              "value": "localauthorities"
+            },
+            {
               "name": "SPI_Cache__ProcessingQueueConnectionString",
               "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
             },
