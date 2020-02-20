@@ -21,58 +21,38 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
     {
         private readonly IGiasApiClient _giasApiClient;
         private readonly IEstablishmentRepository _establishmentRepository;
+        private readonly IGroupRepository _groupRepository;
         private readonly IMapper _mapper;
         private readonly IEventPublisher _eventPublisher;
         private readonly IEstablishmentProcessingQueue _establishmentProcessingQueue;
+        private readonly IGroupProcessingQueue _groupProcessingQueue;
         private readonly ILoggerWrapper _logger;
 
         public CacheManager(
             IGiasApiClient giasApiClient, 
             IEstablishmentRepository establishmentRepository, 
+            IGroupRepository groupRepository,
             IMapper mapper,
             IEventPublisher eventPublisher,
             IEstablishmentProcessingQueue establishmentProcessingQueue,
+            IGroupProcessingQueue groupProcessingQueue,
             ILoggerWrapper logger)
         {
             _giasApiClient = giasApiClient;
             _establishmentRepository = establishmentRepository;
+            _groupRepository = groupRepository;
             _mapper = mapper;
             _eventPublisher = eventPublisher;
             _establishmentProcessingQueue = establishmentProcessingQueue;
+            _groupProcessingQueue = groupProcessingQueue;
             _logger = logger;
         }
         
+        
         public async Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken)
         {
-            _logger.Info("Acquiring establishments file from GIAS...");
-
-            // Download
-            var establishments = await _giasApiClient.DownloadEstablishmentsAsync(cancellationToken);
-            _logger.Info($"Downloaded {establishments.Length} establishments from GIAS");
-            
-            // Store
-            await _establishmentRepository.StoreInStagingAsync(establishments, cancellationToken);
-            _logger.Info($"Stored {establishments.Length} establishments in staging");
-            
-            // Queue diff check
-            var position = 0;
-            const int batchSize = 100;
-            while (position < establishments.Length)
-            {
-                var batch = establishments
-                    .Skip(position)
-                    .Take(batchSize)
-                    .Select(e=>e.Urn)
-                    .ToArray();
-                
-                _logger.Debug(
-                    $"Queuing {position} to {position + batch.Length} for processing");
-                await _establishmentProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
-
-                position += batchSize;
-            }
-
-            _logger.Info("Finished downloading Establishments to cache");
+            await DownloadGroupsToCacheAsync(cancellationToken);
+            await DownloadEstablishmentsToCacheAsync(cancellationToken);
         }
 
         public async Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken)
@@ -103,6 +83,74 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             }
         }
 
+
+
+        private async Task DownloadGroupsToCacheAsync(CancellationToken cancellationToken)
+        {
+            _logger.Info("Acquiring groups file from GIAS...");
+
+            // Download
+            var groups = await _giasApiClient.DownloadGroupsAsync(cancellationToken);
+            _logger.Info($"Downloaded {groups.Length} groups from GIAS");
+            
+            // Store
+            await _groupRepository.StoreInStagingAsync(groups, cancellationToken);
+            _logger.Info($"Stored {groups.Length} groups in staging");
+            
+            // Queue diff check
+            var position = 0;
+            const int batchSize = 100;
+            while (position < groups.Length)
+            {
+                var batch = groups
+                    .Skip(position)
+                    .Take(batchSize)
+                    .Select(e=>e.Uid)
+                    .ToArray();
+                
+                _logger.Debug(
+                    $"Queuing {position} to {position + batch.Length} of groups for processing");
+                await _groupProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
+
+                position += batchSize;
+            }
+
+            _logger.Info("Finished downloading groups to cache");
+        }
+        
+        private async Task DownloadEstablishmentsToCacheAsync(CancellationToken cancellationToken)
+        {
+            _logger.Info("Acquiring establishments file from GIAS...");
+
+            // Download
+            var establishments = await _giasApiClient.DownloadEstablishmentsAsync(cancellationToken);
+            _logger.Info($"Downloaded {establishments.Length} establishments from GIAS");
+            
+            // Store
+            await _establishmentRepository.StoreInStagingAsync(establishments, cancellationToken);
+            _logger.Info($"Stored {establishments.Length} establishments in staging");
+            
+            // Queue diff check
+            var position = 0;
+            const int batchSize = 100;
+            while (position < establishments.Length)
+            {
+                var batch = establishments
+                    .Skip(position)
+                    .Take(batchSize)
+                    .Select(e=>e.Urn)
+                    .ToArray();
+                
+                _logger.Debug(
+                    $"Queuing {position} to {position + batch.Length} of establishments for processing");
+                await _establishmentProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
+
+                position += batchSize;
+            }
+
+            _logger.Info("Finished downloading Establishments to cache");
+        }
+        
         private bool AreSame(Establishment current, Establishment staging)
         {
             if (current.EstablishmentName != staging.EstablishmentName)

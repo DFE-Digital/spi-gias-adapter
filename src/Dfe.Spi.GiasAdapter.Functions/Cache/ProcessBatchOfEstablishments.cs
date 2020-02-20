@@ -25,7 +25,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.Cache
             _logger = logger;
         }
         
-        [StorageAccount("SPI_Cache:EstablishmentProcessingQueueConnectionString")]
+        [StorageAccount("SPI_Cache:ProcessingQueueConnectionString")]
         [FunctionName(FunctionName)]
         public async Task Run(
             [QueueTrigger(CacheQueueNames.EstablishmentProcessingQueue)]

@@ -189,7 +189,7 @@
               "value": "establishments"
             },
             {
-              "name": "SPI_Cache__EstablishmentProcessingQueueConnectionString",
+              "name": "SPI_Cache__ProcessingQueueConnectionString",
               "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
             },
             {
