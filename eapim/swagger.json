@@ -56,6 +56,55 @@
         }
       }
     },
+    "/management-groups/{id}": {
+      "get": {
+        "description": "Returns a single management group, based on its code.",
+        "operationId": "get-management-group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "type": "string",
+            "description": "The code of the learning provider to return.",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "description": "Bearer token authentication.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-Internal-Request-Id",
+            "type": "string",
+            "description": "An internal request id. Should be a vaild guid.",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-External-Request-Id",
+            "description": "An optional external request id. Used in logging.",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The management group exists, and is part of the body of the response.",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "No management group exists for the given id.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          }
+        }
+      }
+    },
     "/HeartBeat": {
       "get": {
         "description": "Standard diagnostics method, used to test the health of the facade's underlying system.",
