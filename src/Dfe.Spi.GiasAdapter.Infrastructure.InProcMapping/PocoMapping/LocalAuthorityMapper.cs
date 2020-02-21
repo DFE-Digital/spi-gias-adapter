@@ -40,7 +40,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             };
             
             managementGroup.Type =
-                await TranslateAsync(EnumerationNames.ManagementGroupType, "LA", cancellationToken);
+                await TranslateAsync(EnumerationNames.ManagementGroupType, LocalAuthority.ManagementGroupType, cancellationToken);
 
             managementGroup.Code = $"{managementGroup.Type}-{managementGroup.Identifier}";
 

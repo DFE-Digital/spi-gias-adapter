@@ -26,7 +26,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         {
             _translatorMock = new Mock<ITranslator>();
             _translatorMock.Setup(t =>
-                    t.TranslateEnumValue(EnumerationNames.ManagementGroupType, "LA", It.IsAny<CancellationToken>()))
+                    t.TranslateEnumValue(EnumerationNames.ManagementGroupType, LocalAuthority.ManagementGroupType, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(LocalAuthorityManagementGroupType);
 
             _mapper = new EstablishmentMapper(_translatorMock.Object);

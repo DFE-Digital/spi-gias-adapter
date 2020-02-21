@@ -206,7 +206,6 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             CancellationToken cancellationToken)
         {
             const string sponsorType = "School sponsor";
-            const string laType = "LA";
 
             var link = establishment.GroupLinks?.FirstOrDefault(l => l.GroupType != sponsorType);
             if (link != null)
@@ -220,7 +219,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 };
             }
 
-            var translatedLaType = await TranslateManagementGroupType(laType, cancellationToken);
+            var translatedLaType = await TranslateManagementGroupType(LocalAuthority.ManagementGroupType, cancellationToken);
             return new ManagementGroup
             {
                 Type = translatedLaType,

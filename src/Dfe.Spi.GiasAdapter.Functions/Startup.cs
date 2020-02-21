@@ -6,6 +6,7 @@ using Dfe.Spi.Common.Logging;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.Cache;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
+using Dfe.Spi.GiasAdapter.Application.ManagementGroups;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.Events;
@@ -92,7 +93,6 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddLogging(IServiceCollection services)
         {
             services.AddLogging();
-            services.AddScoped(typeof(ILogger<>), typeof(Logger<>));
             services.AddScoped<ILogger>(provider =>
                 provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
             services.AddScoped<ILoggerWrapper, LoggerWrapper>();
@@ -140,6 +140,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddManagers(IServiceCollection services)
         {
             services.AddScoped<ILearningProviderManager, LearningProviderManager>();
+            services.AddScoped<IManagementGroupManager, ManagementGroupManager>();
             services.AddScoped<ICacheManager, CacheManager>();
             services.AddScoped<IHttpSpiExecutionContextManager, HttpSpiExecutionContextManager>();
             services.AddScoped<ISpiExecutionContextManager>(x => x.GetService<IHttpSpiExecutionContextManager>());

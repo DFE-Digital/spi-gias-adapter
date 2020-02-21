@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Dfe.Spi.GiasAdapter.Functions.Cache;
 using Dfe.Spi.GiasAdapter.Functions.LearningProviders;
+using Dfe.Spi.GiasAdapter.Functions.ManagementGroups;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,10 +60,12 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests
         {
             return new[]
             {
+                typeof(ProcessBatchOfLocalAuthorities),
                 typeof(ProcessBatchOfGroups),
                 typeof(ProcessBatchOfEstablishments),
                 typeof(DownloadFullDatasetScheduled),
                 typeof(GetLearningProvider),
+                typeof(GetManagementGroup),
             };
         }
         
