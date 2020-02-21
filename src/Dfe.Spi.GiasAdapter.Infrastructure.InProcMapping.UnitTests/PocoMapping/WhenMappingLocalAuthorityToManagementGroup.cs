@@ -61,7 +61,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             Assert.IsNotNull(actual);
             Assert.AreEqual(transformedValue, actual.Type);
             _translatorMock.Verify(
-                t => t.TranslateEnumValue(EnumerationNames.ManagementGroupType, "LA",
+                t => t.TranslateEnumValue(EnumerationNames.ManagementGroupType, LocalAuthority.ManagementGroupType,
                     _cancellationToken),
                 Times.Once);
         }
