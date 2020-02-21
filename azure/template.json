@@ -192,6 +192,10 @@
               "value": "groups.csv"
             },
             {
+              "name": "SPI_GiasApi__ExtractGroupLinksFileName",
+              "value": "groupLinks.csv"
+            },
+            {
               "name": "SPI_Cache__DownloadSchedule",
               "value": "[parameters('establishmentSchedule')]"
             },
@@ -206,6 +210,10 @@
             {
               "name": "SPI_Cache__GroupTableName",
               "value": "groups"
+            },
+            {
+              "name": "SPI_Cache__LocalAuthorityTableName",
+              "value": "localauthorities"
             },
             {
               "name": "SPI_Cache__ProcessingQueueConnectionString",

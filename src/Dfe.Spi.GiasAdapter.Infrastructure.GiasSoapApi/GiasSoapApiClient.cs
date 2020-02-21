@@ -193,6 +193,28 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             }
         }
 
+        public async Task<GroupLink[]> DownloadGroupLinksAsync(CancellationToken cancellationToken)
+        {
+            if (_zip == null)
+            {
+                await AcquireExtract(cancellationToken);
+            }
+
+            var zipEntry = _zip.Entries.SingleOrDefault(e => e.Name == _configuration.ExtractGroupLinksFileName);
+            if (zipEntry == null)
+            {
+                throw new Exception($"Extract does not contain entry for {_configuration.ExtractGroupLinksFileName}");
+            }
+
+            using (var stream = zipEntry.Open())
+            using (var reader = new StreamReader(stream))
+            using (var parser = new GroupLinkFileParser(reader))
+            {
+                var groupLinks = parser.GetRecords();
+                return groupLinks;
+            }
+        }
+
 
         private async Task AcquireExtract(CancellationToken cancellationToken)
         {

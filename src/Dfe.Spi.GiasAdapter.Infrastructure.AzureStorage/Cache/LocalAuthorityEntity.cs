@@ -1,11 +1,10 @@
-using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    public class EstablishmentEntity : TableEntity
+    public class LocalAuthorityEntity : TableEntity
     {
-        public string Establishment
+        public string LocalAuthority
         {
             get;
             set;

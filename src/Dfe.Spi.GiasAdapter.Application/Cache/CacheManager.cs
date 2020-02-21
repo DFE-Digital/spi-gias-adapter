@@ -16,6 +16,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken);
         Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken);
         Task ProcessBatchOfGroups(long[] uids, CancellationToken cancellationToken);
+        Task ProcessBatchOfLocalAuthorities(int[] laCodes, CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
@@ -23,37 +24,45 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         private readonly IGiasApiClient _giasApiClient;
         private readonly IEstablishmentRepository _establishmentRepository;
         private readonly IGroupRepository _groupRepository;
+        private readonly ILocalAuthorityRepository _localAuthorityRepository;
         private readonly IMapper _mapper;
         private readonly IEventPublisher _eventPublisher;
         private readonly IEstablishmentProcessingQueue _establishmentProcessingQueue;
         private readonly IGroupProcessingQueue _groupProcessingQueue;
+        private readonly ILocalAuthorityProcessingQueue _localAuthorityProcessingQueue;
         private readonly ILoggerWrapper _logger;
 
         public CacheManager(
-            IGiasApiClient giasApiClient, 
-            IEstablishmentRepository establishmentRepository, 
+            IGiasApiClient giasApiClient,
+            IEstablishmentRepository establishmentRepository,
             IGroupRepository groupRepository,
+            ILocalAuthorityRepository localAuthorityRepository,
             IMapper mapper,
             IEventPublisher eventPublisher,
             IEstablishmentProcessingQueue establishmentProcessingQueue,
             IGroupProcessingQueue groupProcessingQueue,
+            ILocalAuthorityProcessingQueue localAuthorityProcessingQueue,
             ILoggerWrapper logger)
         {
             _giasApiClient = giasApiClient;
             _establishmentRepository = establishmentRepository;
             _groupRepository = groupRepository;
+            _localAuthorityRepository = localAuthorityRepository;
             _mapper = mapper;
             _eventPublisher = eventPublisher;
             _establishmentProcessingQueue = establishmentProcessingQueue;
             _groupProcessingQueue = groupProcessingQueue;
+            _localAuthorityProcessingQueue = localAuthorityProcessingQueue;
             _logger = logger;
         }
-        
-        
+
+
         public async Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken)
         {
+            var groupLinks = await _giasApiClient.DownloadGroupLinksAsync(cancellationToken);
+
             await DownloadGroupsToCacheAsync(cancellationToken);
-            await DownloadEstablishmentsToCacheAsync(cancellationToken);
+            await DownloadEstablishmentsToCacheAsync(groupLinks, cancellationToken);
         }
 
         public async Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken)
@@ -90,18 +99,18 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             {
                 var current = await _groupRepository.GetGroupAsync(uid, cancellationToken);
                 var staging = await _groupRepository.GetGroupFromStagingAsync(uid, cancellationToken);
-            
+
                 if (current == null)
                 {
                     _logger.Info($"Group {uid} has not been seen before. Processing as created");
-            
+
                     await ProcessGroup(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
                         cancellationToken);
                 }
                 else if (!AreSame(current, staging))
                 {
                     _logger.Info($"Group {uid} has changed. Processing as updated");
-            
+
                     await ProcessGroup(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
                         cancellationToken);
                 }
@@ -112,8 +121,36 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             }
         }
 
+        public async Task ProcessBatchOfLocalAuthorities(int[] laCodes, CancellationToken cancellationToken)
+        {
+            foreach (var laCode in laCodes)
+            {
+                var current = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, cancellationToken);
+                var staging = await _localAuthorityRepository.GetLocalAuthorityFromStagingAsync(laCode, cancellationToken);
+
+                if (current == null)
+                {
+                    _logger.Info($"Local authority {laCode} has not been seen before. Processing as created");
+
+                    await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
+                        cancellationToken);
+                }
+                else if (!AreSame(current, staging))
+                {
+                    _logger.Info($"Local authority {laCode} has changed. Processing as updated");
+
+                    await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
+                        cancellationToken);
+                }
+                else
+                {
+                    _logger.Info($"Local authority {laCode} has not changed. Skipping");
+                }
+            }
+        }
 
 
+        
         private async Task DownloadGroupsToCacheAsync(CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring groups file from GIAS...");
@@ -121,11 +158,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             // Download
             var groups = await _giasApiClient.DownloadGroupsAsync(cancellationToken);
             _logger.Info($"Downloaded {groups.Length} groups from GIAS");
-            
+
             // Store
             await _groupRepository.StoreInStagingAsync(groups, cancellationToken);
             _logger.Info($"Stored {groups.Length} groups in staging");
-            
+
             // Queue diff check
             var position = 0;
             const int batchSize = 100;
@@ -134,9 +171,9 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 var batch = groups
                     .Skip(position)
                     .Take(batchSize)
-                    .Select(e=>e.Uid)
+                    .Select(e => e.Uid)
                     .ToArray();
-                
+
                 _logger.Debug(
                     $"Queuing {position} to {position + batch.Length} of groups for processing");
                 await _groupProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
@@ -146,19 +183,30 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             _logger.Info("Finished downloading groups to cache");
         }
-        
-        private async Task DownloadEstablishmentsToCacheAsync(CancellationToken cancellationToken)
+
+        private async Task DownloadEstablishmentsToCacheAsync(GroupLink[] groupLinks,
+            CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring establishments file from GIAS...");
 
             // Download
             var establishments = await _giasApiClient.DownloadEstablishmentsAsync(cancellationToken);
             _logger.Info($"Downloaded {establishments.Length} establishments from GIAS");
-            
+
+            // Add links
+            foreach (var establishment in establishments)
+            {
+                establishment.GroupLinks = groupLinks.Where(l => l.Urn == establishment.Urn).ToArray();
+                _logger.Debug($"Added {establishment.GroupLinks.Length} links to establishment {establishment.Urn}");
+            }
+
+            // Process local authorities
+            await ProcessEstablishmentLocalAuthoritiesToCacheAsync(establishments, cancellationToken);
+
             // Store
             await _establishmentRepository.StoreInStagingAsync(establishments, cancellationToken);
             _logger.Info($"Stored {establishments.Length} establishments in staging");
-            
+
             // Queue diff check
             var position = 0;
             const int batchSize = 100;
@@ -167,9 +215,9 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 var batch = establishments
                     .Skip(position)
                     .Take(batchSize)
-                    .Select(e=>e.Urn)
+                    .Select(e => e.Urn)
                     .ToArray();
-                
+
                 _logger.Debug(
                     $"Queuing {position} to {position + batch.Length} of establishments for processing");
                 await _establishmentProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
@@ -179,48 +227,108 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             _logger.Info("Finished downloading Establishments to cache");
         }
-        
+
+        private async Task ProcessEstablishmentLocalAuthoritiesToCacheAsync(Establishment[] establishments,
+            CancellationToken cancellationToken)
+        {
+            // Get unique list of local authorities from establishments
+            var localAuthorities = establishments
+                .Where(e => e.LA != null)
+                .Select(e => new LocalAuthority {Code = int.Parse(e.LA.Code), Name = e.LA.DisplayName})
+                .GroupBy(la => la.Code)
+                .Select(grp => grp.First())
+                .ToArray();
+            _logger.Info($"Found {localAuthorities.Length} local authorities in GIAS establishment data");
+
+            // Store
+            await _localAuthorityRepository.StoreInStagingAsync(localAuthorities, cancellationToken);
+            _logger.Info($"Stored {localAuthorities.Length} local authorities in staging");
+
+            // Queue diff check
+            var position = 0;
+            const int batchSize = 100;
+            while (position < localAuthorities.Length)
+            {
+                var batch = localAuthorities
+                    .Skip(position)
+                    .Take(batchSize)
+                    .Select(e => e.Code)
+                    .ToArray();
+
+                _logger.Debug(
+                    $"Queuing {position} to {position + batch.Length} of local authorities for processing");
+                await _localAuthorityProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
+
+                position += batchSize;
+            }
+
+            _logger.Info("Finished processing local authorities to cache");
+        }
+
         private bool AreSame(Establishment current, Establishment staging)
         {
             if (current.EstablishmentName != staging.EstablishmentName)
             {
                 return false;
             }
+
             if (current.Ukprn != staging.Ukprn)
             {
                 return false;
             }
+
             if (current.Uprn != staging.Uprn)
             {
                 return false;
             }
+
             if (current.CompaniesHouseNumber != staging.CompaniesHouseNumber)
             {
                 return false;
             }
+
             if (current.CharitiesCommissionNumber != staging.CharitiesCommissionNumber)
             {
                 return false;
             }
+
             if (current.Trusts?.Code != staging.Trusts?.Code)
             {
                 return false;
             }
+
             if (current.LA?.Code != staging.LA?.Code)
             {
                 return false;
             }
+
             if (current.EstablishmentNumber != staging.EstablishmentNumber)
             {
                 return false;
             }
+
             if (current.PreviousEstablishmentNumber != staging.PreviousEstablishmentNumber)
             {
                 return false;
             }
+
             if (current.Postcode != staging.Postcode)
             {
                 return false;
+            }
+
+            if (current.GroupLinks?.Length != staging.GroupLinks?.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < current.GroupLinks?.Length; i++)
+            {
+                var currentLink = current.GroupLinks[i];
+                if (!staging.GroupLinks.Any(l => l.Uid == currentLink.Uid && l.GroupType == currentLink.GroupType))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -231,6 +339,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             return current.GroupName == staging.GroupName &&
                    current.GroupType == staging.GroupType &&
                    current.CompaniesHouseNumber == staging.CompaniesHouseNumber;
+        }
+
+        private bool AreSame(LocalAuthority current, LocalAuthority staging)
+        {
+            return current.Name == staging.Name;
         }
 
         private async Task ProcessEstablishment(Establishment staging,
@@ -257,6 +370,19 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             managementGroup._Lineage = null;
             await publishEvent(managementGroup, cancellationToken);
             _logger.Debug($"Sent event for group {staging.Uid}");
+        }
+
+        private async Task ProcessLocalAuthority(LocalAuthority staging,
+            Func<ManagementGroup, CancellationToken, Task> publishEvent,
+            CancellationToken cancellationToken)
+        {
+            await _localAuthorityRepository.StoreAsync(staging, cancellationToken);
+            _logger.Debug($"Stored local authority {staging.Code} in repository");
+
+            var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);
+            managementGroup._Lineage = null;
+            await publishEvent(managementGroup, cancellationToken);
+            _logger.Debug($"Sent event for local authority {staging.Code}");
         }
     }
 }

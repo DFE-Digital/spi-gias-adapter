@@ -10,8 +10,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         where TModel : class
         where TEntity : TableEntity
     {
-        protected TableCacheRepository(string connectionString, string tableName, ILoggerWrapper logger)
+        private readonly string _logTypeName;
+
+        protected TableCacheRepository(string connectionString, string tableName, ILoggerWrapper logger, string logTypeName)
         {
+            _logTypeName = logTypeName;
             var storageAccount = CloudStorageAccount.Parse(connectionString);
             var tableClient = storageAccount.CreateCloudTableClient();
             Table = tableClient.GetTableReference(tableName);
@@ -59,7 +62,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                     }
 
                     Logger.Debug(
-                        $"Inserting {position} to {partition.Length} for partition {entities.First().PartitionKey}");
+                        $"Inserting {position} to {partition.Length} for partition {entities.First().PartitionKey} of {_logTypeName}");
                     await Table.ExecuteBatchAsync(batch, cancellationToken);
 
                     position += batchSize;

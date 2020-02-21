@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
 using Dfe.Spi.Common.WellKnownIdentifiers;
+using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
@@ -12,10 +13,10 @@ using NUnit.Framework;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
 {
-    public class WhenMappingGroupToManagementGroup
+    public class WhenMappingLocalAuthorityToManagementGroup
     {
         private Mock<ITranslator> _translatorMock;
-        private GroupMapper _mapper;
+        private LocalAuthorityMapper _mapper;
         private CancellationToken _cancellationToken;
 
         [SetUp]
@@ -23,13 +24,13 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         {
             _translatorMock = new Mock<ITranslator>();
 
-            _mapper = new GroupMapper(_translatorMock.Object);
+            _mapper = new LocalAuthorityMapper(_translatorMock.Object);
 
             _cancellationToken = new CancellationToken();
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldReturnManagementGroup(Group source)
+        public async Task ThenItShouldReturnManagementGroup(LocalAuthority source)
         {
             var actual = await _mapper.MapAsync<ManagementGroup>(source, _cancellationToken);
 
@@ -38,18 +39,17 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapGroupToManagementGroupForBasicTypeProperties(Group source)
+        public async Task ThenItShouldMapGroupToManagementGroupForBasicTypeProperties(LocalAuthority source)
         {
             var actual = await _mapper.MapAsync<ManagementGroup>(source, _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.AreEqual(source.GroupName, actual.Name);
-            Assert.AreEqual(source.Uid.ToString(), actual.Identifier);
-            Assert.AreEqual(source.CompaniesHouseNumber, actual.CompaniesHouseNumber);
+            Assert.AreEqual(source.Name, actual.Name);
+            Assert.AreEqual(source.Code.ToString(), actual.Identifier);
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapTypeFromTranslation(Group source, string transformedValue)
+        public async Task ThenItShouldMapTypeFromTranslation(LocalAuthority source, string transformedValue)
         {
             _translatorMock.Setup(t =>
                     t.TranslateEnumValue(EnumerationNames.ManagementGroupType, It.IsAny<string>(),
@@ -61,13 +61,13 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             Assert.IsNotNull(actual);
             Assert.AreEqual(transformedValue, actual.Type);
             _translatorMock.Verify(
-                t => t.TranslateEnumValue(EnumerationNames.ManagementGroupType, source.GroupType,
+                t => t.TranslateEnumValue(EnumerationNames.ManagementGroupType, "LA",
                     _cancellationToken),
                 Times.Once);
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapCodeFromTranslatedTypeAndIdentifier(Group source, string transformedType)
+        public async Task ThenItShouldMapCodeFromTranslatedTypeAndIdentifier(LocalAuthority source, string transformedType)
         {
             _translatorMock.Setup(t =>
                     t.TranslateEnumValue(EnumerationNames.ManagementGroupType, It.IsAny<string>(),
@@ -77,11 +77,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             var actual = await _mapper.MapAsync<ManagementGroup>(source, _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.AreEqual($"{transformedType}-{source.Uid}", actual.Code);
+            Assert.AreEqual($"{transformedType}-{source.Code}", actual.Code);
         }
 
         [Test]
-        public void ThenItShouldThrowExceptionIfSourceIsNotGroup()
+        public void ThenItShouldThrowExceptionIfSourceIsNotLocalAuthority()
         {
             Assert.ThrowsAsync<ArgumentException>(async () =>
                 await _mapper.MapAsync<ManagementGroup>(new object(), new CancellationToken()));
@@ -91,7 +91,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         public void ThenItShouldThrowExceptionIfDestinationIsNotManagementGroup()
         {
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _mapper.MapAsync<object>(new Group(), new CancellationToken()));
+                await _mapper.MapAsync<object>(new LocalAuthority(), new CancellationToken()));
         }
     }
 }

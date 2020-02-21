@@ -6,5 +6,6 @@ namespace Dfe.Spi.GiasAdapter.Domain.Cache
     {
         public const string EstablishmentProcessingQueue = "staging-establishment";
         public const string GroupProcessingQueue = "staging-group";
+        public const string LocalAuthorityProcessingQueue = "staging-localauthority";
     }
 }

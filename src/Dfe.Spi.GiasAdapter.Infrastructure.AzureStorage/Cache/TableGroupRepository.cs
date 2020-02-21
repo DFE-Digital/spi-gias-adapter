@@ -12,7 +12,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
     public class TableGroupRepository : TableCacheRepository<Group, GroupEntity>,  IGroupRepository
     {
         public TableGroupRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
-            : base(configuration.TableStorageConnectionString, configuration.GroupTableName, logger)
+            : base(configuration.TableStorageConnectionString, configuration.GroupTableName, logger, "groups")
         {
         }
 

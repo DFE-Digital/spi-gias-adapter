@@ -117,12 +117,14 @@ namespace Dfe.Spi.GiasAdapter.Functions
         {
             services.AddScoped<IEstablishmentRepository, TableEstablishmentRepository>();
             services.AddScoped<IGroupRepository, TableGroupRepository>();
+            services.AddScoped<ILocalAuthorityRepository, TableLocalAuthorityRepository>();
         }
 
         private void AddQueues(IServiceCollection services)
         {
             services.AddScoped<IEstablishmentProcessingQueue, QueueEstablishmentProcessingQueue>();
             services.AddScoped<IGroupProcessingQueue, QueueGroupProcessingQueue>();
+            services.AddScoped<ILocalAuthorityProcessingQueue, QueueLocalAuthorityProcessingQueue>();
         }
 
         private void AddGiasApi(IServiceCollection services)
