@@ -15,7 +15,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
     {
         
         public TableEstablishmentRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
-            : base(configuration.TableStorageConnectionString, configuration.LocalAuthorityTableName, logger, "establishments")
+            : base(configuration.TableStorageConnectionString, configuration.EstablishmentTableName, logger, "establishments")
         {
         }
         
