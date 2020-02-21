@@ -16,6 +16,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken);
         Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken);
         Task ProcessBatchOfGroups(long[] uids, CancellationToken cancellationToken);
+        Task ProcessBatchOfLocalAuthorities(int[] laCodes, CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
@@ -120,7 +121,36 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             }
         }
 
+        public async Task ProcessBatchOfLocalAuthorities(int[] laCodes, CancellationToken cancellationToken)
+        {
+            foreach (var laCode in laCodes)
+            {
+                var current = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, cancellationToken);
+                var staging = await _localAuthorityRepository.GetLocalAuthorityFromStagingAsync(laCode, cancellationToken);
 
+                if (current == null)
+                {
+                    _logger.Info($"Local authority {laCode} has not been seen before. Processing as created");
+
+                    await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
+                        cancellationToken);
+                }
+                else if (!AreSame(current, staging))
+                {
+                    _logger.Info($"Local authority {laCode} has changed. Processing as updated");
+
+                    await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
+                        cancellationToken);
+                }
+                else
+                {
+                    _logger.Info($"Local authority {laCode} has not changed. Skipping");
+                }
+            }
+        }
+
+
+        
         private async Task DownloadGroupsToCacheAsync(CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring groups file from GIAS...");
@@ -311,6 +341,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                    current.CompaniesHouseNumber == staging.CompaniesHouseNumber;
         }
 
+        private bool AreSame(LocalAuthority current, LocalAuthority staging)
+        {
+            return current.Name == staging.Name;
+        }
+
         private async Task ProcessEstablishment(Establishment staging,
             Func<LearningProvider, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
@@ -335,6 +370,19 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             managementGroup._Lineage = null;
             await publishEvent(managementGroup, cancellationToken);
             _logger.Debug($"Sent event for group {staging.Uid}");
+        }
+
+        private async Task ProcessLocalAuthority(LocalAuthority staging,
+            Func<ManagementGroup, CancellationToken, Task> publishEvent,
+            CancellationToken cancellationToken)
+        {
+            await _localAuthorityRepository.StoreAsync(staging, cancellationToken);
+            _logger.Debug($"Stored local authority {staging.Code} in repository");
+
+            var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);
+            managementGroup._Lineage = null;
+            await publishEvent(managementGroup, cancellationToken);
+            _logger.Debug($"Sent event for local authority {staging.Code}");
         }
     }
 }
