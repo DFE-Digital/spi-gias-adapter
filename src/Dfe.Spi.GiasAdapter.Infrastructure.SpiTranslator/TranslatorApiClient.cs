@@ -17,12 +17,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
 {
     public class TranslatorApiClient : ITranslator
     {
+        private readonly OAuth2ClientCredentialsAuthenticator _oAuth2ClientCredentialsAuthenticator;
         private readonly IRestClient _restClient;
         private readonly ISpiExecutionContextManager _spiExecutionContextManager;
         private readonly ILoggerWrapper _logger;
         private readonly Dictionary<string, Dictionary<string, string[]>> _cache;
 
         public TranslatorApiClient(
+            AuthenticationConfiguration authenticationConfiguration,
             IRestClient restClient,
             ISpiExecutionContextManager spiExecutionContextManager,
             TranslatorConfiguration configuration,
@@ -41,6 +43,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             _logger = logger;
 
             _cache = new Dictionary<string, Dictionary<string, string[]>>();
+
+            _oAuth2ClientCredentialsAuthenticator = new OAuth2ClientCredentialsAuthenticator(
+                authenticationConfiguration.TokenEndpoint,
+                authenticationConfiguration.ClientId,
+                authenticationConfiguration.ClientSecret,
+                authenticationConfiguration.Resource);
         }
 
         public async Task<string> TranslateEnumValue(string enumName, string sourceValue,
@@ -84,6 +92,18 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
                 _spiExecutionContextManager.SpiExecutionContext;
 
             request.AppendContext(spiExecutionContext);
+
+            // Do we have an OAuth token?
+            // Or is this a server process?
+            string identityToken = spiExecutionContext.IdentityToken;
+
+            if (string.IsNullOrEmpty(identityToken))
+            {
+                // The fact we don't have a token means this is probably a
+                // server process.
+                // We need to generate one...
+                _restClient.Authenticator = _oAuth2ClientCredentialsAuthenticator;
+            }
 
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             if (!response.IsSuccessful)
