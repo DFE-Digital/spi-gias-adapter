@@ -1,19 +1,27 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 {
     internal class EstablishmentMapper : ObjectMapper
     {
+        private static PropertyInfo[] _propertyInfos;
+
         private readonly ITranslator _translator;
 
         public EstablishmentMapper(ITranslator translator)
         {
+            _propertyInfos = typeof(LearningProvider).GetProperties();
+
             _translator = translator;
         }
 
@@ -34,8 +42,25 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                     nameof(source));
             }
 
+            DateTime readDate = DateTime.UtcNow;
+
+            // This is is about as complicated as it gets for now.
+            // When we do stuff with management groups, might have to get a
+            // little more involved.
+            Dictionary<string, LineageEntry> lineage =
+                _propertyInfos
+                    .Where(x => !x.Name.StartsWith("_"))
+                    .ToDictionary(
+                        x => x.Name,
+                        x => new LineageEntry()
+                        {
+                            ReadDate = readDate,
+                        });
+
             var learningProvider = new LearningProvider
             {
+                _Lineage = lineage,
+
                 Type = establishment.EstablishmentTypeGroup?.Code,
                 SubType = establishment.TypeOfEstablishment?.Code,
                 Status = establishment.EstablishmentStatus?.Code,
@@ -100,11 +125,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 FederationFlag = establishment.FederationFlag?.DisplayName,
                 TelephoneNumber = establishment.TelephoneNum,
                 ContactEmail = establishment.ContactEmail,
-                AddressLine1 = establishment.Street,
-                AddressLine2 = establishment.Locality,
-                AddressLine3 = establishment.Address3,
-                Town = establishment.Town,
-                County = establishment.County,
+                Address = new Address()
+                {
+                    AddressLine1 = establishment.Street,
+                    AddressLine2 = establishment.Locality,
+                    AddressLine3 = establishment.Address3,
+                    Town = establishment.Town,
+                    County = establishment.County,
+                },
                 SchoolCapacity = establishment.SchoolCapacity,
                 NumberOfPupils = establishment.NumberOfPupils,
                 NumberOfBoys = establishment.NumberOfBoys,

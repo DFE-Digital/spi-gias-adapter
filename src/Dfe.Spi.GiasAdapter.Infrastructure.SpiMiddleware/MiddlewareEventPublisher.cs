@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.Events;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Newtonsoft.Json;
 using RestSharp;
 
