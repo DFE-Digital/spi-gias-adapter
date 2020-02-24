@@ -3,6 +3,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
+using Dfe.Spi.Common.Context;
+using Dfe.Spi.Common.Context.Definitions;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
@@ -18,6 +21,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
     class Program
     {
         private static Logger _logger;
+        private static HttpSpiExecutionContextManager _httpSpiExecutionContextManager;
         private static IGiasApiClient _giasApiClient;
         private static IMapper _mapper;
 
@@ -34,12 +38,16 @@ namespace ConvertEstablishmentFileToLearningProviderFile
         {
             _giasApiClient = new GiasPublicDownloadClient(new RestClient(), _logger);
 
+            // TODO: Somehow inject an OAuth token into the manager.
+            _httpSpiExecutionContextManager = new HttpSpiExecutionContextManager();
+
             var translator = new TranslatorApiClient(
                 new RestClient(),
+                _httpSpiExecutionContextManager,
                 new TranslatorConfiguration
                 {
                     BaseUrl = options.TranslatorBaseUrl,
-                    FunctionsKey = options.TranslatorFunctionKey,
+                    SubscriptionKey = options.TranslatorSubscriptionKey,
                 }, 
                 _logger);
             _mapper = new PocoMapper(translator);

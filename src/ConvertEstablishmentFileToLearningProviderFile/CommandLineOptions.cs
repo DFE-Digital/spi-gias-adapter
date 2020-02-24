@@ -10,7 +10,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
         [Option('t', "translator-url", Required = true, HelpText = "Base URL of translator API")]
         public string TranslatorBaseUrl { get; set; }
         
-        [Option('k', "translator-function-key", Required = true, HelpText = "Function key of translator API")]
-        public string TranslatorFunctionKey { get; set; }
+        [Option('k', "translator-subscription-key", Required = true, HelpText = "Subscription key of Translator API")]
+        public string TranslatorSubscriptionKey { get; set; }
     }
 }

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Context.Definitions;
+using Dfe.Spi.Common.Context.Models;
+using Dfe.Spi.Common.Http.Client;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
@@ -15,20 +18,24 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
     public class TranslatorApiClient : ITranslator
     {
         private readonly IRestClient _restClient;
+        private readonly ISpiExecutionContextManager _spiExecutionContextManager;
         private readonly ILoggerWrapper _logger;
         private readonly Dictionary<string, Dictionary<string, string[]>> _cache;
 
         public TranslatorApiClient(
             IRestClient restClient,
+            ISpiExecutionContextManager spiExecutionContextManager,
             TranslatorConfiguration configuration,
             ILoggerWrapper logger)
         {
             _restClient = restClient;
+            _spiExecutionContextManager = spiExecutionContextManager;
+
             _restClient.BaseUrl = new Uri(configuration.BaseUrl);
-            if (!string.IsNullOrEmpty(configuration.FunctionsKey))
+            if (!string.IsNullOrEmpty(configuration.SubscriptionKey))
             {
                 _restClient.DefaultParameters.Add(
-                    new Parameter("x-functions-key", configuration.FunctionsKey, ParameterType.HttpHeader));
+                    new Parameter("Ocp-Apim-Subscription-Key", configuration.SubscriptionKey, ParameterType.HttpHeader));
             }
 
             _logger = logger;
@@ -72,6 +79,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             var resource = $"enumerations/{enumName}/{SourceSystemNames.GetInformationAboutSchools}";
             _logger.Info($"Calling {resource} on translator api");
             var request = new RestRequest(resource, Method.GET);
+
+            SpiExecutionContext spiExecutionContext =
+                _spiExecutionContextManager.SpiExecutionContext;
+
+            request.AppendContext(spiExecutionContext);
+
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             if (!response.IsSuccessful)
             {

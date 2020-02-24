@@ -52,13 +52,13 @@
     "middlewareBaseUrl": {
       "type": "string"
     },
-    "middlewareFunctionsKey": {
+    "middlewareSubscriptionKey": {
       "type": "securestring"
     },
     "translatorBaseUrl": {
       "type": "string"
     },
-    "translatorFunctionsKey": {
+    "translatorSubscriptionKey": {
       "type": "securestring"
     },
     "eapimIp": {
@@ -229,16 +229,16 @@
               "value": "[concat(parameters('middlewareBaseUrl'), 'publish/spi-gias-events/')]"
             },
             {
-              "name": "SPI_Middleware__FunctionsKey",
-              "value": "[parameters('middlewareFunctionsKey')]"
+              "name": "SPI_Middleware__SubscriptionKey",
+              "value": "[parameters('middlewareSubscriptionKey')]"
             },
             {
               "name": "SPI_Translator__BaseUrl",
               "value": "[parameters('translatorBaseUrl')]"
             },
             {
-              "name": "SPI_Translator__FunctionsKey",
-              "value": "[parameters('translatorFunctionsKey')]"
+              "name": "SPI_Translator__SubscriptionKey",
+              "value": "[parameters('translatorSubscriptionKey')]"
             }
           ],
           "ipSecurityRestrictions": [

@@ -20,9 +20,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
         {
             _restClient = restClient;
             _restClient.BaseUrl = new Uri(configuration.BaseUrl, UriKind.Absolute);
-            if (!string.IsNullOrEmpty(configuration.FunctionsKey))
+            if (!string.IsNullOrEmpty(configuration.SubscriptionKey))
             {
-                _restClient.DefaultParameters.Add(new Parameter("x-functions-key", configuration.FunctionsKey,
+                _restClient.DefaultParameters.Add(new Parameter("Ocp-Apim-Subscription-Key", configuration.SubscriptionKey,
                     ParameterType.HttpHeader));
             }
 
