@@ -53,9 +53,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{C1FA72FE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PopulateInitialCache", "PopulateInitialCache\PopulateInitialCache.csproj", "{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests", "Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests\Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests.csproj", "{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing.UnitTests", "Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing.UnitTests\Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing.UnitTests.csproj", "{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvertEstablishmentFileToLearningProviderFile", "ConvertEstablishmentFileToLearningProviderFile\ConvertEstablishmentFileToLearningProviderFile.csproj", "{A050DA56-BBD3-4CCA-B587-D313C8620624}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing", "Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing\Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing.csproj", "{767C71DB-B2F3-47B0-BA22-AAE6F5390CD5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EAPIM", "EAPIM", "{683CD669-2BA0-4748-B92D-FF95626DAF70}"
+ProjectSection(SolutionItems) = preProject
+	..\eapim\named-values.csv = ..\eapim\named-values.csv
+	..\eapim\policy.xml = ..\eapim\policy.xml
+	..\eapim\swagger.json = ..\eapim\swagger.json
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -135,6 +144,10 @@ Global
 		{A050DA56-BBD3-4CCA-B587-D313C8620624}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A050DA56-BBD3-4CCA-B587-D313C8620624}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A050DA56-BBD3-4CCA-B587-D313C8620624}.Release|Any CPU.Build.0 = Release|Any CPU
+		{767C71DB-B2F3-47B0-BA22-AAE6F5390CD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{767C71DB-B2F3-47B0-BA22-AAE6F5390CD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{767C71DB-B2F3-47B0-BA22-AAE6F5390CD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{767C71DB-B2F3-47B0-BA22-AAE6F5390CD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -151,6 +164,7 @@ Global
 		{A70BD66F-855E-4AFB-B78D-6E4AD3EE0AAD} = {C1FA72FE-D8B5-4D62-83D5-E01596A486DB}
 		{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
 		{A050DA56-BBD3-4CCA-B587-D313C8620624} = {C1FA72FE-D8B5-4D62-83D5-E01596A486DB}
+		{683CD669-2BA0-4748-B92D-FF95626DAF70} = {053962FA-B190-4DFC-9057-8A1005338F9F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CFA95EB2-3EA6-4613-A9A5-911CD95DBD67}

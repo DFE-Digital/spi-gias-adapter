@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
@@ -30,6 +31,22 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             var actual = await _mapper.MapAsync<LearningProvider>(source, new CancellationToken());
             
             Assert.IsInstanceOf<LearningProvider>(actual);
+        }
+        
+        [Test, AutoData]
+        public async Task ThenItShouldReturnManagementGroupWhenMappingGroupToManagementGroup(Group source)
+        {
+            var actual = await _mapper.MapAsync<ManagementGroup>(source, new CancellationToken());
+            
+            Assert.IsInstanceOf<ManagementGroup>(actual);
+        }
+        
+        [Test, AutoData]
+        public async Task ThenItShouldReturnManagementGroupWhenMappingLocalAuthorityToManagementGroup(LocalAuthority source)
+        {
+            var actual = await _mapper.MapAsync<ManagementGroup>(source, new CancellationToken());
+            
+            Assert.IsInstanceOf<ManagementGroup>(actual);
         }
 
         [Test]

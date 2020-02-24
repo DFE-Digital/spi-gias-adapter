@@ -6,6 +6,7 @@ using Dfe.Spi.Common.Logging;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.Cache;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
+using Dfe.Spi.GiasAdapter.Application.ManagementGroups;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.Events;
@@ -92,7 +93,6 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddLogging(IServiceCollection services)
         {
             services.AddLogging();
-            services.AddScoped(typeof(ILogger<>), typeof(Logger<>));
             services.AddScoped<ILogger>(provider =>
                 provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
             services.AddScoped<ILoggerWrapper, LoggerWrapper>();
@@ -116,11 +116,15 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddRepositories(IServiceCollection services)
         {
             services.AddScoped<IEstablishmentRepository, TableEstablishmentRepository>();
+            services.AddScoped<IGroupRepository, TableGroupRepository>();
+            services.AddScoped<ILocalAuthorityRepository, TableLocalAuthorityRepository>();
         }
 
         private void AddQueues(IServiceCollection services)
         {
             services.AddScoped<IEstablishmentProcessingQueue, QueueEstablishmentProcessingQueue>();
+            services.AddScoped<IGroupProcessingQueue, QueueGroupProcessingQueue>();
+            services.AddScoped<ILocalAuthorityProcessingQueue, QueueLocalAuthorityProcessingQueue>();
         }
 
         private void AddGiasApi(IServiceCollection services)
@@ -136,18 +140,8 @@ namespace Dfe.Spi.GiasAdapter.Functions
         private void AddManagers(IServiceCollection services)
         {
             services.AddScoped<ILearningProviderManager, LearningProviderManager>();
-            services.AddScoped<ICacheManager>((sp) =>
-            {
-                // TODO: Once we have SOAP extracts, this can be a "standard" registration
-                //       Currently have 2 IGiasApiClient implementations
-                var logger = sp.GetService<ILoggerWrapper>();
-                var apiClient = new GiasPublicDownloadClient(sp.GetService<IRestClient>(), logger);
-                var establishmentRepository = sp.GetService<IEstablishmentRepository>();
-                var mapper = sp.GetService<IMapper>();
-                var eventPublisher = sp.GetService<IEventPublisher>();
-                var establishmentProcessingQueue = sp.GetService<IEstablishmentProcessingQueue>();
-                return new CacheManager(apiClient, establishmentRepository, mapper, eventPublisher, establishmentProcessingQueue, logger);
-            });
+            services.AddScoped<IManagementGroupManager, ManagementGroupManager>();
+            services.AddScoped<ICacheManager, CacheManager>();
             services.AddScoped<IHttpSpiExecutionContextManager, HttpSpiExecutionContextManager>();
             services.AddScoped<ISpiExecutionContextManager>(x => x.GetService<IHttpSpiExecutionContextManager>());
         }

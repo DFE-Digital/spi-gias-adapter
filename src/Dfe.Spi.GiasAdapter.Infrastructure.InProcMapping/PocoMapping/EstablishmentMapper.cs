@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.WellKnownIdentifiers;
+using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.Models;
@@ -42,25 +43,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                     nameof(source));
             }
 
-            DateTime readDate = DateTime.UtcNow;
-
-            // This is is about as complicated as it gets for now.
-            // When we do stuff with management groups, might have to get a
-            // little more involved.
-            Dictionary<string, LineageEntry> lineage =
-                _propertyInfos
-                    .Where(x => !x.Name.StartsWith("_"))
-                    .ToDictionary(
-                        x => x.Name,
-                        x => new LineageEntry()
-                        {
-                            ReadDate = readDate,
-                        });
-
             var learningProvider = new LearningProvider
             {
-                _Lineage = lineage,
-
                 Type = establishment.EstablishmentTypeGroup?.Code,
                 SubType = establishment.TypeOfEstablishment?.Code,
                 Status = establishment.EstablishmentStatus?.Code,
@@ -141,6 +125,23 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 ResourcedProvisionNumberOnRoll = establishment.ResourcedProvisionOnRoll,
             };
 
+            DateTime readDate = DateTime.UtcNow;
+
+            // This is is about as complicated as it gets for now.
+            // When we do stuff with management groups, might have to get a
+            // little more involved.
+            Dictionary<string, LineageEntry> lineage =
+                _propertyInfos
+                    .Where(x => !x.Name.StartsWith("_") && (x.GetValue(learningProvider) != null))
+                    .ToDictionary(
+                        x => x.Name,
+                        x => new LineageEntry()
+                        {
+                            ReadDate = readDate,
+                        });
+
+            learningProvider._Lineage = lineage;
+
             // Do the Translation bit...
             learningProvider.Type = await TranslateCodeNamePairAsync(
                 EnumerationNames.ProviderType,
@@ -172,6 +173,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 establishment.Gender,
                 cancellationToken);
             
+            // Set management group
+            learningProvider.ManagementGroup = await GetManagementGroup(establishment, cancellationToken);
+
             return learningProvider as TDestination;
         }
 
@@ -196,6 +200,39 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             }
 
             return await _translator.TranslateEnumValue(enumName, codeNamePair.Code.ToString(), cancellationToken);
+        }
+
+        private async Task<ManagementGroup> GetManagementGroup(Establishment establishment,
+            CancellationToken cancellationToken)
+        {
+            const string sponsorType = "School sponsor";
+
+            var link = establishment.GroupLinks?.FirstOrDefault(l => l.GroupType != sponsorType);
+            if (link != null)
+            {
+                var translatedLinkType = await TranslateManagementGroupType(link.GroupType, cancellationToken);
+                return new ManagementGroup
+                {
+                    Type = translatedLinkType,
+                    Code = $"{translatedLinkType}-{link.Uid}",
+                    Identifier = link.Uid.ToString(),
+                };
+            }
+
+            var translatedLaType = await TranslateManagementGroupType(LocalAuthority.ManagementGroupType, cancellationToken);
+            return new ManagementGroup
+            {
+                Type = translatedLaType,
+                Code = $"{translatedLaType}-{establishment.LA.Code}",
+                Identifier = establishment.LA.Code,
+                Name = establishment.LA.DisplayName,
+            };
+        }
+
+        private async Task<string> TranslateManagementGroupType(string value, CancellationToken cancellationToken)
+        {
+            return await _translator.TranslateEnumValue(EnumerationNames.ManagementGroupType,
+                value, cancellationToken);
         }
     }
 }

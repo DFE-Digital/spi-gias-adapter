@@ -29,6 +29,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
             _logger = logger;
         }
 
+        
         public async Task PublishLearningProviderCreatedAsync(LearningProvider learningProvider,
             CancellationToken cancellationToken)
         {
@@ -42,6 +43,22 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
             await SendEventToMiddleware("learning-provider-updated", learningProvider, cancellationToken);
             _logger.Debug($"Published learning provider updated: {JsonConvert.SerializeObject(learningProvider)}");
         }
+
+        
+        public async Task PublishManagementGroupCreatedAsync(ManagementGroup managementGroup,
+            CancellationToken cancellationToken)
+        {
+            await SendEventToMiddleware("management-group-created", managementGroup, cancellationToken);
+            _logger.Debug($"Published management group created: {JsonConvert.SerializeObject(managementGroup)}");
+        }
+
+        public async Task PublishManagementGroupUpdatedAsync(ManagementGroup managementGroup,
+            CancellationToken cancellationToken)
+        {
+            await SendEventToMiddleware("management-group-updated", managementGroup, cancellationToken);
+            _logger.Debug($"Published management group updated: {JsonConvert.SerializeObject(managementGroup)}");
+        }
+        
 
         private async Task SendEventToMiddleware(string eventType, object details, CancellationToken cancellationToken)
         {

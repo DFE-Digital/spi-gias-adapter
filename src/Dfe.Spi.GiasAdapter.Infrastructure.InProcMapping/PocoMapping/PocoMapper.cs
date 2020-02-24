@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
@@ -35,6 +36,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             if (type == typeof(Establishment))
             {
                 return new EstablishmentMapper(_translator);
+            }
+            if (type == typeof(Group))
+            {
+                return new GroupMapper(_translator);
+            }
+            if (type == typeof(LocalAuthority))
+            {
+                return new LocalAuthorityMapper(_translator);
             }
 
             return null;

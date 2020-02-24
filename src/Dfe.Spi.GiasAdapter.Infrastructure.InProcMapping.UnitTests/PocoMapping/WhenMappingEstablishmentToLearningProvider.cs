@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
 using Dfe.Spi.Common.WellKnownIdentifiers;
+using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping;
@@ -14,6 +15,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
 {
     public class WhenMappingEstablishmentToLearningProvider
     {
+        private const string LocalAuthorityManagementGroupType = "unit-test-la";
+        
         private Mock<ITranslator> _translatorMock;
         private EstablishmentMapper _mapper;
         private CancellationToken _cancellationToken;
@@ -22,6 +25,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         public void Arrange()
         {
             _translatorMock = new Mock<ITranslator>();
+            _translatorMock.Setup(t =>
+                    t.TranslateEnumValue(EnumerationNames.ManagementGroupType, LocalAuthority.ManagementGroupType, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(LocalAuthorityManagementGroupType);
 
             _mapper = new EstablishmentMapper(_translatorMock.Object);
 
@@ -97,7 +103,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapsubTypeFromTranslation(Establishment source, string transformedValue)
+        public async Task ThenItShouldMapSubTypeFromTranslation(Establishment source, string transformedValue)
         {
             _translatorMock.Setup(t =>
                     t.TranslateEnumValue(EnumerationNames.ProviderSubType, It.IsAny<string>(),
@@ -112,6 +118,66 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
                 t => t.TranslateEnumValue(EnumerationNames.ProviderSubType, source.TypeOfEstablishment.Code.ToString(),
                     _cancellationToken),
                 Times.Once);
+        }
+
+        [Test, AutoData]
+        public async Task ThenItShouldMapManagementGroupToLAIfNoLinks(Establishment source)
+        {
+            source.GroupLinks = null;
+            
+            var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken);
+            
+            Assert.IsNotNull(actual.ManagementGroup);
+            Assert.AreEqual(source.LA.Code, actual.ManagementGroup.Identifier);
+            Assert.AreEqual(source.LA.DisplayName, actual.ManagementGroup.Name);
+            Assert.AreEqual(LocalAuthorityManagementGroupType, actual.ManagementGroup.Type);
+            Assert.AreEqual($"{LocalAuthorityManagementGroupType}-{source.LA.Code}", actual.ManagementGroup.Code);
+        }
+
+        [Test, AutoData]
+        public async Task ThenItShouldMapManagementGroupToLAIfLinkIsOnlySponsor(Establishment source)
+        {
+            source.GroupLinks = new[]
+            {
+                new GroupLink
+                {
+                    GroupType = "School sponsor",
+                    Uid = 123456,
+                    Urn = source.Urn,   
+                }, 
+            };
+            
+            var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken);
+            
+            Assert.IsNotNull(actual.ManagementGroup);
+            Assert.AreEqual(source.LA.Code, actual.ManagementGroup.Identifier);
+            Assert.AreEqual(source.LA.DisplayName, actual.ManagementGroup.Name);
+            Assert.AreEqual(LocalAuthorityManagementGroupType, actual.ManagementGroup.Type);
+            Assert.AreEqual($"{LocalAuthorityManagementGroupType}-{source.LA.Code}", actual.ManagementGroup.Code);
+        }
+
+        [Test, AutoData]
+        public async Task ThenItShouldMapManagementGroupFromLinkWhenLinkIsGroup(Establishment source, long uid)
+        {
+            source.GroupLinks = new[]
+            {
+                new GroupLink
+                {
+                    GroupType = "Single-academy trust",
+                    Uid = uid,
+                    Urn = source.Urn,   
+                }, 
+            };
+            _translatorMock.Setup(t =>
+                    t.TranslateEnumValue(EnumerationNames.ManagementGroupType, "Single-academy trust", It.IsAny<CancellationToken>()))
+                .ReturnsAsync("SAT");
+            
+            var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken);
+            
+            Assert.IsNotNull(actual.ManagementGroup);
+            Assert.AreEqual(uid.ToString(), actual.ManagementGroup.Identifier);
+            Assert.AreEqual("SAT", actual.ManagementGroup.Type);
+            Assert.AreEqual($"SAT-{uid}", actual.ManagementGroup.Code);
         }
 
         [Test]

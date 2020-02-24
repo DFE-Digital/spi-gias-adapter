@@ -14,7 +14,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         
         public QueueEstablishmentProcessingQueue(CacheConfiguration configuration)
         {
-            var storageAccount = CloudStorageAccount.Parse(configuration.EstablishmentProcessingQueueConnectionString);
+            var storageAccount = CloudStorageAccount.Parse(configuration.ProcessingQueueConnectionString);
             var queueClient = storageAccount.CreateCloudQueueClient();
             _queue = queueClient.GetQueueReference(CacheQueueNames.EstablishmentProcessingQueue);
         }

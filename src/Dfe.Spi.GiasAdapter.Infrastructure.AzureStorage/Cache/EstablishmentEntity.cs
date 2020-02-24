@@ -3,7 +3,7 @@ using Microsoft.Azure.Cosmos.Table;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    internal class EstablishmentEntity : TableEntity
+    public class EstablishmentEntity : TableEntity
     {
         public string Establishment
         {

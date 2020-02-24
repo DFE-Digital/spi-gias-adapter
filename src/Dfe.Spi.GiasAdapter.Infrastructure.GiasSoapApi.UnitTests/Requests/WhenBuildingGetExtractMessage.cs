@@ -1,21 +1,22 @@
 using System.Xml.Linq;
 using AutoFixture.NUnit3;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.Requests;
 using NUnit.Framework;
 
-namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
+namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests.Requests
 {
-    public class WhenBuildingGetEstablishmentMessage
+    public class WhenBuildingGetExtractMessage
     {
         [Test, AutoData]
-        public void ThenItShouldReturnMessageForUrn(long urn, string username, string password)
+        public void ThenItShouldReturnMessageForExtractId(int extractId, string username, string password)
         {
             // Arrange
-            var builder = new GetEstablishmentMessageBuilder(username, password);
+            var builder = new GetExtractMessageBuilder(username, password);
 
             // Act
-            var actual = builder.Build(new GetEstablishmentRequest
+            var actual = builder.Build(new GetExtractRequest
             {
-                Urn = urn,
+                ExtractId = extractId,
             });
             
             // Assert
@@ -24,24 +25,24 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.UnitTests
             var body = XElement.Parse(actual).GetElementByLocalName("Body");
             Assert.IsNotNull(body);
             
-            var request = body.GetElementByLocalName("GetEstablishment");
+            var request = body.GetElementByLocalName("GetExtract");
             Assert.IsNotNull(request);
             
-            var requestUrn = request.GetElementByLocalName("Urn");
+            var requestUrn = request.GetElementByLocalName("Id");
             Assert.IsNotNull(requestUrn);
-            Assert.AreEqual(requestUrn.Value, urn.ToString());
+            Assert.AreEqual(requestUrn.Value, extractId.ToString());
         }
 
         [Test, AutoData]
-        public void ThenItShouldReturnMessageThatIsSecured(long urn, string username, string password)
+        public void ThenItShouldReturnMessageThatIsSecured(int extractId, string username, string password)
         {
             // Arrange
-            var builder = new GetEstablishmentMessageBuilder(username, password);
+            var builder = new GetExtractMessageBuilder(username, password);
 
             // Act
-            var actual = builder.Build(new GetEstablishmentRequest
+            var actual = builder.Build(new GetExtractRequest
             {
-                Urn = urn,
+                ExtractId = extractId,
             });
             
             // Asser

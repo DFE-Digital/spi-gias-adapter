@@ -7,5 +7,7 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
     {
         Task<Establishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken);
         Task<Establishment[]> DownloadEstablishmentsAsync(CancellationToken cancellationToken);
+        Task<Group[]> DownloadGroupsAsync(CancellationToken cancellationToken);
+        Task<GroupLink[]> DownloadGroupLinksAsync(CancellationToken cancellationToken);
     }
 }

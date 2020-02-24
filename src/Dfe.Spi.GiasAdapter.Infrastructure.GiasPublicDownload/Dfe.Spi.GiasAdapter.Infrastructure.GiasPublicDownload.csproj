@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Domain\Dfe.Spi.GiasAdapter.Domain.csproj" />
+        <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing\Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing.csproj" />
     </ItemGroup>
 
     <ItemGroup>

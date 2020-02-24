@@ -1,3 +1,3 @@
 ﻿using System.Runtime.CompilerServices;
 
-[assembly:InternalsVisibleTo("Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.UnitTests")] 
+[assembly:InternalsVisibleTo("Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing.UnitTests")] 

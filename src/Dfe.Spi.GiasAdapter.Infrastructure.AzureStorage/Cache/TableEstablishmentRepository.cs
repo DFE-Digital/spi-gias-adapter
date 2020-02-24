@@ -11,102 +11,46 @@ using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    public class TableEstablishmentRepository : IEstablishmentRepository
+    public class TableEstablishmentRepository : TableCacheRepository<Establishment, EstablishmentEntity>, IEstablishmentRepository
     {
-        private readonly ILoggerWrapper _logger;
-        private readonly CloudTable _table;
-
-        public TableEstablishmentRepository(CacheConfiguration configuration, ILoggerWrapper logger)
+        
+        public TableEstablishmentRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
+            : base(configuration.TableStorageConnectionString, configuration.EstablishmentTableName, logger, "establishments")
         {
-            _logger = logger;
-
-            var storageAccount = CloudStorageAccount.Parse(configuration.TableStorageConnectionString);
-            var tableClient = storageAccount.CreateCloudTableClient();
-            _table = tableClient.GetTableReference(configuration.EstablishmentTableName);
         }
+        
+        
 
-        
-        
         public async Task StoreAsync(Establishment establishment, CancellationToken cancellationToken)
         {
-            await _table.CreateIfNotExistsAsync(cancellationToken);
-
-            var operation = TableOperation.InsertOrReplace(ModelToCurrent(establishment));
-            await _table.ExecuteAsync(operation, cancellationToken);
+            await InsertOrUpdateAsync(establishment, cancellationToken);
         }
 
         public async Task StoreInStagingAsync(Establishment[] establishments, CancellationToken cancellationToken)
         {
-            const int batchSize = 100;
-
-            await _table.CreateIfNotExistsAsync(cancellationToken);
-
-            var partitionedEntities = establishments
-                .Select(ModelToStaging)
-                .GroupBy(entity => entity.PartitionKey)
-                .ToDictionary(g => g.Key, g => g.ToArray());
-            foreach (var partition in partitionedEntities.Values)
-            {
-                var position = 0;
-                while (position < partition.Length)
-                {
-                    var entities = partition.Skip(position).Take(batchSize).ToArray();
-                    var batch = new TableBatchOperation();
-
-                    foreach (var entity in entities)
-                    {
-                        batch.InsertOrReplace(entity);
-                    }
-
-                    _logger.Debug(
-                        $"Inserting {position} to {partition.Length} for partition {entities.First().PartitionKey}");
-                    await _table.ExecuteBatchAsync(batch, cancellationToken);
-
-                    position += batchSize;
-                }
-            }
+            await InsertOrUpdateStagingAsync(establishments, cancellationToken);
         }
 
         public async Task<Establishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken)
         {
-            var operation = TableOperation.Retrieve<EstablishmentEntity>(urn.ToString(), "current");
-            var operationResult = await _table.ExecuteAsync(operation, cancellationToken);
-            var entity = (EstablishmentEntity) operationResult.Result;
-
-            if (entity == null)
-            {
-                return null;
-            }
-
-            return EntityToModel(entity);
+            return await RetrieveAsync(urn.ToString(), "current", cancellationToken);
         }
 
         public async Task<Establishment> GetEstablishmentFromStagingAsync(long urn, CancellationToken cancellationToken)
         {
-            var operation = TableOperation.Retrieve<EstablishmentEntity>(GetStagingPartitionKey(urn),urn.ToString());
-            var operationResult = await _table.ExecuteAsync(operation, cancellationToken);
-            var entity = (EstablishmentEntity) operationResult.Result;
-
-            if (entity == null)
-            {
-                return null;
-            }
-
-            return EntityToModel(entity);
+            return await RetrieveAsync(GetStagingPartitionKey(urn), urn.ToString(), cancellationToken);
         }
-
-
         
         
 
-        private EstablishmentEntity ModelToCurrent(Establishment establishment)
+        protected override EstablishmentEntity ModelToEntity(Establishment model)
         {
-            return ModelToEntity(establishment.Urn.ToString(), "current", establishment);
+            return ModelToEntity(model.Urn.ToString(), "current", model);
         }
 
-        private EstablishmentEntity ModelToStaging(Establishment establishment)
+        protected override EstablishmentEntity ModelToEntityForStaging(Establishment model)
         {
-            return ModelToEntity(GetStagingPartitionKey(establishment.Urn), establishment.Urn.ToString(), establishment);
+            return ModelToEntity(GetStagingPartitionKey(model.Urn), model.Urn.ToString(), model);
         }
 
         private EstablishmentEntity ModelToEntity(string partitionKey, string rowKey, Establishment establishment)
@@ -119,7 +63,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             };
         }
 
-        private Establishment EntityToModel(EstablishmentEntity entity)
+        protected override Establishment EntityToModel(EstablishmentEntity entity)
         {
             return JsonConvert.DeserializeObject<Establishment>(
                 entity.Establishment);

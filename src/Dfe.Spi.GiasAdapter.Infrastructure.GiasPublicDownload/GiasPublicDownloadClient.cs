@@ -6,9 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
-using Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.CsvParsing;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing;
 using HtmlAgilityPack;
 using RestSharp;
+using Group = Dfe.Spi.GiasAdapter.Domain.GiasApi.Group;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload
 {
@@ -54,6 +55,16 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload
                 var establishments = parser.GetRecords();
                 return establishments;
             }
+        }
+
+        public Task<Group[]> DownloadGroupsAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<GroupLink[]> DownloadGroupLinksAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
 
 
