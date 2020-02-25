@@ -17,6 +17,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
 {
     public class WhenTranslatingEnumValue
     {
+        private AuthenticationConfiguration _authenticationConfiguration;
         private Mock<IRestClient> _restClientMock;
         private Mock<ISpiExecutionContextManager> _spiExecutionContextManager;
         private TranslatorConfiguration _configuration;
@@ -27,6 +28,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
         [SetUp]
         public void Arrange()
         {
+            _authenticationConfiguration = new AuthenticationConfiguration()
+            {
+                ClientId = "some client id",
+                ClientSecret = "some secret",
+                Resource = "http://this.doesnt.exist.local/abc",
+                TokenEndpoint = "https://somecorp.local/tokens",
+            };
+
             _restClientMock = new Mock<IRestClient>();
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new RestResponse
@@ -47,6 +56,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _translator = new TranslatorApiClient(
+                _authenticationConfiguration,
                 _restClientMock.Object,
                 _spiExecutionContextManager.Object,
                 _configuration,

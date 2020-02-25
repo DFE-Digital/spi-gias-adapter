@@ -38,10 +38,16 @@ namespace ConvertEstablishmentFileToLearningProviderFile
         {
             _giasApiClient = new GiasPublicDownloadClient(new RestClient(), _logger);
 
-            // TODO: Somehow inject an OAuth token into the manager.
             _httpSpiExecutionContextManager = new HttpSpiExecutionContextManager();
 
             var translator = new TranslatorApiClient(
+                new AuthenticationConfiguration()
+                {
+                    ClientId = options.ClientId,
+                    ClientSecret = options.ClientSecret,
+                    Resource = options.Resource,
+                    TokenEndpoint = options.TokenEndpoint,
+                },
                 new RestClient(),
                 _httpSpiExecutionContextManager,
                 new TranslatorConfiguration
