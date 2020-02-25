@@ -91,18 +91,31 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             SpiExecutionContext spiExecutionContext =
                 _spiExecutionContextManager.SpiExecutionContext;
 
-            request.AppendContext(spiExecutionContext);
-
             // Do we have an OAuth token?
             // Or is this a server process?
             string identityToken = spiExecutionContext.IdentityToken;
 
             if (string.IsNullOrEmpty(identityToken))
             {
+                _logger.Debug(
+                    $"No OAuth token present in the " +
+                    $"{nameof(SpiExecutionContext)}. The " +
+                    $"{nameof(OAuth2ClientCredentialsAuthenticator)} will " +
+                    $"be used, and a new token generated.");
+
                 // The fact we don't have a token means this is probably a
                 // server process.
                 // We need to generate one...
                 _restClient.Authenticator = _oAuth2ClientCredentialsAuthenticator;
+            }
+            else
+            {
+                request.AppendContext(spiExecutionContext);
+
+                _logger.Debug(
+                    $"OAuth token present in the " +
+                    $"{nameof(SpiExecutionContext)}. This will be used in " +
+                    $"calling the Translator.");
             }
 
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Http.Client;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.Events;
@@ -15,7 +16,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
         private readonly IRestClient _restClient;
         private readonly ILoggerWrapper _logger;
 
-        public MiddlewareEventPublisher(MiddlewareConfiguration configuration, IRestClient restClient,
+        public MiddlewareEventPublisher(
+            AuthenticationConfiguration authenticationConfiguration,
+            MiddlewareConfiguration configuration,
+            IRestClient restClient,
             ILoggerWrapper logger)
         {
             _restClient = restClient;
@@ -25,6 +29,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
                 _restClient.DefaultParameters.Add(new Parameter("Ocp-Apim-Subscription-Key", configuration.SubscriptionKey,
                     ParameterType.HttpHeader));
             }
+
+            _restClient.Authenticator = new OAuth2ClientCredentialsAuthenticator(
+                authenticationConfiguration.TokenEndpoint,
+                authenticationConfiguration.ClientId,
+                authenticationConfiguration.ClientSecret,
+                authenticationConfiguration.Resource);
 
             _logger = logger;
         }
