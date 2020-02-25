@@ -121,7 +121,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             if (!response.IsSuccessful)
             {
-                throw new TranslatorApiException(resource, response.StatusCode, response.Content);
+                throw new TranslatorApiException(
+                    resource,
+                    response.StatusCode,
+                    response.Content,
+                    response.ErrorException);
             }
 
             _logger.Info($"Received {response.Content}");
