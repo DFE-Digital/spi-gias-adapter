@@ -115,7 +115,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
                 _logger.Debug(
                     $"OAuth token present in the " +
                     $"{nameof(SpiExecutionContext)}. This will be used in " +
-                    "calling the Translator.");
+                    $"calling the Translator.");
             }
 
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
