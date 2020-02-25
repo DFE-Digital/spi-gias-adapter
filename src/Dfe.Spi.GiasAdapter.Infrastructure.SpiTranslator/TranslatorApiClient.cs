@@ -91,6 +91,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             SpiExecutionContext spiExecutionContext =
                 _spiExecutionContextManager.SpiExecutionContext;
 
+            request.AppendContext(spiExecutionContext);
+
             // Do we have an OAuth token?
             // Or is this a server process?
             string identityToken = spiExecutionContext.IdentityToken;
@@ -110,8 +112,6 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             }
             else
             {
-                request.AppendContext(spiExecutionContext);
-
                 _logger.Debug(
                     $"OAuth token present in the " +
                     $"{nameof(SpiExecutionContext)}. This will be used in " +
@@ -121,7 +121,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             if (!response.IsSuccessful)
             {
-                throw new TranslatorApiException(resource, response.StatusCode, response.Content);
+                throw new TranslatorApiException(
+                    resource,
+                    response.StatusCode,
+                    response.Content,
+                    response.ErrorException);
             }
 
             _logger.Info($"Received {response.Content}");
