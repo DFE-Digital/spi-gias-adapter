@@ -8,6 +8,7 @@ using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.Models;
 using Dfe.Spi.Models.Entities;
+using Dfe.Spi.Models.Extensions;
 using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
