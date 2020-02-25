@@ -3,6 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
 using Castle.Core.Resource;
+using Dfe.Spi.Common.Context.Definitions;
+using Dfe.Spi.Common.Context.Models;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
@@ -15,7 +17,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
 {
     public class WhenTranslatingEnumValue
     {
+        private AuthenticationConfiguration _authenticationConfiguration;
         private Mock<IRestClient> _restClientMock;
+        private Mock<ISpiExecutionContextManager> _spiExecutionContextManager;
         private TranslatorConfiguration _configuration;
         private Mock<ILoggerWrapper> _loggerMock;
         private TranslatorApiClient _translator;
@@ -24,6 +28,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
         [SetUp]
         public void Arrange()
         {
+            _authenticationConfiguration = new AuthenticationConfiguration()
+            {
+                ClientId = "some client id",
+                ClientSecret = "some secret",
+                Resource = "http://this.doesnt.exist.local/abc",
+                TokenEndpoint = "https://somecorp.local/tokens",
+            };
+
             _restClientMock = new Mock<IRestClient>();
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new RestResponse
@@ -33,6 +45,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
                     Content = GetValidResponse("Value1", new[] {"Mapped1"})
                 });
 
+            _spiExecutionContextManager = new Mock<ISpiExecutionContextManager>();
+            _spiExecutionContextManager.Setup(x => x.SpiExecutionContext).Returns(new SpiExecutionContext());
+
             _configuration = new TranslatorConfiguration
             {
                 BaseUrl = "https://translator.unit.tests",
@@ -41,7 +56,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _translator = new TranslatorApiClient(
+                _authenticationConfiguration,
                 _restClientMock.Object,
+                _spiExecutionContextManager.Object,
                 _configuration,
                 _loggerMock.Object);
 
