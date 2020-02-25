@@ -8,6 +8,8 @@ param (
     [string] $AuthResource
 )
 
+Add-Type -AssemblyName System.Web;
+
 # Get an OAuth token.
 $AuthClientId = [System.Web.HttpUtility]::UrlEncode($AuthClientId);
 $AuthClientSecret = [System.Web.HttpUtility]::UrlEncode($AuthClientSecret);
