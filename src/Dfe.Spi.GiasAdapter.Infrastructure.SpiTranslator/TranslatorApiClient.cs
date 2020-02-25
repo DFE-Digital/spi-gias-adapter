@@ -114,7 +114,6 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             {
                 _logger.Debug(
                     $"OAuth token present in the " +
-                    "OAuth token present in the SpiExecutionContext. This " +
                     $"{nameof(SpiExecutionContext)}. This will be used in " +
                     "will be used in calling the Translator.");
             }
