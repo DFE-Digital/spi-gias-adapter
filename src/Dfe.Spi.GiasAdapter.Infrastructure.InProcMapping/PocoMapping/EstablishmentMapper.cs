@@ -10,6 +10,7 @@ using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.Models;
 using Dfe.Spi.Models.Entities;
+using Dfe.Spi.Models.Extensions;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 {
@@ -127,21 +128,6 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 
             DateTime readDate = DateTime.UtcNow;
 
-            // This is is about as complicated as it gets for now.
-            // When we do stuff with management groups, might have to get a
-            // little more involved.
-            Dictionary<string, LineageEntry> lineage =
-                _propertyInfos
-                    .Where(x => !x.Name.StartsWith("_") && (x.GetValue(learningProvider) != null))
-                    .ToDictionary(
-                        x => x.Name,
-                        x => new LineageEntry()
-                        {
-                            ReadDate = readDate,
-                        });
-
-            learningProvider._Lineage = lineage;
-
             // Do the Translation bit...
             learningProvider.Type = await TranslateCodeNamePairAsync(
                 EnumerationNames.ProviderType,
@@ -172,10 +158,13 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 EnumerationNames.GenderOfEntry,
                 establishment.Gender,
                 cancellationToken);
+
+            // lineage
+            learningProvider.SetLineageForRequestedFields();
             
             // Set management group
             learningProvider.ManagementGroup = await GetManagementGroup(establishment, cancellationToken);
-
+            
             return learningProvider as TDestination;
         }
 
