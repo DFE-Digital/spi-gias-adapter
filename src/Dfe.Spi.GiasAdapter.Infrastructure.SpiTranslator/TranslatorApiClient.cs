@@ -110,6 +110,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
                 // We need to generate one...
                 _restClient.Authenticator = _oAuth2ClientCredentialsAuthenticator;
             }
+            else
+            {
+                _logger.Debug(
+                    "OAuth token present in the SpiExecutionContext. This " +
+                    "will be used in calling the Translator.");
+            }
 
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             if (!response.IsSuccessful)
