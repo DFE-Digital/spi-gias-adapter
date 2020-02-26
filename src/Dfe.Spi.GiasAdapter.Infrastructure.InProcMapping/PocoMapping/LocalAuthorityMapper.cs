@@ -5,6 +5,7 @@ using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.Models.Entities;
+using Dfe.Spi.Models.Extensions;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 {
@@ -43,7 +44,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 await TranslateAsync(EnumerationNames.ManagementGroupType, LocalAuthority.ManagementGroupType, cancellationToken);
 
             managementGroup.Code = $"{managementGroup.Type}-{managementGroup.Identifier}";
-
+            
+            managementGroup.SetLineageForRequestedFields();
             return managementGroup as TDestination;
         }
         

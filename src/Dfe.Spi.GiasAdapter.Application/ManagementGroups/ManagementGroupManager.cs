@@ -8,6 +8,7 @@ using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.Models.Entities;
+using Dfe.Spi.Models.Extensions;
 
 namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
 {
