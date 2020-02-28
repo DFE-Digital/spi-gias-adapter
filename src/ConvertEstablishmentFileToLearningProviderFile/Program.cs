@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommandLine;
 using Dfe.Spi.Common.Context;
 using Dfe.Spi.Common.Context.Definitions;
+using Dfe.Spi.Common.Context.Models;
 using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
@@ -39,6 +40,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             _giasApiClient = new GiasPublicDownloadClient(new RestClient(), _logger);
 
             _httpSpiExecutionContextManager = new HttpSpiExecutionContextManager();
+            _httpSpiExecutionContextManager.SetInternalRequestId(Guid.NewGuid());
 
             var translator = new TranslatorApiClient(
                 new AuthenticationConfiguration()
