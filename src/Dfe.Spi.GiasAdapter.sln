@@ -66,6 +66,8 @@ ProjectSection(SolutionItems) = preProject
 	..\eapim\swagger.json = ..\eapim\swagger.json
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportManagementGroups", "ExportManagementGroups\ExportManagementGroups.csproj", "{2948A555-E271-4336-A581-B409B3458E15}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -148,6 +150,10 @@ Global
 		{767C71DB-B2F3-47B0-BA22-AAE6F5390CD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{767C71DB-B2F3-47B0-BA22-AAE6F5390CD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{767C71DB-B2F3-47B0-BA22-AAE6F5390CD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2948A555-E271-4336-A581-B409B3458E15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2948A555-E271-4336-A581-B409B3458E15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2948A555-E271-4336-A581-B409B3458E15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2948A555-E271-4336-A581-B409B3458E15}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -165,6 +171,7 @@ Global
 		{E7AAEE6B-2D27-4D95-92EF-2B46B1F0BC33} = {BF25E5F8-95CF-4550-B6DB-BBE7ADE9328F}
 		{A050DA56-BBD3-4CCA-B587-D313C8620624} = {C1FA72FE-D8B5-4D62-83D5-E01596A486DB}
 		{683CD669-2BA0-4748-B92D-FF95626DAF70} = {053962FA-B190-4DFC-9057-8A1005338F9F}
+		{2948A555-E271-4336-A581-B409B3458E15} = {C1FA72FE-D8B5-4D62-83D5-E01596A486DB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CFA95EB2-3EA6-4613-A9A5-911CD95DBD67}
