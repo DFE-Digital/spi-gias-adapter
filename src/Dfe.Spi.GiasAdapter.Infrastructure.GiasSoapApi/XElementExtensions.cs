@@ -40,7 +40,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             };
         }
 
-        internal static DateTime? GetDateTimeFromChildElement(this XElement containerElement, string localName)
+        internal static DateTime? GetDateTimeFromChildElement(this XElement containerElement, string localName, bool includeTime = false)
         {
             string value = containerElement.GetValueFromChildElement(localName);
 
@@ -49,7 +49,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                 return null;
             }
  
-            return DateTime.Parse(value);
+            var dateTime = DateTime.Parse(value);
+            return includeTime ? dateTime : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
         }
 
         internal static long? GetLongFromChildElement(this XElement containerElement, string localName)
