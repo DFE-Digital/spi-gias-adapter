@@ -59,7 +59,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
                 kvp.Value.Any(v => v.Equals(sourceValue, StringComparison.InvariantCultureIgnoreCase))).Key;
             if (string.IsNullOrEmpty(mapping))
             {
-                _logger.Info($"No enum mapping found for GIAS for {enumName} with value {sourceValue}");
+                _logger.Warning($"No enum mapping found for GIAS for {enumName} with value {sourceValue}");
                 return null;
             }
             
