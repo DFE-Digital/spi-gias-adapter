@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
+using Dfe.Spi.Common.Caching;
 using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
@@ -61,6 +62,7 @@ namespace ExportManagementGroups
                     TokenEndpoint = options.TokenEndpoint,
                 },
                 new RestClient(),
+                new CacheProvider(),
                 _httpSpiExecutionContextManager,
                 new TranslatorConfiguration
                 {

@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
+using Dfe.Spi.Common.Caching;
 using Dfe.Spi.Common.Context;
 using Dfe.Spi.Common.Context.Definitions;
 using Dfe.Spi.Common.Context.Models;
@@ -51,6 +52,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
                     TokenEndpoint = options.TokenEndpoint,
                 },
                 new RestClient(),
+                new CacheProvider(),
                 _httpSpiExecutionContextManager,
                 new TranslatorConfiguration
                 {
