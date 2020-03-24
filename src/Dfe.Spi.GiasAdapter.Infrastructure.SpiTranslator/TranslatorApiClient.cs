@@ -134,7 +134,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
                     response.ErrorException);
             }
 
-            _logger.Info($"Received {response.Content}");
+            _logger.Debug($"Received {response.Content}");
             var translationResponse = JsonConvert.DeserializeObject<TranslationResponse>(response.Content);
             return translationResponse.MappingsResult.Mappings;
         }

@@ -89,7 +89,7 @@ namespace ExportManagementGroups
                         Name = cnp.DisplayName,
                     })
                 .ToArray();
-            _logger.Info($"Converted {establishments.Length} to {localAuthorities.Length} distinct local authorities");
+            _logger.Debug($"Converted {establishments.Length} to {localAuthorities.Length} distinct local authorities");
 
             return await MapAsync(localAuthorities, cancellationToken);
         }

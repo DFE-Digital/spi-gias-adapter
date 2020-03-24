@@ -101,7 +101,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
         {
             services.AddLogging();
             services.AddScoped<ILogger>(provider =>
-                provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
+                provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("GiasAdapter")));
             services.AddScoped<ILoggerWrapper, LoggerWrapper>();
         }
 

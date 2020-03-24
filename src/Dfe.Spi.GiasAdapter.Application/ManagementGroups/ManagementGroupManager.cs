@@ -56,7 +56,7 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
             {
                 managementGroup = managementGroup.Pick(fields);
 
-                _logger.Info(
+                _logger.Debug(
                     $"Pruned management group: {managementGroup}.");
             }
             else
