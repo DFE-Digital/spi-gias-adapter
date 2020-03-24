@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
 using Castle.Core.Resource;
+using Dfe.Spi.Common.Caching.Definitions;
 using Dfe.Spi.Common.Context.Definitions;
 using Dfe.Spi.Common.Context.Models;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -19,6 +20,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
     {
         private AuthenticationConfiguration _authenticationConfiguration;
         private Mock<IRestClient> _restClientMock;
+        private Mock<ICacheProvider> _cacheProviderMock;
         private Mock<ISpiExecutionContextManager> _spiExecutionContextManager;
         private TranslatorConfiguration _configuration;
         private Mock<ILoggerWrapper> _loggerMock;
@@ -44,6 +46,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
                     ResponseStatus = ResponseStatus.Completed,
                     Content = GetValidResponse("Value1", new[] {"Mapped1"})
                 });
+            
+            _cacheProviderMock = new Mock<ICacheProvider>();
 
             _spiExecutionContextManager = new Mock<ISpiExecutionContextManager>();
             _spiExecutionContextManager.Setup(x => x.SpiExecutionContext).Returns(new SpiExecutionContext());
@@ -58,6 +62,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.UnitTests
             _translator = new TranslatorApiClient(
                 _authenticationConfiguration,
                 _restClientMock.Object,
+                _cacheProviderMock.Object,
                 _spiExecutionContextManager.Object,
                 _configuration,
                 _loggerMock.Object);

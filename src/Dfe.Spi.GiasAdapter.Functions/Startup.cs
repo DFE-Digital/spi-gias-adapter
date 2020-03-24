@@ -1,4 +1,6 @@
 using System.IO;
+using Dfe.Spi.Common.Caching;
+using Dfe.Spi.Common.Caching.Definitions;
 using Dfe.Spi.Common.Context.Definitions;
 using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
@@ -28,6 +30,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RestSharp;
+using CacheManager = Dfe.Spi.GiasAdapter.Application.Cache.CacheManager;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -65,6 +68,9 @@ namespace Dfe.Spi.GiasAdapter.Functions
             AddGiasApi(services);
             AddMapping(services);
             AddManagers(services);
+
+            services
+                .AddSingleton<ICacheProvider, CacheProvider>();
         }
 
         private IConfigurationRoot BuildConfiguration()
@@ -95,7 +101,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
         {
             services.AddLogging();
             services.AddScoped<ILogger>(provider =>
-                provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
+                provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("GiasAdapter")));
             services.AddScoped<ILoggerWrapper, LoggerWrapper>();
         }
 

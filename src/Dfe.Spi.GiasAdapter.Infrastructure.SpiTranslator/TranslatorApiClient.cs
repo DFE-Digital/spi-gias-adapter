@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Caching.Definitions;
 using Dfe.Spi.Common.Context.Definitions;
 using Dfe.Spi.Common.Context.Models;
 using Dfe.Spi.Common.Http.Client;
@@ -19,18 +20,20 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
     {
         private readonly OAuth2ClientCredentialsAuthenticator _oAuth2ClientCredentialsAuthenticator;
         private readonly IRestClient _restClient;
+        private readonly ICacheProvider _cacheProvider;
         private readonly ISpiExecutionContextManager _spiExecutionContextManager;
         private readonly ILoggerWrapper _logger;
-        private readonly Dictionary<string, Dictionary<string, string[]>> _cache;
 
         public TranslatorApiClient(
             AuthenticationConfiguration authenticationConfiguration,
             IRestClient restClient,
+            ICacheProvider cacheProvider,
             ISpiExecutionContextManager spiExecutionContextManager,
             TranslatorConfiguration configuration,
             ILoggerWrapper logger)
         {
             _restClient = restClient;
+            _cacheProvider = cacheProvider;
             _spiExecutionContextManager = spiExecutionContextManager;
 
             _restClient.BaseUrl = new Uri(configuration.BaseUrl);
@@ -41,8 +44,6 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             }
 
             _logger = logger;
-
-            _cache = new Dictionary<string, Dictionary<string, string[]>>();
 
             _oAuth2ClientCredentialsAuthenticator = new OAuth2ClientCredentialsAuthenticator(
                 authenticationConfiguration.TokenEndpoint,
@@ -71,13 +72,18 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             CancellationToken cancellationToken)
         {
             var cacheKey = $"{enumName}:{sourceValue}";
-            if (_cache.ContainsKey(cacheKey))
+
+            var cached = (Dictionary<string, string[]>)(await _cacheProvider.GetCacheItemAsync(cacheKey, cancellationToken));
+            if (cached != null)
             {
-                return _cache[cacheKey];
+                return cached;
             }
 
             var mappings = await GetMappingsFromApi(enumName, sourceValue, cancellationToken);
-            _cache.Add(cacheKey, mappings);
+
+            await _cacheProvider.AddCacheItemAsync(cacheKey, mappings,
+                new TimeSpan(0, 1, 0), cancellationToken);
+            
             return mappings;
         }
 
@@ -128,19 +134,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
                     response.ErrorException);
             }
 
-            _logger.Info($"Received {response.Content}");
+            _logger.Debug($"Received {response.Content}");
             var translationResponse = JsonConvert.DeserializeObject<TranslationResponse>(response.Content);
             return translationResponse.MappingsResult.Mappings;
         }
-    }
-
-    internal class TranslationResponse
-    {
-        public TranslationMappingsResult MappingsResult { get; set; }
-    }
-
-    internal class TranslationMappingsResult
-    {
-        public Dictionary<string, string[]> Mappings { get; set; }
     }
 }

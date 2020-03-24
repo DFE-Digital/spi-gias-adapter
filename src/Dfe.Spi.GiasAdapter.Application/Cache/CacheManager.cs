@@ -157,11 +157,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             // Download
             var groups = await _giasApiClient.DownloadGroupsAsync(cancellationToken);
-            _logger.Info($"Downloaded {groups.Length} groups from GIAS");
+            _logger.Debug($"Downloaded {groups.Length} groups from GIAS");
 
             // Store
             await _groupRepository.StoreInStagingAsync(groups, cancellationToken);
-            _logger.Info($"Stored {groups.Length} groups in staging");
+            _logger.Debug($"Stored {groups.Length} groups in staging");
 
             // Queue diff check
             var position = 0;
@@ -191,7 +191,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             // Download
             var establishments = await _giasApiClient.DownloadEstablishmentsAsync(cancellationToken);
-            _logger.Info($"Downloaded {establishments.Length} establishments from GIAS");
+            _logger.Debug($"Downloaded {establishments.Length} establishments from GIAS");
 
             // Add links
             foreach (var establishment in establishments)
@@ -205,7 +205,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             // Store
             await _establishmentRepository.StoreInStagingAsync(establishments, cancellationToken);
-            _logger.Info($"Stored {establishments.Length} establishments in staging");
+            _logger.Debug($"Stored {establishments.Length} establishments in staging");
 
             // Queue diff check
             var position = 0;
@@ -238,11 +238,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 .GroupBy(la => la.Code)
                 .Select(grp => grp.First())
                 .ToArray();
-            _logger.Info($"Found {localAuthorities.Length} local authorities in GIAS establishment data");
+            _logger.Debug($"Found {localAuthorities.Length} local authorities in GIAS establishment data");
 
             // Store
             await _localAuthorityRepository.StoreInStagingAsync(localAuthorities, cancellationToken);
-            _logger.Info($"Stored {localAuthorities.Length} local authorities in staging");
+            _logger.Debug($"Stored {localAuthorities.Length} local authorities in staging");
 
             // Queue diff check
             var position = 0;

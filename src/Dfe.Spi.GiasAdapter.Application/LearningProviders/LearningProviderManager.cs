@@ -55,7 +55,7 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             {
                 learningProvider = learningProvider.Pick(fields);
 
-                _logger.Info(
+                _logger.Debug(
                     $"Pruned mapped establishment: {learningProvider}.");
             }
             else
