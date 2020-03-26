@@ -55,7 +55,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
         public async Task<string> TranslateEnumValue(string enumName, string sourceValue,
             CancellationToken cancellationToken)
         {
-            var mappings = await GetMappings(enumName, sourceValue, cancellationToken);
+            var mappings = await GetMappings(enumName, cancellationToken);
             var mapping = mappings.FirstOrDefault(kvp =>
                 kvp.Value.Any(v => v.Equals(sourceValue, StringComparison.InvariantCultureIgnoreCase))).Key;
             if (string.IsNullOrEmpty(mapping))
@@ -68,10 +68,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             return mapping;
         }
 
-        private async Task<Dictionary<string, string[]>> GetMappings(string enumName, string sourceValue,
-            CancellationToken cancellationToken)
+        private async Task<Dictionary<string, string[]>> GetMappings(string enumName, CancellationToken cancellationToken)
         {
-            var cacheKey = $"{enumName}:{sourceValue}";
+            var cacheKey = enumName;
 
             var cached = (Dictionary<string, string[]>)(await _cacheProvider.GetCacheItemAsync(cacheKey, cancellationToken));
             if (cached != null)
@@ -79,7 +78,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
                 return cached;
             }
 
-            var mappings = await GetMappingsFromApi(enumName, sourceValue, cancellationToken);
+            var mappings = await GetMappingsFromApi(enumName, cancellationToken);
 
             await _cacheProvider.AddCacheItemAsync(cacheKey, mappings,
                 new TimeSpan(0, 1, 0), cancellationToken);
@@ -87,8 +86,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             return mappings;
         }
 
-        private async Task<Dictionary<string, string[]>> GetMappingsFromApi(string enumName, string sourceValue,
-            CancellationToken cancellationToken)
+        private async Task<Dictionary<string, string[]>> GetMappingsFromApi(string enumName, CancellationToken cancellationToken)
         {
             var resource = $"enumerations/{enumName}/{SourceSystemNames.GetInformationAboutSchools}";
             _logger.Info($"Calling {resource} on translator api");

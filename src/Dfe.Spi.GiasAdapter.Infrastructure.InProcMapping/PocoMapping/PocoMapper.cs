@@ -12,10 +12,17 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
     public class PocoMapper : IMapper
     {
         private readonly ITranslator _translator;
+        private readonly IGroupRepository _groupRepository;
+        private readonly ILocalAuthorityRepository _localAuthorityRepository;
 
-        public PocoMapper(ITranslator translator)
+        public PocoMapper(
+            ITranslator translator,
+            IGroupRepository groupRepository,
+            ILocalAuthorityRepository localAuthorityRepository)
         {
             _translator = translator;
+            _groupRepository = groupRepository;
+            _localAuthorityRepository = localAuthorityRepository;
         }
 
         public async Task<TDestination> MapAsync<TDestination>(object source, CancellationToken cancellationToken)
@@ -35,7 +42,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
         {
             if (type == typeof(Establishment))
             {
-                return new EstablishmentMapper(_translator);
+                return new EstablishmentMapper(_translator, _groupRepository, _localAuthorityRepository, this);
             }
             if (type == typeof(Group))
             {
