@@ -70,7 +70,7 @@ namespace ExportManagementGroups
                     SubscriptionKey = options.TranslatorSubscriptionKey,
                 }, 
                 _logger);
-            _mapper = new PocoMapper(translator);
+            _mapper = new PocoMapper(translator, null, null);
         }
 
         static async Task<ManagementGroup[]> GetLocalAuthorities(CancellationToken cancellationToken)

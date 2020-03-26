@@ -196,8 +196,26 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             // Add links
             foreach (var establishment in establishments)
             {
-                establishment.GroupLinks = groupLinks.Where(l => l.Urn == establishment.Urn).ToArray();
-                _logger.Debug($"Added {establishment.GroupLinks.Length} links to establishment {establishment.Urn}");
+                var establishmentGroupLinks = groupLinks.Where(l => l.Urn == establishment.Urn).ToArray();
+                var federationLink = establishmentGroupLinks.FirstOrDefault(l => l.GroupType == "Federation");
+                var trustLink = establishmentGroupLinks.FirstOrDefault(l => l.GroupType == "Trust" || l.GroupType == "Single-academy trust" || l.GroupType == "Multi-academy trust");
+
+                if (federationLink != null)
+                {
+                    establishment.Federations = new CodeNamePair
+                    {
+                        Code = federationLink.Uid.ToString(),
+                    };
+                    _logger.Debug($"Set Federations to {federationLink.Uid} from links of establishment {establishment.Urn}");
+                }
+                if (trustLink != null)
+                {
+                    establishment.Trusts = new CodeNamePair
+                    {
+                        Code = trustLink.Uid.ToString(),
+                    };
+                    _logger.Debug($"Set Trusts to {trustLink.Uid} from links of establishment {establishment.Urn}");
+                }
             }
 
             // Process local authorities
@@ -317,18 +335,14 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 return false;
             }
 
-            if (current.GroupLinks?.Length != staging.GroupLinks?.Length)
+            if (current.Federations?.Code != staging.Federations?.Code)
             {
                 return false;
             }
 
-            for (var i = 0; i < current.GroupLinks?.Length; i++)
+            if (current.Trusts?.Code != staging.Trusts?.Code)
             {
-                var currentLink = current.GroupLinks[i];
-                if (!staging.GroupLinks.Any(l => l.Uid == currentLink.Uid && l.GroupType == currentLink.GroupType))
-                {
-                    return false;
-                }
+                return false;
             }
 
             return true;

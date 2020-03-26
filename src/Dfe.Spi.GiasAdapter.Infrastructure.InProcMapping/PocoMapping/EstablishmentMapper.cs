@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.GiasAdapter.Domain.Translation;
 using Dfe.Spi.Models;
 using Dfe.Spi.Models.Entities;
@@ -19,12 +20,22 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
         private static PropertyInfo[] _propertyInfos;
 
         private readonly ITranslator _translator;
+        private readonly IGroupRepository _groupRepository;
+        private readonly ILocalAuthorityRepository _localAuthorityRepository;
+        private readonly IMapper _mapper;
 
-        public EstablishmentMapper(ITranslator translator)
+        public EstablishmentMapper(
+            ITranslator translator,
+            IGroupRepository groupRepository,
+            ILocalAuthorityRepository localAuthorityRepository,
+            IMapper mapper)
         {
             _propertyInfos = typeof(LearningProvider).GetProperties();
 
             _translator = translator;
+            _groupRepository = groupRepository;
+            _localAuthorityRepository = localAuthorityRepository;
+            _mapper = mapper;
         }
 
         internal override async Task<TDestination> MapAsync<TDestination>(object source,
@@ -164,6 +175,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             
             // Set management group
             learningProvider.ManagementGroup = await GetManagementGroup(establishment, cancellationToken);
+            if (learningProvider.ManagementGroup != null)
+            {
+                learningProvider.ManagementGroup._Lineage = null;
+            }
             
             return learningProvider as TDestination;
         }
@@ -194,28 +209,23 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
         private async Task<ManagementGroup> GetManagementGroup(Establishment establishment,
             CancellationToken cancellationToken)
         {
-            const string sponsorType = "School sponsor";
-
-            var link = establishment.GroupLinks?.FirstOrDefault(l => l.GroupType != sponsorType);
-            if (link != null)
+            if (establishment.Trusts != null && !string.IsNullOrEmpty(establishment.Trusts.Code))
             {
-                var translatedLinkType = await TranslateManagementGroupType(link.GroupType, cancellationToken);
-                return new ManagementGroup
-                {
-                    Type = translatedLinkType,
-                    Code = $"{translatedLinkType}-{link.Uid}",
-                    Identifier = link.Uid.ToString(),
-                };
+                var group = await _groupRepository.GetGroupAsync(long.Parse(establishment.Trusts.Code),
+                    cancellationToken);
+                return await _mapper.MapAsync<ManagementGroup>(group, cancellationToken);
             }
-
-            var translatedLaType = await TranslateManagementGroupType(LocalAuthority.ManagementGroupType, cancellationToken);
-            return new ManagementGroup
+            
+            if (establishment.Federations != null && !string.IsNullOrEmpty(establishment.Federations.Code))
             {
-                Type = translatedLaType,
-                Code = $"{translatedLaType}-{establishment.LA.Code}",
-                Identifier = establishment.LA.Code,
-                Name = establishment.LA.DisplayName,
-            };
+                var group = await _groupRepository.GetGroupAsync(long.Parse(establishment.Federations.Code),
+                    cancellationToken);
+                return await _mapper.MapAsync<ManagementGroup>(group, cancellationToken);
+            }
+            
+            var localAuthority = await _localAuthorityRepository.GetLocalAuthorityAsync(
+                int.Parse(establishment.LA.Code), cancellationToken);
+            return await _mapper.MapAsync<ManagementGroup>(localAuthority, cancellationToken);
         }
 
         private async Task<string> TranslateManagementGroupType(string value, CancellationToken cancellationToken)

@@ -73,7 +73,5 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         // to break things.
         public string CharitiesCommissionNumber { get; set; }
         public string CompaniesHouseNumber { get; set; }
-        
-        public GroupLink[] GroupLinks { get; set; }
     }
 }
