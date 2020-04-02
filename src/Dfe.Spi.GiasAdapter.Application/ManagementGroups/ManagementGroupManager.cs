@@ -69,7 +69,7 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
 
         private KeyValuePair<string, string> SplitCode(string code)
         {
-            var separatorIndex = code.IndexOf('-');
+            var separatorIndex = code.LastIndexOf('-');
             if (separatorIndex == -1 || separatorIndex == code.Length - 1)
             {
                 throw new ArgumentException($"{code} is not a valid management group code", nameof(code));
