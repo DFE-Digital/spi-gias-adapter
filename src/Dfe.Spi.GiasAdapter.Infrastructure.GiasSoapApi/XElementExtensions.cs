@@ -1,3 +1,4 @@
+using Dfe.Spi.Common.Extensions;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using System;
 using System.Linq;
@@ -50,7 +51,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
             }
  
             var dateTime = DateTime.Parse(value);
-            return includeTime ? dateTime : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+            return includeTime
+                ? new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second, DateTimeKind.Utc)
+                : new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, 0, 0, 0, DateTimeKind.Utc);
         }
 
         internal static long? GetLongFromChildElement(this XElement containerElement, string localName)
