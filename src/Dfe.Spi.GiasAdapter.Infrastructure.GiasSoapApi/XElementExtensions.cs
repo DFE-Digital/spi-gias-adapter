@@ -50,7 +50,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                 return null;
             }
  
-            var dateTime = DateTime.Parse(value);
+            var dateTime = value.ToDateTime();
             return includeTime
                 ? new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second, DateTimeKind.Utc)
                 : new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, 0, 0, 0, DateTimeKind.Utc);
