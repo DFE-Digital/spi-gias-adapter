@@ -55,91 +55,135 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                     nameof(source));
             }
 
+            // Note: These are listed in the same order that the properties
+            //       are ordered in the spi-models lib:
+            //
+            //       https://github.com/DFE-Digital/spi-models/blob/master/src/Dfe.Spi.Models/Dfe.Spi.Models/Entities/LearningProvider.cs
+            //
+            //       Which, is in turn, ordered the same in the spreadsheet
+            //       Matt came up with:
+            //
+            //       https://docs.google.com/spreadsheets/d/1GGvBUJohPLrC_K1Y3irFbH2OPABLPmVdb7lM_Kx2Xao/
+            //
+            //       If adding new properties, please keep things in order!
             var learningProvider = new LearningProvider
             {
-                Type = establishment.EstablishmentTypeGroup?.Code,
-                SubType = establishment.TypeOfEstablishment?.Code,
-                Status = establishment.EstablishmentStatus?.Code,
-                OpenDate = establishment.OpenDate,
-                CloseDate = establishment.CloseDate,
-                LocalAuthorityCode = establishment.LA?.Code,
-                ManagementGroupType = null, // Note: Not on establishment model.
-                Postcode = establishment.Postcode,
-                Name = establishment.EstablishmentName,
-                Urn = establishment.Urn,
-                Ukprn = establishment.Ukprn,
-                Uprn = establishment.Uprn,
-                CompaniesHouseNumber = establishment.CompaniesHouseNumber,
-                CharitiesCommissionNumber = establishment.CharitiesCommissionNumber,
-                AcademyTrustCode = establishment.Trusts?.Code,
-                Id = null, // Note: Not on establishment model.
-                DfeNumber = CreateDfeNumber(establishment),
-                EstablishmentNumber = establishment.EstablishmentNumber,
-                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber,
-
-                BoardersCode = establishment.Boarders?.Code,
-                BoardersName = establishment.Boarders?.DisplayName,
-                LowestAge = establishment.StatutoryLowAge,
-                HighestAge = establishment.StatutoryHighAge,
-                Website = establishment.SchoolWebsite,
-                GenderOfEntry = establishment.Gender.Code,
-                PercentageOfPupilsReceivingFreeSchoolMeals = establishment.PercentageFsm,
-                OfstedLastInspection = establishment.OfstedLastInsp,
-                UpdatedDate = establishment.LastChangedDate,
-                InspectionDate = establishment.DateOfLastInspectionVisit,
-                OfstedRating = establishment.OfstedRating?.DisplayName,
-                LocalAuthorityName = establishment.LA?.DisplayName,
-                AdmissionsPolicy = establishment.AdmissionsPolicy?.Code,
-                InspectorateName = establishment.InspectorateName?.DisplayName,
-                InspectorateReport = establishment.InspectorateReport,
-                TeenMothers = establishment.TeenMoth?.DisplayName,
-                TeenMothersPlaces = establishment.TeenMothPlaces,
-                OpeningReason = establishment.ReasonEstablishmentOpened?.Code,
-                ClosingReason = establishment.ReasonEstablishmentClosed?.Code,
-                PhaseOfEducation = establishment.PhaseOfEducation?.Code,
-                FurtherEducationType = establishment.FurtherEducationType?.DisplayName,
-                SixthFormStatus = establishment.OfficialSixthForm?.Code,
-                DioceseCode = establishment.Diocese?.Code,
-                DioceseName = establishment.Diocese?.DisplayName,
-                PreviousLocalAuthorityCode = null, // Note: Not in the underlying GIAS API response.
-                PreviousLocalAuthorityName = null, // // Note: Not in the underlying GIAS API response.
-                DistrictAdministrativeCode = establishment.DistrictAdministrative?.Code,
-                DistrictAdministrativeName = establishment.DistrictAdministrative?.DisplayName,
                 AdministrativeWardCode = establishment.AdministrativeWard?.Code,
                 AdministrativeWardName = establishment.AdministrativeWard?.DisplayName,
-                GovernmentOfficeRegion = establishment.Gor?.Code,
-                LowerLayerSuperOutputArea = establishment.Lsoa?.Code,
-                MiddleLayerSuperOutputArea = establishment.Msoa?.Code,
-                RegionalSchoolsCommissionerRegion = establishment.RscRegion?.DisplayName,
-                Section41Approved = establishment.Section41Approved?.DisplayName,
+
+                // TODO: Translate!
+                AdmissionsPolicy = establishment.AdmissionsPolicy?.Code,
+
+                BoardersCode = TryParseCodeAsLong(establishment.Boarders),
+                BoardersName = establishment.Boarders?.DisplayName,
+                PruChildcareFacilitiesName = establishment.Ccf?.DisplayName,
+                CloseDate = establishment.CloseDate,
+                OfstedLastInspection = establishment.OfstedLastInsp,
+                DioceseCode = establishment.Diocese?.Code,
+                DioceseName = establishment.Diocese?.DisplayName,
+                DistrictAdministrativeCode = establishment.DistrictAdministrative?.Code,
+                DistrictAdministrativeName = establishment.DistrictAdministrative?.DisplayName,
                 Easting = establishment.Easting,
+                PruEbdProvisionCode = TryParseCodeAsLong(establishment.Ebd),
+                PruEbdProvisionName = establishment.Ebd?.DisplayName,
+                PruEducatedByOtherProvidersCode = TryParseCodeAsLong(establishment.EdByOther),
+                PruEducatedByOtherProvidersName = establishment.EdByOther?.DisplayName,
+                Name = establishment.EstablishmentName,
+                EstablishmentNumber = establishment.EstablishmentNumber,
+
+                // Translatable.
+                Status = establishment.EstablishmentStatus?.Code,
+
+                // Translatable.
+                Type = establishment.EstablishmentTypeGroup?.Code,
+
+                // Translatable.
+                SubType = establishment.TypeOfEstablishment?.Code,
+
+                FurtherEducationTypeName = establishment.FurtherEducationType?.DisplayName,
+                GenderOfPupilsCode = TryParseCodeAsLong(establishment.Gender),
+                GenderOfPupilsName = establishment.Gender?.DisplayName,
+                GovernmentOfficeRegionCode = establishment.Gor?.Code,
+                GovernmentOfficeRegionName = establishment.Gor?.DisplayName,
+                GovernmentStatisticalServiceLocalAuthorityCodeName = establishment.GsslaCode?.DisplayName,
+                InspectorateCode = TryParseCodeAsLong(establishment.Inspectorate),
+                InspectorateName = establishment.Inspectorate?.DisplayName,
+                LocalAuthorityCode = establishment.LA?.Code,
+                LocalAuthorityName = establishment.LA?.DisplayName,
+                LastChangedDate = establishment.LastChangedDate,
+                MiddleLayerSuperOutputAreaCode = establishment.Msoa?.Code,
+                MiddleLayerSuperOutputAreaName = establishment.Msoa?.DisplayName,
                 Northing = establishment.Northing,
-                GovernmentStatisticalServiceLocalAuthorityCode = establishment.GsslaCode?.DisplayName,
-                UrbanRuralName = establishment.UrbanRural?.DisplayName,
-                UrbanRuralCode = establishment.UrbanRural?.Code,
-                Federations = establishment.Federations?.Code,
-                FederationFlag = establishment.FederationFlag?.DisplayName,
-                TelephoneNumber = establishment.TelephoneNum,
-                ContactEmail = establishment.ContactEmail,
-                Address = new Address()
-                {
-                    AddressLine1 = establishment.Street,
-                    AddressLine2 = establishment.Locality,
-                    AddressLine3 = establishment.Address3,
-                    Town = establishment.Town,
-                    County = establishment.County,
-                },
-                SchoolCapacity = establishment.SchoolCapacity,
                 NumberOfPupils = establishment.NumberOfPupils,
-                NumberOfBoys = establishment.NumberOfBoys,
-                NumberOfGirls = establishment.NumberOfGirls,
+                SixthFormStatusCode = TryParseCodeAsLong(establishment.OfficialSixthForm),
+                SixthFormStatusName = establishment.OfficialSixthForm?.DisplayName,
+                OfstedRatingName = establishment.OfstedRating?.DisplayName,
+                OpenDate = establishment.OpenDate,
+                ParliamentaryConstituencyCode = establishment.ParliamentaryConstituency?.Code,
+                ParliamentaryConstituencyName = establishment.ParliamentaryConstituency?.DisplayName,
+                PercentageOfPupilsReceivingFreeSchoolMeals = establishment.PercentageFsm,
+                PhaseOfEducationCode = TryParseCodeAsLong(establishment.PhaseOfEducation),
+                PhaseOfEducationName = establishment.PhaseOfEducation?.DisplayName,
+                Postcode = establishment.Postcode,
+                PreviousEstablishmentNumber = establishment.PreviousEstablishmentNumber,
+                ClosingReasonCode = TryParseCodeAsLong(establishment.ReasonEstablishmentClosed),
+                ClosingReasonName = establishment.ReasonEstablishmentClosed?.DisplayName,
+                OpeningReasonCode = TryParseCodeAsLong(establishment.ReasonEstablishmentOpened),
+                OpeningReasonName = establishment.ReasonEstablishmentOpened?.DisplayName,
+                ReligiousEthosCode = TryParseCodeAsLong(establishment.ReligiousEthos),
+                ReligiousEthosName = establishment.ReligiousEthos?.DisplayName,
                 ResourcedProvisionCapacity = establishment.ResourcedProvisionCapacity,
                 ResourcedProvisionNumberOnRoll = establishment.ResourcedProvisionOnRoll,
+                RegionalSchoolsCommissionerRegionCode = TryParseCodeAsLong(establishment.RscRegion),
+                RegionalSchoolsCommissionerRegionName = establishment.RscRegion?.DisplayName,
+                SchoolCapacity = establishment.SchoolCapacity,
+                Website = establishment.SchoolWebsite,
+                Section41ApprovedCode = TryParseCodeAsLong(establishment.Section41Approved),
+                Section41ApprovedName = establishment.Section41Approved?.DisplayName,
+                SpecialClassesCode = TryParseCodeAsLong(establishment.SpecialClasses),
+                SpecialClassesName = establishment.SpecialClasses?.DisplayName,
+                HighestAge = establishment.StatutoryHighAge,
+                LowestAge = establishment.StatutoryLowAge,
+                TeenageMotherProvisionCode = TryParseCodeAsLong(establishment.TeenMoth),
+                TeenageMotherProvisionName = establishment.TeenMoth?.DisplayName,
+                TeenageMotherPlaces = establishment.TeenMothPlaces,
+                TelephoneNumber = establishment.TelephoneNum,
+                AcademyTrustCode = establishment.Trusts?.Code,
+                AcademyTrustName = establishment.Trusts?.DisplayName,
+                Ukprn = establishment.Ukprn,
+                Uprn = establishment.Uprn,
+                UrbanRuralCode = establishment.UrbanRural?.Code,
+                UrbanRuralName = establishment.UrbanRural?.DisplayName,
+                Urn = establishment.Urn,
+                ManagementGroup = null, // Not populated here - just sitting here for ordering purposes.
+                CompaniesHouseNumber = establishment.CompaniesHouseNumber,
+                CharitiesCommissionNumber = establishment.CharitiesCommissionNumber,
+
+                // Aggregate of other property values - not pulled or mapped
+                // from anything in particular.
+                DfeNumber = CreateDfeNumber(establishment),
+
+                LowerLayerSuperOutputAreaCode = establishment.Lsoa?.Code,
+                LowerLayerSuperOutputAreaName = establishment.Lsoa?.DisplayName,
+                InspectionDate = establishment.DateOfLastInspectionVisit,
+                InspectorateReport = establishment.InspectorateReport,
+                LegalName = null, // Not populated here - just sitting here for ordering purposes.
+                ContactEmail = establishment.ContactEmail,
+                AddressLine1 = establishment.Street,
+                AddressLine2 = establishment.Locality,
+                AddressLine3 = establishment.Address3,
+                Town = establishment.Town,
+                County = establishment.County,
             };
 
             DateTime readDate = DateTime.UtcNow;
 
-            // Do the Translation bit...
+            // Do the translationy bit...
+            learningProvider.AdmissionsPolicy = await TranslateCodeNamePairAsync(
+                EnumerationNames.AdmissionsPolicy,
+                establishment.AdmissionsPolicy,
+                cancellationToken);
+
             learningProvider.Type = await TranslateCodeNamePairAsync(
                 EnumerationNames.ProviderType,
                 establishment.EstablishmentTypeGroup,
@@ -155,21 +199,6 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 establishment.EstablishmentStatus,
                 cancellationToken);
 
-            learningProvider.LocalAuthorityCode = await TranslateCodeNamePairAsync(
-                EnumerationNames.LocalAuthorityCode,
-                establishment.LA,
-                cancellationToken);
-
-            learningProvider.BoardersCode = await TranslateCodeNamePairAsync(
-                EnumerationNames.BoardersCode,
-                establishment.Boarders,
-                cancellationToken);
-
-            learningProvider.GenderOfEntry = await TranslateCodeNamePairAsync(
-                EnumerationNames.GenderOfEntry,
-                establishment.Gender,
-                cancellationToken);
-
             // lineage
             learningProvider.SetLineageForRequestedFields();
             
@@ -181,6 +210,19 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             }
             
             return learningProvider as TDestination;
+        }
+
+        private static long? TryParseCodeAsLong(CodeNamePair codeNamePair)
+        {
+            long? toReturn = null;
+
+            long parsedLong;
+            if (codeNamePair != null && long.TryParse(codeNamePair.Code, out parsedLong))
+            {
+                toReturn = parsedLong;
+            }
+
+            return toReturn;
         }
 
         public static string CreateDfeNumber(Establishment establishment)
