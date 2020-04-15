@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Caching.Definitions;
@@ -56,6 +57,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             CancellationToken cancellationToken)
         {
             var mappings = await GetMappings(enumName, cancellationToken);
+            if (mappings == null)
+            {
+                return null;
+            }
+            
             var mapping = mappings.FirstOrDefault(kvp =>
                 kvp.Value.Any(v => v.Equals(sourceValue, StringComparison.InvariantCultureIgnoreCase))).Key;
             if (string.IsNullOrEmpty(mapping))
@@ -70,25 +76,42 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
 
         private async Task<Dictionary<string, string[]>> GetMappings(string enumName, CancellationToken cancellationToken)
         {
-            var cacheKey = enumName;
+            var allMappings = await GetMappings(cancellationToken);
+            if (allMappings == null)
+            {
+                return null;
+            }
+            
+            var key = allMappings.Keys.SingleOrDefault(mappingsKey => mappingsKey.Equals(enumName, StringComparison.InvariantCultureIgnoreCase));
+            return string.IsNullOrEmpty(key)
+                ? null
+                : allMappings[key];
+        }
 
-            var cached = (Dictionary<string, string[]>)(await _cacheProvider.GetCacheItemAsync(cacheKey, cancellationToken));
+        private async Task<Dictionary<string, Dictionary<string, string[]>>> GetMappings(CancellationToken cancellationToken)
+        {
+            const string cacheKey = "AllEnumMappings";
+
+            var cached = (Dictionary<string, Dictionary<string, string[]>>)(await _cacheProvider.GetCacheItemAsync(cacheKey, cancellationToken));
             if (cached != null)
             {
                 return cached;
             }
-
-            var mappings = await GetMappingsFromApi(enumName, cancellationToken);
-
-            await _cacheProvider.AddCacheItemAsync(cacheKey, mappings,
-                new TimeSpan(0, 1, 0), cancellationToken);
             
+            var mappings = await GetMappingsFromApi(cancellationToken);
+
+            if (mappings != null)
+            {
+                await _cacheProvider.AddCacheItemAsync(cacheKey, mappings,
+                    new TimeSpan(0, 1, 0), cancellationToken);
+            }
+
             return mappings;
         }
 
-        private async Task<Dictionary<string, string[]>> GetMappingsFromApi(string enumName, CancellationToken cancellationToken)
+        private async Task<Dictionary<string, Dictionary<string, string[]>>> GetMappingsFromApi(CancellationToken cancellationToken)
         {
-            var resource = $"enumerations/{enumName}/{SourceSystemNames.GetInformationAboutSchools}";
+            var resource = $"adapters/{SourceSystemNames.GetInformationAboutSchools}/mappings";
             _logger.Info($"Calling {resource} on translator api");
             var request = new RestRequest(resource, Method.GET);
 
@@ -123,6 +146,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             }
 
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
             if (!response.IsSuccessful)
             {
                 throw new TranslatorApiException(
@@ -133,8 +160,17 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator
             }
 
             _logger.Debug($"Received {response.Content}");
-            var translationResponse = JsonConvert.DeserializeObject<TranslationResponse>(response.Content);
-            return translationResponse.MappingsResult.Mappings;
+            var translationResponse = JsonConvert.DeserializeObject<Dictionary<string, TranslationMappingsResult>>(response.Content);
+            return translationResponse
+                .Select(kvp =>
+                    new
+                    {
+                        EnumerationName = kvp.Key,
+                        Mappings = kvp.Value.Mappings,
+                    })
+                .ToDictionary(
+                    x => x.EnumerationName,
+                    x => x.Mappings);
         }
     }
 }
