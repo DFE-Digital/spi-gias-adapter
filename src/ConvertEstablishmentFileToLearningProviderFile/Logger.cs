@@ -31,7 +31,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
 
         public void Warning(string message, Exception exception)
         {
-            WriteColored(message + "\n" + exception?.ToString(), ConsoleColor.Yellow);
+            WriteColored($"{message}\n{exception}", ConsoleColor.Yellow);
         }
 
         public void Error(string message)
@@ -41,7 +41,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
 
         public void Error(string message, Exception exception)
         {
-            WriteColored(message + "\n" + exception?.ToString(), ConsoleColor.Yellow);
+            WriteColored($"{message}\n{exception}", ConsoleColor.Yellow);
         }
 
         public void Error(Exception exception)
