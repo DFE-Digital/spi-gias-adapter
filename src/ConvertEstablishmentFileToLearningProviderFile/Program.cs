@@ -210,9 +210,6 @@ namespace ConvertEstablishmentFileToLearningProviderFile
                 {
                     _logger.Error(ex);
                 }
-
-                _logger.Info("Done. Press any key to exit...");
-                Console.ReadKey();
             }
         }
     }
