@@ -5,7 +5,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Dfe.Spi.Common.Caching" Version="1.1.0" />
-        <PackageReference Include="Dfe.Spi.Common.Http.Server" Version="1.0.14" />
+        <PackageReference Include="Dfe.Spi.Common.Http.Server" Version="2.0.1" />
         <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.1.1" />
         <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
         <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="3.0.0" />
@@ -29,5 +29,11 @@
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping\Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.csproj" />
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware\Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware.csproj" />
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator\Dfe.Spi.GiasAdapter.Infrastructure.SpiTranslator.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="Schemas\get-learning-providers-body.json" />
+      <EmbeddedResource Include="Schemas\get-learning-providers-body.json" />
+      <None Remove="Schemas\get-management-groups-body.json" />
+      <EmbeddedResource Include="Schemas\get-management-groups-body.json" />
     </ItemGroup>
 </Project>

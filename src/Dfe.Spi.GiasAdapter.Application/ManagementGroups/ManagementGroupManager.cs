@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -15,6 +16,7 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
     public interface IManagementGroupManager
     {
         Task<ManagementGroup> GetManagementGroupAsync(string id, string fields, CancellationToken cancellationToken);
+        Task<ManagementGroup[]> GetManagementGroupsAsync(string[] ids, string[] fields, CancellationToken cancellationToken);
     }
     
     public class ManagementGroupManager : IManagementGroupManager
@@ -65,6 +67,15 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
             }
 
             return managementGroup;
+        }
+
+        public async Task<ManagementGroup[]> GetManagementGroupsAsync(string[] ids, string[] fields, CancellationToken cancellationToken)
+        {
+            var fieldsString = fields == null || fields.Length == 0 ? null : fields.Aggregate((x, y) => $"{x},{y}");
+
+            var managementGroups = await Task.WhenAll(ids.Select(id => GetManagementGroupAsync(id, fieldsString, cancellationToken)));
+
+            return managementGroups;
         }
 
         private KeyValuePair<string, string> SplitCode(string code)
