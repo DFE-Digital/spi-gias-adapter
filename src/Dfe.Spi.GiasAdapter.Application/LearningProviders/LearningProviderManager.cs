@@ -48,24 +48,7 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 
             _logger.Info($"read establishment {urn}: {JsonConvert.SerializeObject(establishment)}");
 
-            var learningProvider = await _mapper.MapAsync<LearningProvider>(establishment, cancellationToken);
-            _logger.Info($"mapped establishment {urn} to {JsonConvert.SerializeObject(learningProvider)}");
-
-            // If the fields are specified, then limit them... otherwise,
-            // just return everything.
-            if (!string.IsNullOrEmpty(fields))
-            {
-                learningProvider = learningProvider.Pick(fields);
-
-                _logger.Debug(
-                    $"Pruned mapped establishment: {learningProvider}.");
-            }
-            else
-            {
-                _logger.Debug("No fields specified - model not pruned.");
-            }
-
-            return learningProvider;
+            return await GetLearningProviderFromEstablishment(establishment, fields, cancellationToken);
         }
 
         public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken)
@@ -91,12 +74,14 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
                     continue;
                 }
 
-                providers[i] = await _mapper.MapAsync<LearningProvider>(establishments[i], cancellationToken);
+                providers[i] = await GetLearningProviderFromEstablishment(establishments[i], fieldsString, cancellationToken);
             }
 
             return providers;
         }
 
+        
+        
         private async Task<Establishment[]> GetBatchOfEstablishmentsAsync(string[] batch, string fields, CancellationToken cancellationToken)
         {
             var establishments = new Establishment[batch.Length];
@@ -115,6 +100,28 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             }
 
             return establishments;
+        }
+
+        private async Task<LearningProvider> GetLearningProviderFromEstablishment(Establishment establishment, string fields, CancellationToken cancellationToken)
+        {
+            var learningProvider = await _mapper.MapAsync<LearningProvider>(establishment, cancellationToken);
+            _logger.Info($"mapped establishment {establishment.Urn} to {JsonConvert.SerializeObject(learningProvider)}");
+
+            // If the fields are specified, then limit them... otherwise,
+            // just return everything.
+            if (!string.IsNullOrEmpty(fields))
+            {
+                learningProvider = learningProvider.Pick(fields);
+
+                _logger.Debug(
+                    $"Pruned mapped establishment: {learningProvider}.");
+            }
+            else
+            {
+                _logger.Debug("No fields specified - model not pruned.");
+            }
+
+            return learningProvider;
         }
     }
 }
