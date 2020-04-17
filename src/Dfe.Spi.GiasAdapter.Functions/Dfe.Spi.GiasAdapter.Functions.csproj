@@ -33,5 +33,7 @@
     <ItemGroup>
       <None Remove="Schemas\get-learning-providers-body.json" />
       <EmbeddedResource Include="Schemas\get-learning-providers-body.json" />
+      <None Remove="Schemas\get-management-groups-body.json" />
+      <EmbeddedResource Include="Schemas\get-management-groups-body.json" />
     </ItemGroup>
 </Project>
