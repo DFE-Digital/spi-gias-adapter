@@ -39,6 +39,13 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 Name = group.GroupName,
                 Identifier = group.Uid.ToString(),
                 CompaniesHouseNumber = group.CompaniesHouseNumber,
+                Ukprn = group.Ukprn,
+                AddressLine1 = group.GroupStreet,
+                AddressLine2 = group.GroupLocality,
+                AddressLine3 = group.GroupAddress3,
+                Town = group.GroupTown,
+                County = group.GroupCounty,
+                Postcode = group.GroupPostcode,
             };
             
             managementGroup.Type =
