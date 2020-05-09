@@ -7,6 +7,7 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public long Uid { get; set; }
         public string GroupName { get; set; }
         public string CompaniesHouseNumber { get; set; }
+        public long? Ukprn { get; set; }
         public string GroupType { get; set; }
         public DateTime? ClosedDate { get; set; }
         public string Status { get; set; }
@@ -19,5 +20,11 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public string HeadOfGroupTitle { get; set; }
         public string HeadOfGroupFirstName { get; set; }
         public string HeadOfGroupLastName { get; set; }
+        public string GroupStreet { get; set; }
+        public string GroupLocality { get; set; }
+        public string GroupAddress3 { get; set; }
+        public string GroupTown { get; set; }
+        public string GroupCounty { get; set; }
+        public string GroupPostcode { get; set; }
     }
 }
