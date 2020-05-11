@@ -18,6 +18,7 @@
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Domain\Dfe.Spi.GiasAdapter.Domain.csproj" />
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage\Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.csproj" />
       <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload\Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi\Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi.csproj" />
     </ItemGroup>
 
 </Project>

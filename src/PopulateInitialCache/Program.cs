@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache;
 using Dfe.Spi.GiasAdapter.Infrastructure.GiasPublicDownload;
+using Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi;
 using RestSharp;
 
 namespace PopulateInitialCache
@@ -17,6 +19,8 @@ namespace PopulateInitialCache
         private static Logger _logger;
         private static IGiasApiClient _giasApiClient;
         private static IEstablishmentRepository _establishmentRepository;
+        private static ILocalAuthorityRepository _localAuthorityRepository;
+        private static IGroupRepository _groupRepository;
 
         static async Task Run(CommandLineOptions options, CancellationToken cancellationToken = default)
         {
@@ -24,17 +28,36 @@ namespace PopulateInitialCache
 
             var establishments = await GetEstablishments(cancellationToken);
             await StoreEstablishments(establishments, cancellationToken);
+            
+            await StoreLocalAuthorities(establishments, cancellationToken);
+
+            var groups = await GetGroups(cancellationToken);
+            await StoreGroups(groups, cancellationToken);
         }
 
         static void Init(CommandLineOptions options)
         {
-            _giasApiClient = new GiasPublicDownloadClient(new RestClient(), _logger);
+            _giasApiClient = new GiasSoapApiClient(new GiasApiConfiguration
+            {
+                Url = options.GiasSoapEndpoint,
+                Username = options.GiasSoapUsername,
+                Password = options.GiasSoapPassword,
+                ExtractId = options.ExtractId,
+                ExtractEstablishmentsFileName = options.EstablishmentsFileName,
+                ExtractGroupsFileName = options.GroupsFileName,
+                ExtractGroupLinksFileName = options.GroupLinksFileName,
+            });
 
-            _establishmentRepository = new TableEstablishmentRepository(new CacheConfiguration
+            var cacheConfiguration = new CacheConfiguration
             {
                 TableStorageConnectionString = options.StorageConnectionString,
                 EstablishmentTableName = options.EstablishmentsTableName,
-            }, _logger);
+                GroupTableName = options.GroupsTableName,
+                LocalAuthorityTableName = options.LocalAuthoritiesTableName,
+            };
+            _establishmentRepository = new TableEstablishmentRepository(cacheConfiguration, _logger);
+            _groupRepository = new TableGroupRepository(cacheConfiguration, _logger);
+            _localAuthorityRepository = new TableLocalAuthorityRepository(cacheConfiguration, _logger);
         }
 
         static async Task<Establishment[]> GetEstablishments(CancellationToken cancellationToken)
@@ -54,8 +77,45 @@ namespace PopulateInitialCache
                 await _establishmentRepository.StoreAsync(establishments[i], cancellationToken);
             }
         }
+
+        static async Task StoreLocalAuthorities(Establishment[] establishments, CancellationToken cancellationToken)
+        {
+            // Get unique list of local authorities from establishments
+            var localAuthorities = establishments
+                .Where(e => e.LA != null)
+                .Select(e => new LocalAuthority {Code = int.Parse(e.LA.Code), Name = e.LA.DisplayName})
+                .GroupBy(la => la.Code)
+                .Select(grp => grp.First())
+                .ToArray();
+            _logger.Debug($"Found {localAuthorities.Length} local authorities in GIAS establishment data");
+            
+            for (var i = 0; i < localAuthorities.Length; i++)
+            {
+                _logger.Info($"Storing local authority {i} of {localAuthorities.Length}: {localAuthorities[i].Code}");
+
+                await _localAuthorityRepository.StoreAsync(localAuthorities[i], cancellationToken);
+            }
+        }
         
-        
+        static async Task<Group[]> GetGroups(CancellationToken cancellationToken)
+        {
+            _logger.Info("Downloading groups...");
+            var groups = await _giasApiClient.DownloadGroupsAsync(cancellationToken);
+            _logger.Info($"Downloaded {groups.Length} groups");
+            return groups;
+        }
+
+        static async Task StoreGroups(Group[] groups, CancellationToken cancellationToken)
+        {
+            for (var i = 0; i < groups.Length; i++)
+            {
+                _logger.Info($"Storing group {i} of {groups.Length}: {groups[i].Uid}");
+
+                await _groupRepository.StoreAsync(groups[i], cancellationToken);
+            }
+        }
+
+
         static void Main(string[] args)
         {
             _logger = new Logger();
@@ -73,8 +133,7 @@ namespace PopulateInitialCache
                     _logger.Error(ex);
                 }
 
-                _logger.Info("Done. Press any key to exit...");
-                Console.ReadKey();
+                _logger.Info("Done");
             }
         }
     }
