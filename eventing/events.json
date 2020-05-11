@@ -72,10 +72,33 @@
         },
         "companiesHouseNumber": {
           "type": "string"
+        },
+        "ukprn": {
+          "type": "integer"
+        },
+        "addressLine1": {
+          "type": "string"
+        },
+        "addressLine2": {
+          "type": "string"
+        },
+        "addressLine3": {
+          "type": "string"
+        },
+        "town": {
+          "type": "string"
+        },
+        "county": {
+          "type": "string"
+        },
+        "postcode": {
+          "type": "string"
         }
       },
       "required": [
-        "name"
+        "name",
+        "type",
+        "identifier"
       ]
     }
   }
