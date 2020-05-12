@@ -352,7 +352,14 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         {
             return current.GroupName == staging.GroupName &&
                    current.GroupType == staging.GroupType &&
-                   current.CompaniesHouseNumber == staging.CompaniesHouseNumber;
+                   current.CompaniesHouseNumber == staging.CompaniesHouseNumber &&
+                   current.Ukprn == staging.Ukprn &&
+                   current.GroupStreet == staging.GroupStreet &&
+                   current.GroupLocality == staging.GroupLocality &&
+                   current.GroupAddress3 == staging.GroupAddress3 &&
+                   current.GroupTown == staging.GroupTown &&
+                   current.GroupCounty == staging.GroupCounty &&
+                   current.GroupPostcode == staging.GroupPostcode;
         }
 
         private bool AreSame(LocalAuthority current, LocalAuthority staging)
