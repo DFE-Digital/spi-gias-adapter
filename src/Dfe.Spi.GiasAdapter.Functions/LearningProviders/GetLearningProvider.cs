@@ -36,13 +36,15 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
         {
             _httpSpiExecutionContextManager.SetContext(req.Headers);
 
-            string fields = req.Query["fields"];
+            var fields = (string)req.Query["fields"];
+            var live = ((string) req.Query["live"] ?? "").ToLower();
+            var readFromLive = live == "true" || live == "yes" || live == "1";
 
             _logger.Info($"{FunctionName} triggered at {DateTime.Now} with id {id}");
 
             try
             {
-                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, fields, cancellationToken);
+                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, fields, readFromLive, cancellationToken);
 
                 if (learningProvider == null)
                 {

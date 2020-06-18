@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Extensions;
 using Dfe.Spi.Common.Logging.Definitions;
+using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
 using Dfe.Spi.Models;
@@ -15,56 +16,51 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 {
     public interface ILearningProviderManager
     {
-        Task<LearningProvider> GetLearningProviderAsync(string id, string fields, CancellationToken cancellationToken);
-        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken);
+        Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, CancellationToken cancellationToken);
+        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken);
     }
 
     public class LearningProviderManager : ILearningProviderManager
     {
         private readonly IGiasApiClient _giasApiClient;
+        private readonly IEstablishmentRepository _establishmentRepository;
         private readonly IMapper _mapper;
         private readonly ILoggerWrapper _logger;
 
-        public LearningProviderManager(IGiasApiClient giasApiClient, IMapper mapper, ILoggerWrapper logger)
+        public LearningProviderManager(
+            IGiasApiClient giasApiClient,
+            IEstablishmentRepository establishmentRepository,
+            IMapper mapper,
+            ILoggerWrapper logger)
         {
             _giasApiClient = giasApiClient;
+            _establishmentRepository = establishmentRepository;
             _mapper = mapper;
             _logger = logger;
         }
 
-        public async Task<LearningProvider> GetLearningProviderAsync(string id, string fields, CancellationToken cancellationToken)
+        public async Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, CancellationToken cancellationToken)
         {
-            int urn;
-            if (!int.TryParse(id, out urn))
-            {
-                throw new ArgumentException($"id must be a number (urn) but received {id}", nameof(id));
-            }
-
-            var establishment = await _giasApiClient.GetEstablishmentAsync(urn, cancellationToken);
+            var establishment = readFromLive
+                ? await GetEstablishmentFromApiAsync(id, cancellationToken)
+                : await GetEstablishmentFromCacheAsync(id, cancellationToken);
             if (establishment == null)
             {
                 return null;
             }
 
-            _logger.Info($"read establishment {urn}: {JsonConvert.SerializeObject(establishment)}");
+            _logger.Debug($"read establishment {id} from {(readFromLive ? "live" : "cache")}: {JsonConvert.SerializeObject(establishment)}");
 
             return await GetLearningProviderFromEstablishment(establishment, fields, cancellationToken);
         }
 
-        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken)
+        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken)
         {
+            var establishments = readFromLive
+                ? await GetEstablishmentsAsync(ids, GetEstablishmentFromApiAsync, cancellationToken)
+                : await GetEstablishmentsAsync(ids, GetEstablishmentFromCacheAsync, cancellationToken);
+
             var fieldsString = fields == null || fields.Length == 0 ? null : fields.Aggregate((x, y) => $"{x},{y}");
-
-            var tasks = new Task<Establishment[]>[5];
-            var batchSize = (int) Math.Ceiling(ids.Length / (float) tasks.Length);
-            for (var i = 0; i < tasks.Length; i++)
-            {
-                var batch = ids.Skip(i * batchSize).Take(batchSize).ToArray();
-                tasks[i] = GetBatchOfEstablishmentsAsync(batch, fieldsString, cancellationToken);
-            }
-
-            var taskResults = await Task.WhenAll(tasks);
-            var establishments = taskResults.SelectMany(x => x).ToArray();
             var providers = new LearningProvider[establishments.Length];
 
             for (var i = 0; i < establishments.Length; i++)
@@ -80,9 +76,30 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             return providers;
         }
 
-        
-        
-        private async Task<Establishment[]> GetBatchOfEstablishmentsAsync(string[] batch, string fields, CancellationToken cancellationToken)
+
+        private async Task<Establishment[]> GetEstablishmentsAsync(
+            string[] ids,
+            Func<string, CancellationToken, Task<Establishment>> readerFunc,
+            CancellationToken cancellationToken)
+        {
+            var tasks = new Task<Establishment[]>[5];
+            var batchSize = (int) Math.Ceiling(ids.Length / (float) tasks.Length);
+            for (var i = 0; i < tasks.Length; i++)
+            {
+                var batch = ids.Skip(i * batchSize).Take(batchSize).ToArray();
+                tasks[i] = GetBatchOfEstablishmentsAsync(batch, readerFunc, cancellationToken);
+            }
+
+            var taskResults = await Task.WhenAll(tasks);
+            var establishments = taskResults.SelectMany(x => x).ToArray();
+
+            return establishments;
+        }
+
+        private async Task<Establishment[]> GetBatchOfEstablishmentsAsync(
+            string[] batch,
+            Func<string, CancellationToken, Task<Establishment>> readerFunc,
+            CancellationToken cancellationToken)
         {
             var establishments = new Establishment[batch.Length];
 
@@ -90,19 +107,38 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             {
                 var id = batch[i];
 
-                int urn;
-                if (!int.TryParse(id, out urn))
-                {
-                    throw new ArgumentException($"id must be a number (urn) but received {id}", nameof(id));
-                }
-
-                establishments[i] = await _giasApiClient.GetEstablishmentAsync(urn, cancellationToken);
+                establishments[i] = await readerFunc(id, cancellationToken);
             }
 
             return establishments;
         }
 
-        private async Task<LearningProvider> GetLearningProviderFromEstablishment(Establishment establishment, string fields, CancellationToken cancellationToken)
+        private async Task<Establishment> GetEstablishmentFromApiAsync(string id, CancellationToken cancellationToken)
+        {
+            if (!int.TryParse(id, out var urn))
+            {
+                throw new ArgumentException($"id must be a number (urn) but received {id}", nameof(id));
+            }
+
+            var establishment = await _giasApiClient.GetEstablishmentAsync(urn, cancellationToken);
+
+            return establishment;
+        }
+
+        private async Task<Establishment> GetEstablishmentFromCacheAsync(string id, CancellationToken cancellationToken)
+        {
+            if (!int.TryParse(id, out var urn))
+            {
+                throw new ArgumentException($"id must be a number (urn) but received {id}", nameof(id));
+            }
+
+            var establishment = await _establishmentRepository.GetEstablishmentAsync(urn, cancellationToken);
+
+            return establishment;
+        }
+
+        private async Task<LearningProvider> GetLearningProviderFromEstablishment(Establishment establishment, string fields,
+            CancellationToken cancellationToken)
         {
             var learningProvider = await _mapper.MapAsync<LearningProvider>(establishment, cancellationToken);
             _logger.Info($"mapped establishment {establishment.Urn} to {JsonConvert.SerializeObject(learningProvider)}");
