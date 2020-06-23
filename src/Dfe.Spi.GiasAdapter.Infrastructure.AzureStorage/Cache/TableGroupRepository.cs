@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    public class TableGroupRepository : TableCacheRepository<Group, GroupEntity>,  IGroupRepository
+    public class TableGroupRepository : TableCacheRepository<PointInTimeGroup, GroupEntity>,  IGroupRepository
     {
         public TableGroupRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
             : base(configuration.TableStorageConnectionString, configuration.GroupTableName, logger, "groups")
@@ -17,7 +17,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         }
 
 
-        public async Task StoreAsync(Group @group, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeGroup @group, CancellationToken cancellationToken)
         {
             await InsertOrUpdateAsync(group, cancellationToken);
         }
@@ -27,30 +27,30 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             await InsertOrUpdateStagingAsync(groups, cancellationToken);
         }
 
-        public async Task<Group> GetGroupAsync(long uid, CancellationToken cancellationToken)
+        public async Task<PointInTimeGroup> GetGroupAsync(long uid, CancellationToken cancellationToken)
         {
             return await RetrieveAsync(uid.ToString(), "current", cancellationToken);
         }
 
-        public async Task<Group> GetGroupFromStagingAsync(long uid, CancellationToken cancellationToken)
+        public async Task<PointInTimeGroup> GetGroupFromStagingAsync(long uid, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(GetStagingPartitionKey(uid), uid.ToString(), cancellationToken);
+            return await RetrieveAsync(GetStagingPartitionKey(pointInTime), uid.ToString(), cancellationToken);
         }
 
 
-        protected override GroupEntity ModelToEntity(Group model)
+        protected override GroupEntity ModelToEntity(PointInTimeGroup model)
         {
             return ModelToEntity(model.Uid.ToString(), "current", model);
         }
 
-        protected override GroupEntity ModelToEntityForStaging(Group model)
+        protected override GroupEntity ModelToEntityForStaging(PointInTimeGroup model)
         {
-            return ModelToEntity(GetStagingPartitionKey(model.Uid), model.Uid.ToString(), model);
+            return ModelToEntity(GetStagingPartitionKey(model.PointInTime), model.Uid.ToString(), model);
         }
 
-        protected override Group EntityToModel(GroupEntity entity)
+        protected override PointInTimeGroup EntityToModel(GroupEntity entity)
         {
-            return JsonConvert.DeserializeObject<Group>(entity.Group);
+            return JsonConvert.DeserializeObject<PointInTimeGroup>(entity.Group);
         }
 
         private GroupEntity ModelToEntity(string partitionKey, string rowKey, Group group)
@@ -63,9 +63,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             };
         }
         
-        private string GetStagingPartitionKey(long uid)
+        private string GetStagingPartitionKey(DateTime pointInTime)
         {
-            return $"staging{Math.Floor(uid / 5000d) * 5000}";
+            return $"staging{pointInTime:yyyMMdd}";
         }
     }
 }

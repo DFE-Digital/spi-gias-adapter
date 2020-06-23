@@ -177,7 +177,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         public async Task ThenItShouldMapManagementGroupToTrustIfAvailable(Establishment source, long uid)
         {
             EnsureManagmentGroupCodes(source, trustUid: uid);
-            var trust = new Group();
+            var trust = new PointInTimeGroup();
             var managementGroup = new ManagementGroup();
             _groupRepositoryMock.Setup(r =>
                     r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
@@ -200,7 +200,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         public async Task ThenItShouldMapManagementGroupToFederationIfAvailable(Establishment source, long uid)
         {
             EnsureManagmentGroupCodes(source, federationUid: uid);
-            var federation = new Group();
+            var federation = new PointInTimeGroup();
             var managementGroup = new ManagementGroup();
             _groupRepositoryMock.Setup(r =>
                     r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))

@@ -97,10 +97,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
         public async Task ProcessBatchOfGroups(long[] uids, CancellationToken cancellationToken)
         {
+            var pointInTime = DateTime.UtcNow.Date; // TODO: FIX!!!
             foreach (var uid in uids)
             {
                 var current = await _groupRepository.GetGroupAsync(uid, cancellationToken);
-                var staging = await _groupRepository.GetGroupFromStagingAsync(uid, cancellationToken);
+                var staging = await _groupRepository.GetGroupFromStagingAsync(uid, pointInTime, cancellationToken);
 
                 if (current == null)
                 {
@@ -404,7 +405,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _logger.Debug($"Sent event for establishment {staging.Urn}");
         }
 
-        private async Task ProcessGroup(Group staging,
+        private async Task ProcessGroup(PointInTimeGroup staging,
             Func<ManagementGroup, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {

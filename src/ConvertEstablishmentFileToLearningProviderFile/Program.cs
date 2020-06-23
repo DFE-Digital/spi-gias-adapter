@@ -96,12 +96,18 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return establishments;
         }
 
-        static async Task<Group[]> GetGroups(CancellationToken cancellationToken)
+        static async Task<PointInTimeGroup[]> GetGroups(CancellationToken cancellationToken)
         {
             _logger.Info("Downloading groups...");
             var groups = await _giasApiClient.DownloadGroupsAsync(cancellationToken);
             _logger.Info($"Downloaded {groups.Length} groups");
-            return groups;
+            
+            var pointInTimeGroups = groups.Select(group => Clone<PointInTimeGroup>(group)).ToArray();
+            foreach (var pointInTimeGroup in pointInTimeGroups)
+            {
+                pointInTimeGroup.PointInTime = DateTime.UtcNow.Date;
+            }
+            return pointInTimeGroups;
         }
 
         static async Task<GroupLink[]> GetGroupLinks(CancellationToken cancellationToken)
@@ -112,7 +118,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return groupLinks;
         }
 
-        static void SetRepositoryData(Establishment[] establishments, Group[] groups)
+        static void SetRepositoryData(Establishment[] establishments, PointInTimeGroup[] groups)
         {
             _groupRepository.SetData(groups);
 
@@ -192,6 +198,37 @@ namespace ConvertEstablishmentFileToLearningProviderFile
 
             _logger.Info($"Written {learningProviders.Length} learning providers to {path}");
         }
+        
+        
+        static TDestination Clone<TDestination>(object source, Func<TDestination> activator = null)
+        {
+            // TODO: This could be more efficient with some caching of properties
+            var sourceProperties = source.GetType().GetProperties();
+            var destinationProperties = source.GetType().GetProperties();
+
+            TDestination destination;
+            if (activator != null)
+            {
+                destination = activator();
+            }
+            else
+            {
+                destination = Activator.CreateInstance<TDestination>();
+            }
+
+            foreach (var destinationProperty in destinationProperties)
+            {
+                var sourceProperty = sourceProperties.SingleOrDefault(p => p.Name == destinationProperty.Name);
+                if (sourceProperty != null)
+                {
+                    // TODO: This assumes the property types are the same. If this is not true then handling will be required
+                    var sourceValue = sourceProperty.GetValue(source);
+                    destinationProperty.SetValue(destination, sourceValue);
+                }
+            }
+
+            return destination;
+        }
 
 
         static void Main(string[] args)
@@ -217,14 +254,14 @@ namespace ConvertEstablishmentFileToLearningProviderFile
 
     class InProcGroupRepository : IGroupRepository
     {
-        private Group[] _groups;
+        private PointInTimeGroup[] _groups;
 
-        public void SetData(Group[] groups)
+        public void SetData(PointInTimeGroup[] groups)
         {
             _groups = groups;
         }
 
-        public Task StoreAsync(Group @group, CancellationToken cancellationToken)
+        public Task StoreAsync(PointInTimeGroup @group, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -234,7 +271,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             throw new NotImplementedException();
         }
 
-        public Task<Group> GetGroupAsync(long uid, CancellationToken cancellationToken)
+        public Task<PointInTimeGroup> GetGroupAsync(long uid, CancellationToken cancellationToken)
         {
             if (_groups == null)
             {
@@ -245,7 +282,7 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return Task.FromResult(group);
         }
 
-        public Task<Group> GetGroupFromStagingAsync(long uid, CancellationToken cancellationToken)
+        public Task<PointInTimeGroup> GetGroupFromStagingAsync(long uid, DateTime pointInTime, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
