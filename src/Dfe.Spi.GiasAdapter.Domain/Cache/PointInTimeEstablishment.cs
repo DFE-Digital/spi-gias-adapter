@@ -6,5 +6,6 @@ namespace Dfe.Spi.GiasAdapter.Domain.Cache
     public class PointInTimeEstablishment : Establishment
     {
         public DateTime PointInTime { get; set; }
+        public bool IsCurrent { get; set; }
     }
 }

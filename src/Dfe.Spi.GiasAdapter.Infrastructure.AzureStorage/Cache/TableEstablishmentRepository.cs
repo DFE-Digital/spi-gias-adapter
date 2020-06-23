@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Azure.Documents.Spatial;
 using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
@@ -23,7 +25,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task StoreAsync(PointInTimeEstablishment establishment, CancellationToken cancellationToken)
         {
-            await InsertOrUpdateAsync(establishment, cancellationToken);
+            await StoreAsync(new[] {establishment}, cancellationToken);
         }
 
         public async Task StoreAsync(PointInTimeEstablishment[] establishments, CancellationToken cancellationToken)
@@ -50,7 +52,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         protected override EstablishmentEntity ModelToEntity(PointInTimeEstablishment model)
         {
-            return ModelToEntity(model.Urn.ToString(), "current", model);
+            return ModelToEntity(model.Urn.ToString(), model.PointInTime.ToString("yyyyMMdd"), model);
         }
 
         protected override EstablishmentEntity ModelToEntityForStaging(PointInTimeEstablishment model)
@@ -65,6 +67,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
                 Establishment = JsonConvert.SerializeObject(establishment),
+                PointInTime = establishment.PointInTime,
+                IsCurrent = establishment.IsCurrent,
             };
         }
 
@@ -73,7 +77,30 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             return JsonConvert.DeserializeObject<PointInTimeEstablishment>(
                 entity.Establishment);
         }
-        
+
+        protected override EstablishmentEntity[] ProcessEntitiesBeforeStoring(EstablishmentEntity[] entities)
+        {
+            var processedEntities = new List<EstablishmentEntity>();
+            
+            foreach (var entity in entities)
+            {
+                if (entity.IsCurrent)
+                {
+                    processedEntities.Add(new EstablishmentEntity
+                    {
+                        PartitionKey = entity.PartitionKey,
+                        RowKey = "current",
+                        Establishment = entity.Establishment,
+                        PointInTime = entity.PointInTime,
+                        IsCurrent = entity.IsCurrent,
+                    });
+                }
+                processedEntities.Add(entity);
+            }
+
+            return processedEntities.ToArray();
+        }
+
         private string GetStagingPartitionKey(DateTime pointInTime)
         {
             return $"staging{pointInTime:yyyyMMdd}";

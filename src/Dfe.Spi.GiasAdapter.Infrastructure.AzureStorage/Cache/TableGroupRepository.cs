@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -17,9 +18,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         }
 
 
-        public async Task StoreAsync(PointInTimeGroup @group, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeGroup group, CancellationToken cancellationToken)
         {
-            await InsertOrUpdateAsync(group, cancellationToken);
+            await StoreAsync(new[] {group}, cancellationToken);
+        }
+
+        public async Task StoreAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
+        {
+            await InsertOrUpdateAsync(groups, cancellationToken);
         }
 
         public async Task StoreInStagingAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
@@ -40,7 +46,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         protected override GroupEntity ModelToEntity(PointInTimeGroup model)
         {
-            return ModelToEntity(model.Uid.ToString(), "current", model);
+            return ModelToEntity(model.Uid.ToString(), model.PointInTime.ToString("yyyyMMdd"), model);
         }
 
         protected override GroupEntity ModelToEntityForStaging(PointInTimeGroup model)
@@ -53,14 +59,39 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             return JsonConvert.DeserializeObject<PointInTimeGroup>(entity.Group);
         }
 
-        private GroupEntity ModelToEntity(string partitionKey, string rowKey, Group group)
+        private GroupEntity ModelToEntity(string partitionKey, string rowKey, PointInTimeGroup group)
         {
             return new GroupEntity
             {
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
                 Group = JsonConvert.SerializeObject(group),
+                PointInTime = group.PointInTime,
+                IsCurrent = group.IsCurrent,
             };
+        }
+
+        protected override GroupEntity[] ProcessEntitiesBeforeStoring(GroupEntity[] entities)
+        {
+            var processedEntities = new List<GroupEntity>();
+            
+            foreach (var entity in entities)
+            {
+                if (entity.IsCurrent)
+                {
+                    processedEntities.Add(new GroupEntity
+                    {
+                        PartitionKey = entity.PartitionKey,
+                        RowKey = "current",
+                        Group = entity.Group,
+                        PointInTime = entity.PointInTime,
+                        IsCurrent = entity.IsCurrent,
+                    });
+                }
+                processedEntities.Add(entity);
+            }
+
+            return processedEntities.ToArray();
         }
         
         private string GetStagingPartitionKey(DateTime pointInTime)

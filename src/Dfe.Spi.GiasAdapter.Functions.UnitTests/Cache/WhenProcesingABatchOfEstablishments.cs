@@ -6,6 +6,7 @@ using AutoFixture.NUnit3;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.Cache;
+using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Functions.Cache;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Timers;
@@ -41,12 +42,19 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldCallCacheManagerWithDeserializedUrns(long[] urns)
+        public async Task ThenItShouldCallCacheManagerWithDeserializedUrns(long[] urns, DateTime pointInTime)
         {
-            await _function.Run(JsonConvert.SerializeObject(urns), _cancellationToken);
+            var queueItem = new StagingBatchQueueItem<long>
+            {
+                Identifiers = urns,
+                PointInTime = pointInTime,
+            };
+            
+            await _function.Run(JsonConvert.SerializeObject(queueItem), _cancellationToken);
 
             _cacheManagerMock.Verify(m => m.ProcessBatchOfEstablishments(
                 It.Is<long[]>(actual => AreEqual(urns, actual)),
+                pointInTime,
                 _cancellationToken), Times.Once);
         }
 

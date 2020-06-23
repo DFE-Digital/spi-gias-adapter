@@ -267,6 +267,11 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             throw new NotImplementedException();
         }
 
+        public async Task StoreAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task StoreInStagingAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
@@ -299,6 +304,11 @@ namespace ConvertEstablishmentFileToLearningProviderFile
         }
 
         public Task StoreAsync(PointInTimeLocalAuthority localAuthority, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task StoreAsync(PointInTimeLocalAuthority[] localAuthorities, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

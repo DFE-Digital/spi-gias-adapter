@@ -29,6 +29,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         protected abstract TEntity ModelToEntity(TModel model);
         protected abstract TEntity ModelToEntityForStaging(TModel model);
         protected abstract TModel EntityToModel(TEntity entity);
+        protected virtual TEntity[] ProcessEntitiesBeforeStoring(TEntity[] entities)
+        {
+            return entities;
+        }
 
         protected async Task InsertOrUpdateAsync(TModel model, CancellationToken cancellationToken)
         {
@@ -43,9 +47,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             const int batchSize = 100;
             
             await Table.CreateIfNotExistsAsync(cancellationToken);
+
+            var entities = models.Select(ModelToEntity).ToArray();
+            var processedEntities = ProcessEntitiesBeforeStoring(entities);
             
-            var partitionedEntities = models
-                .Select(ModelToEntity)
+            var partitionedEntities = processedEntities
                 .GroupBy(entity => entity.PartitionKey)
                 .ToDictionary(g => g.Key, g => g.ToArray());
             foreach (var partition in partitionedEntities.Values)
@@ -53,16 +59,16 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 var position = 0;
                 while (position < partition.Length)
                 {
-                    var entities = partition.Skip(position).Take(batchSize).ToArray();
+                    var batchOfEntities = partition.Skip(position).Take(batchSize).ToArray();
                     var batch = new TableBatchOperation();
 
-                    foreach (var entity in entities)
+                    foreach (var entity in batchOfEntities)
                     {
                         batch.InsertOrReplace(entity);
                     }
 
                     Logger.Debug(
-                        $"Inserting {position} to {partition.Length} for partition {entities.First().PartitionKey} of {_logTypeName}");
+                        $"Inserting {position} to {partition.Length} for partition {batchOfEntities.First().PartitionKey} of {_logTypeName}");
                     await Table.ExecuteBatchAsync(batch, cancellationToken);
 
                     position += batchSize;

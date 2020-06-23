@@ -36,10 +36,10 @@ namespace Dfe.Spi.GiasAdapter.Functions.Cache
 
             _logger.Info($"{FunctionName} trigger with: {queueContent}");
 
-            var uids = JsonConvert.DeserializeObject<long[]>(queueContent);
-            _logger.Debug($"Deserialized to {uids.Length} uids");
+            var queueItem = JsonConvert.DeserializeObject<StagingBatchQueueItem<long>>(queueContent);
+            _logger.Debug($"Deserialized to {queueItem.Identifiers.Length} uids on {queueItem.PointInTime}");
 
-            await _cacheManager.ProcessBatchOfGroups(uids, cancellationToken);
+            await _cacheManager.ProcessBatchOfGroups(queueItem.Identifiers, queueItem.PointInTime, cancellationToken);
         }
     }
 }

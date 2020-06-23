@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -20,7 +21,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task StoreAsync(PointInTimeLocalAuthority localAuthority, CancellationToken cancellationToken)
         {
-            await InsertOrUpdateAsync(localAuthority, cancellationToken);
+            await StoreAsync(new[] {localAuthority}, cancellationToken);
+        }
+
+        public async Task StoreAsync(PointInTimeLocalAuthority[] localAuthorities, CancellationToken cancellationToken)
+        {
+            await InsertOrUpdateAsync(localAuthorities, cancellationToken);
         }
 
         public async Task StoreInStagingAsync(PointInTimeLocalAuthority[] localAuthorities, CancellationToken cancellationToken)
@@ -43,7 +49,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         protected override LocalAuthorityEntity ModelToEntity(PointInTimeLocalAuthority model)
         {
-            return ModelToEntity(model.Code.ToString(), "current", model);
+            return ModelToEntity(model.Code.ToString(), model.PointInTime.ToString("yyyyMMdd"), model);
         }
 
         protected override LocalAuthorityEntity ModelToEntityForStaging(PointInTimeLocalAuthority model)
@@ -58,12 +64,37 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
                 LocalAuthority = JsonConvert.SerializeObject(model),
+                PointInTime = model.PointInTime,
+                IsCurrent = model.IsCurrent,
             };
         }
 
         protected override PointInTimeLocalAuthority EntityToModel(LocalAuthorityEntity entity)
         {
             return JsonConvert.DeserializeObject<PointInTimeLocalAuthority>(entity.LocalAuthority);
+        }
+
+        protected override LocalAuthorityEntity[] ProcessEntitiesBeforeStoring(LocalAuthorityEntity[] entities)
+        {
+            var processedEntities = new List<LocalAuthorityEntity>();
+            
+            foreach (var entity in entities)
+            {
+                if (entity.IsCurrent)
+                {
+                    processedEntities.Add(new LocalAuthorityEntity
+                    {
+                        PartitionKey = entity.PartitionKey,
+                        RowKey = "current",
+                        LocalAuthority = entity.LocalAuthority,
+                        PointInTime = entity.PointInTime,
+                        IsCurrent = entity.IsCurrent,
+                    });
+                }
+                processedEntities.Add(entity);
+            }
+
+            return processedEntities.ToArray();
         }
         
         private string GetStagingPartitionKey(DateTime pointInTime)

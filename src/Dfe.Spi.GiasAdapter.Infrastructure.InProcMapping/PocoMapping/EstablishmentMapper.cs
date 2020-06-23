@@ -267,6 +267,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
             
             var localAuthority = await _localAuthorityRepository.GetLocalAuthorityAsync(
                 int.Parse(establishment.LA.Code), cancellationToken);
+            if (localAuthority == null)
+            {
+                return null;
+            }
             return await _mapper.MapAsync<ManagementGroup>(localAuthority, cancellationToken);
         }
 

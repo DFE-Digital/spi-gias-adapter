@@ -14,9 +14,9 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
     public interface ICacheManager
     {
         Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken);
-        Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken);
-        Task ProcessBatchOfGroups(long[] uids, CancellationToken cancellationToken);
-        Task ProcessBatchOfLocalAuthorities(int[] laCodes, CancellationToken cancellationToken);
+        Task ProcessBatchOfEstablishments(long[] urns, DateTime pointInTime, CancellationToken cancellationToken);
+        Task ProcessBatchOfGroups(long[] uids, DateTime pointInTime, CancellationToken cancellationToken);
+        Task ProcessBatchOfLocalAuthorities(int[] laCodes, DateTime pointInTime, CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
@@ -67,9 +67,8 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             await DownloadEstablishmentsToCacheAsync(pointInTime, groupLinks, cancellationToken);
         }
 
-        public async Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken)
+        public async Task ProcessBatchOfEstablishments(long[] urns, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            var pointInTime = DateTime.UtcNow.Date; // TODO: FIX!!!
             foreach (var urn in urns)
             {
                 var current = await _establishmentRepository.GetEstablishmentAsync(urn, cancellationToken);
@@ -79,14 +78,14 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 {
                     _logger.Info($"Establishment {urn} has not been seen before. Processing as created");
 
-                    await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderCreatedAsync,
+                    await ProcessEstablishment(null, staging, _eventPublisher.PublishLearningProviderCreatedAsync,
                         cancellationToken);
                 }
                 else if (!AreSame(current, staging))
                 {
                     _logger.Info($"Establishment {urn} has changed. Processing as updated");
 
-                    await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderUpdatedAsync,
+                    await ProcessEstablishment(current, staging, _eventPublisher.PublishLearningProviderUpdatedAsync,
                         cancellationToken);
                 }
                 else
@@ -96,9 +95,8 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             }
         }
 
-        public async Task ProcessBatchOfGroups(long[] uids, CancellationToken cancellationToken)
+        public async Task ProcessBatchOfGroups(long[] uids, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            var pointInTime = DateTime.UtcNow.Date; // TODO: FIX!!!
             foreach (var uid in uids)
             {
                 var current = await _groupRepository.GetGroupAsync(uid, cancellationToken);
@@ -125,9 +123,8 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             }
         }
 
-        public async Task ProcessBatchOfLocalAuthorities(int[] laCodes, CancellationToken cancellationToken)
+        public async Task ProcessBatchOfLocalAuthorities(int[] laCodes, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            var pointInTime = DateTime.UtcNow.Date; // TODO: FIX!!!
             foreach (var laCode in laCodes)
             {
                 var current = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, cancellationToken);
@@ -409,11 +406,23 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             return current.Name == staging.Name;
         }
 
-        private async Task ProcessEstablishment(PointInTimeEstablishment staging,
+        private async Task ProcessEstablishment(
+            PointInTimeEstablishment current,
+            PointInTimeEstablishment staging,
             Func<LearningProvider, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
-            await _establishmentRepository.StoreAsync(staging, cancellationToken);
+            staging.IsCurrent = current == null || staging.PointInTime > current.PointInTime;
+            if (current != null && staging.IsCurrent)
+            {
+                current.IsCurrent = false;
+            }
+
+            var toStore = current == null || current.IsCurrent
+                ? new[] {staging}
+                : new[] {current, staging};
+            
+            await _establishmentRepository.StoreAsync(toStore, cancellationToken);
             _logger.Debug($"Stored establishment {staging.Urn} in repository");
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(staging, cancellationToken);
@@ -422,7 +431,8 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _logger.Debug($"Sent event for establishment {staging.Urn}");
         }
 
-        private async Task ProcessGroup(PointInTimeGroup staging,
+        private async Task ProcessGroup(
+            PointInTimeGroup staging,
             Func<ManagementGroup, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
@@ -435,7 +445,8 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _logger.Debug($"Sent event for group {staging.Uid}");
         }
 
-        private async Task ProcessLocalAuthority(PointInTimeLocalAuthority staging,
+        private async Task ProcessLocalAuthority(
+            PointInTimeLocalAuthority staging,
             Func<ManagementGroup, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
