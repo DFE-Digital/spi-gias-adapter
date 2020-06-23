@@ -127,10 +127,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
         public async Task ProcessBatchOfLocalAuthorities(int[] laCodes, CancellationToken cancellationToken)
         {
+            var pointInTime = DateTime.UtcNow.Date; // TODO: FIX!!!
             foreach (var laCode in laCodes)
             {
                 var current = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, cancellationToken);
-                var staging = await _localAuthorityRepository.GetLocalAuthorityFromStagingAsync(laCode, cancellationToken);
+                var staging = await _localAuthorityRepository.GetLocalAuthorityFromStagingAsync(laCode, pointInTime, cancellationToken);
 
                 if (current == null)
                 {
@@ -419,7 +420,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _logger.Debug($"Sent event for group {staging.Uid}");
         }
 
-        private async Task ProcessLocalAuthority(LocalAuthority staging,
+        private async Task ProcessLocalAuthority(PointInTimeLocalAuthority staging,
             Func<ManagementGroup, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {

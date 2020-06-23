@@ -30,7 +30,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             _localAuthorityRepositoryMock = new Mock<ILocalAuthorityRepository>();
             _localAuthorityRepositoryMock.Setup(r =>
                     r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority());
+                .ReturnsAsync(new PointInTimeLocalAuthority());
 
             _mapper = new PocoMapper(
                 _translatorMock.Object,

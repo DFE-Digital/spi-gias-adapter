@@ -94,8 +94,10 @@ namespace PopulateInitialCache
             for (var i = 0; i < localAuthorities.Length; i++)
             {
                 _logger.Info($"Storing local authority {i} of {localAuthorities.Length}: {localAuthorities[i].Code}");
+                var pointInTimeLocalAuthority = Clone<PointInTimeLocalAuthority>(localAuthorities[i]);
+                pointInTimeLocalAuthority.PointInTime = DateTime.UtcNow.Date;
 
-                await _localAuthorityRepository.StoreAsync(localAuthorities[i], cancellationToken);
+                await _localAuthorityRepository.StoreAsync(pointInTimeLocalAuthority, cancellationToken);
             }
         }
         

@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    public class TableLocalAuthorityRepository : TableCacheRepository<LocalAuthority, LocalAuthorityEntity>, ILocalAuthorityRepository
+    public class TableLocalAuthorityRepository : TableCacheRepository<PointInTimeLocalAuthority, LocalAuthorityEntity>, ILocalAuthorityRepository
     {
         
         public TableLocalAuthorityRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
@@ -18,7 +18,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         
         
 
-        public async Task StoreAsync(LocalAuthority localAuthority, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeLocalAuthority localAuthority, CancellationToken cancellationToken)
         {
             await InsertOrUpdateAsync(localAuthority, cancellationToken);
         }
@@ -28,30 +28,30 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             await InsertOrUpdateStagingAsync(localAuthorities, cancellationToken);
         }
 
-        public async Task<LocalAuthority> GetLocalAuthorityAsync(int laCode, CancellationToken cancellationToken)
+        public async Task<PointInTimeLocalAuthority> GetLocalAuthorityAsync(int laCode, CancellationToken cancellationToken)
         {
             return await RetrieveAsync(laCode.ToString(), "current", cancellationToken);
         }
 
-        public async Task<LocalAuthority> GetLocalAuthorityFromStagingAsync(int laCode, CancellationToken cancellationToken)
+        public async Task<PointInTimeLocalAuthority> GetLocalAuthorityFromStagingAsync(int laCode, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(GetStagingPartitionKey(laCode), laCode.ToString(), cancellationToken);
+            return await RetrieveAsync(GetStagingPartitionKey(pointInTime), laCode.ToString(), cancellationToken);
         }
         
         
         
 
-        protected override LocalAuthorityEntity ModelToEntity(LocalAuthority model)
+        protected override LocalAuthorityEntity ModelToEntity(PointInTimeLocalAuthority model)
         {
             return ModelToEntity(model.Code.ToString(), "current", model);
         }
 
-        protected override LocalAuthorityEntity ModelToEntityForStaging(LocalAuthority model)
+        protected override LocalAuthorityEntity ModelToEntityForStaging(PointInTimeLocalAuthority model)
         {
-            return ModelToEntity(GetStagingPartitionKey(model.Code), model.Code.ToString(), model);
+            return ModelToEntity(GetStagingPartitionKey(model.PointInTime), model.Code.ToString(), model);
         }
         
-        private LocalAuthorityEntity ModelToEntity(string partitionKey, string rowKey, LocalAuthority model)
+        private LocalAuthorityEntity ModelToEntity(string partitionKey, string rowKey, PointInTimeLocalAuthority model)
         {
             return new LocalAuthorityEntity
             {
@@ -61,14 +61,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             };
         }
 
-        protected override LocalAuthority EntityToModel(LocalAuthorityEntity entity)
+        protected override PointInTimeLocalAuthority EntityToModel(LocalAuthorityEntity entity)
         {
-            return JsonConvert.DeserializeObject<LocalAuthority>(entity.LocalAuthority);
+            return JsonConvert.DeserializeObject<PointInTimeLocalAuthority>(entity.LocalAuthority);
         }
         
-        private string GetStagingPartitionKey(int laCode)
+        private string GetStagingPartitionKey(DateTime pointInTime)
         {
-            return $"staging{Math.Floor(laCode / 50d) * 50}";
+            return $"staging{pointInTime:yyyyMMdd}";
         }
     }
 }

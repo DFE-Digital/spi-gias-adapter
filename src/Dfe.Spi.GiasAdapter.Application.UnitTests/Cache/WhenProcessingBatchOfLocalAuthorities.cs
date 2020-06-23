@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -39,10 +40,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             
             _localAuthorityRepositoryMock = new Mock<ILocalAuthorityRepository>();
             _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((LocalAuthority) null);
+                .ReturnsAsync((PointInTimeLocalAuthority) null);
             _localAuthorityRepositoryMock.Setup(r =>
-                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((int laCode, CancellationToken cancellationToken) => new LocalAuthority
+                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((int laCode, DateTime pointInTime, CancellationToken cancellationToken) => new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
@@ -96,21 +97,21 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _localAuthorityRepositoryMock.Verify(
-                r => r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()),
+                r => r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _localAuthorityRepositoryMock.Verify(r => r.GetLocalAuthorityFromStagingAsync(laCode[0], _cancellationToken),
+            _localAuthorityRepositoryMock.Verify(r => r.GetLocalAuthorityFromStagingAsync(laCode[0], DateTime.UtcNow.Date, _cancellationToken),
                 Times.Once);
-            _localAuthorityRepositoryMock.Verify(r => r.GetLocalAuthorityFromStagingAsync(laCode[1], _cancellationToken),
+            _localAuthorityRepositoryMock.Verify(r => r.GetLocalAuthorityFromStagingAsync(laCode[1], DateTime.UtcNow.Date, _cancellationToken),
                 Times.Once);
 
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.IsAny<LocalAuthority>(), It.IsAny<CancellationToken>()),
+                r => r.StoreAsync(It.IsAny<PointInTimeLocalAuthority>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<LocalAuthority>(e => e.Code == laCode[0]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeLocalAuthority>(e => e.Code == laCode[0]), _cancellationToken),
                 Times.Once);
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<LocalAuthority>(e => e.Code == laCode[1]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeLocalAuthority>(e => e.Code == laCode[1]), _cancellationToken),
                 Times.Once);
 
             _mapperMock.Verify(
@@ -132,10 +133,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         public async Task ThenItShouldPublishCreatedEventIfNoCurrent(int laCode, ManagementGroup managementGroup)
         {
             _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((LocalAuthority) null);
+                .ReturnsAsync((PointInTimeLocalAuthority) null);
             _localAuthorityRepositoryMock.Setup(r =>
-                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
@@ -154,14 +155,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(int laCode, ManagementGroup managementGroup)
         {
             _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = "old name"
                 });
             _localAuthorityRepositoryMock.Setup(r =>
-                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
@@ -180,14 +181,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(int laCode)
         {
             _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
                 });
             _localAuthorityRepositoryMock.Setup(r =>
-                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()

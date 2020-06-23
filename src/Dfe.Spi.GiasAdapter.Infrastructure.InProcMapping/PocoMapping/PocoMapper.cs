@@ -40,15 +40,15 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
 
         private ObjectMapper GetMapperForType(Type type)
         {
-            if (type == typeof(Establishment))
+            if (type == typeof(Establishment) || type == typeof(PointInTimeEstablishment))
             {
                 return new EstablishmentMapper(_translator, _groupRepository, _localAuthorityRepository, this);
             }
-            if (type == typeof(Group))
+            if (type == typeof(Group) || type == typeof(PointInTimeGroup))
             {
                 return new GroupMapper(_translator);
             }
-            if (type == typeof(LocalAuthority))
+            if (type == typeof(LocalAuthority) || type == typeof(PointInTimeLocalAuthority))
             {
                 return new LocalAuthorityMapper(_translator);
             }
