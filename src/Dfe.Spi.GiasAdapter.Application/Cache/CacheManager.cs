@@ -184,10 +184,15 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                     .Take(batchSize)
                     .Select(e => e.Uid)
                     .ToArray();
+                var queueItem = new StagingBatchQueueItem<long>
+                {
+                    Identifiers = batch,
+                    PointInTime = pointInTime,
+                };
 
                 _logger.Debug(
                     $"Queuing {position} to {position + batch.Length} of groups for processing");
-                await _groupProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
+                await _groupProcessingQueue.EnqueueBatchOfStagingAsync(queueItem, cancellationToken);
 
                 position += batchSize;
             }
@@ -255,10 +260,15 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                     .Take(batchSize)
                     .Select(e => e.Urn)
                     .ToArray();
+                var queueItem = new StagingBatchQueueItem<long>
+                {
+                    Identifiers = batch,
+                    PointInTime = pointInTime,
+                };
 
                 _logger.Debug(
                     $"Queuing {position} to {position + batch.Length} of establishments for processing");
-                await _establishmentProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
+                await _establishmentProcessingQueue.EnqueueBatchOfStagingAsync(queueItem, cancellationToken);
 
                 position += batchSize;
             }
@@ -299,10 +309,15 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                     .Take(batchSize)
                     .Select(e => e.Code)
                     .ToArray();
+                var queueItem = new StagingBatchQueueItem<int>
+                {
+                    Identifiers = batch,
+                    PointInTime = pointInTime,
+                };
 
                 _logger.Debug(
                     $"Queuing {position} to {position + batch.Length} of local authorities for processing");
-                await _localAuthorityProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
+                await _localAuthorityProcessingQueue.EnqueueBatchOfStagingAsync(queueItem, cancellationToken);
 
                 position += batchSize;
             }

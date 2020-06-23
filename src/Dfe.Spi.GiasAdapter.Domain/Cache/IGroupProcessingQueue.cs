@@ -5,6 +5,6 @@ namespace Dfe.Spi.GiasAdapter.Domain.Cache
 {
     public interface IGroupProcessingQueue
     {
-        Task EnqueueBatchOfStagingAsync(long[] uids, CancellationToken cancellationToken);
+        Task EnqueueBatchOfStagingAsync(StagingBatchQueueItem<long> queueItem, CancellationToken cancellationToken);
     }
 }
