@@ -73,8 +73,10 @@ namespace PopulateInitialCache
             for (var i = 0; i < establishments.Length; i++)
             {
                 _logger.Info($"Storing establishment {i} of {establishments.Length}: {establishments[i].Urn}");
+                var pointInTimeEstablishment = Clone<PointInTimeEstablishment>(establishments[i]);
+                pointInTimeEstablishment.PointInTime = DateTime.UtcNow.Date;
 
-                await _establishmentRepository.StoreAsync(establishments[i], cancellationToken);
+                await _establishmentRepository.StoreAsync(pointInTimeEstablishment, cancellationToken);
             }
         }
 

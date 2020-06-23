@@ -69,10 +69,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
         public async Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken)
         {
+            var pointInTime = DateTime.UtcNow.Date; // TODO: FIX!!!
             foreach (var urn in urns)
             {
                 var current = await _establishmentRepository.GetEstablishmentAsync(urn, cancellationToken);
-                var staging = await _establishmentRepository.GetEstablishmentFromStagingAsync(urn, cancellationToken);
+                var staging = await _establishmentRepository.GetEstablishmentFromStagingAsync(urn, pointInTime, cancellationToken);
 
                 if (current == null)
                 {
@@ -392,7 +393,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             return current.Name == staging.Name;
         }
 
-        private async Task ProcessEstablishment(Establishment staging,
+        private async Task ProcessEstablishment(PointInTimeEstablishment staging,
             Func<LearningProvider, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {

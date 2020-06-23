@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    public class TableEstablishmentRepository : TableCacheRepository<Establishment, EstablishmentEntity>, IEstablishmentRepository
+    public class TableEstablishmentRepository : TableCacheRepository<PointInTimeEstablishment, EstablishmentEntity>, IEstablishmentRepository
     {
         
         public TableEstablishmentRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
@@ -21,12 +21,12 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         
         
 
-        public async Task StoreAsync(Establishment establishment, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeEstablishment establishment, CancellationToken cancellationToken)
         {
             await InsertOrUpdateAsync(establishment, cancellationToken);
         }
 
-        public async Task StoreAsync(Establishment[] establishments, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeEstablishment[] establishments, CancellationToken cancellationToken)
         {
             await InsertOrUpdateAsync(establishments, cancellationToken);
         }
@@ -36,29 +36,29 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             await InsertOrUpdateStagingAsync(establishments, cancellationToken);
         }
 
-        public async Task<Establishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken)
+        public async Task<PointInTimeEstablishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken)
         {
             return await RetrieveAsync(urn.ToString(), "current", cancellationToken);
         }
 
-        public async Task<Establishment> GetEstablishmentFromStagingAsync(long urn, CancellationToken cancellationToken)
+        public async Task<PointInTimeEstablishment> GetEstablishmentFromStagingAsync(long urn, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(GetStagingPartitionKey(urn), urn.ToString(), cancellationToken);
+            return await RetrieveAsync(GetStagingPartitionKey(pointInTime), urn.ToString(), cancellationToken);
         }
         
         
 
-        protected override EstablishmentEntity ModelToEntity(Establishment model)
+        protected override EstablishmentEntity ModelToEntity(PointInTimeEstablishment model)
         {
             return ModelToEntity(model.Urn.ToString(), "current", model);
         }
 
-        protected override EstablishmentEntity ModelToEntityForStaging(Establishment model)
+        protected override EstablishmentEntity ModelToEntityForStaging(PointInTimeEstablishment model)
         {
-            return ModelToEntity(GetStagingPartitionKey(model.Urn), model.Urn.ToString(), model);
+            return ModelToEntity(GetStagingPartitionKey(model.PointInTime), model.Urn.ToString(), model);
         }
 
-        private EstablishmentEntity ModelToEntity(string partitionKey, string rowKey, Establishment establishment)
+        private EstablishmentEntity ModelToEntity(string partitionKey, string rowKey, PointInTimeEstablishment establishment)
         {
             return new EstablishmentEntity
             {
@@ -68,15 +68,15 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             };
         }
 
-        protected override Establishment EntityToModel(EstablishmentEntity entity)
+        protected override PointInTimeEstablishment EntityToModel(EstablishmentEntity entity)
         {
-            return JsonConvert.DeserializeObject<Establishment>(
+            return JsonConvert.DeserializeObject<PointInTimeEstablishment>(
                 entity.Establishment);
         }
         
-        private string GetStagingPartitionKey(long urn)
+        private string GetStagingPartitionKey(DateTime pointInTime)
         {
-            return $"staging{Math.Floor(urn / 5000d) * 5000}";
+            return $"staging{pointInTime:yyyyMMdd}";
         }
     }
 }
