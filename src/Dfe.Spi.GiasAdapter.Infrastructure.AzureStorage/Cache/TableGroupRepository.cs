@@ -22,7 +22,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             await InsertOrUpdateAsync(group, cancellationToken);
         }
 
-        public async Task StoreInStagingAsync(Group[] groups, CancellationToken cancellationToken)
+        public async Task StoreInStagingAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
         {
             await InsertOrUpdateStagingAsync(groups, cancellationToken);
         }

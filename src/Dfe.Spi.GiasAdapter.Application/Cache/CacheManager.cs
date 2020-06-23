@@ -59,10 +59,12 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
         public async Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken)
         {
+            var pointInTime = DateTime.UtcNow.Date;
+
             var groupLinks = await _giasApiClient.DownloadGroupLinksAsync(cancellationToken);
 
-            await DownloadGroupsToCacheAsync(cancellationToken);
-            await DownloadEstablishmentsToCacheAsync(groupLinks, cancellationToken);
+            await DownloadGroupsToCacheAsync(pointInTime, cancellationToken);
+            await DownloadEstablishmentsToCacheAsync(pointInTime, groupLinks, cancellationToken);
         }
 
         public async Task ProcessBatchOfEstablishments(long[] urns, CancellationToken cancellationToken)
@@ -150,8 +152,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         }
 
 
-        
-        private async Task DownloadGroupsToCacheAsync(CancellationToken cancellationToken)
+        private async Task DownloadGroupsToCacheAsync(DateTime pointInTime, CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring groups file from GIAS...");
 
@@ -159,9 +160,16 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             var groups = await _giasApiClient.DownloadGroupsAsync(cancellationToken);
             _logger.Debug($"Downloaded {groups.Length} groups from GIAS");
 
+            // Timestamp
+            var pointInTimeGroups = groups.Select(group => group.Clone<PointInTimeGroup>()).ToArray();
+            foreach (var pointInTimeGroup in pointInTimeGroups)
+            {
+                pointInTimeGroup.PointInTime = pointInTime;
+            }
+
             // Store
-            await _groupRepository.StoreInStagingAsync(groups, cancellationToken);
-            _logger.Debug($"Stored {groups.Length} groups in staging");
+            await _groupRepository.StoreInStagingAsync(pointInTimeGroups, cancellationToken);
+            _logger.Debug($"Stored {pointInTimeGroups.Length} groups in staging");
 
             // Queue diff check
             var position = 0;
@@ -184,7 +192,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _logger.Info("Finished downloading groups to cache");
         }
 
-        private async Task DownloadEstablishmentsToCacheAsync(GroupLink[] groupLinks,
+        private async Task DownloadEstablishmentsToCacheAsync(DateTime pointInTime, GroupLink[] groupLinks,
             CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring establishments file from GIAS...");
@@ -193,12 +201,20 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             var establishments = await _giasApiClient.DownloadEstablishmentsAsync(cancellationToken);
             _logger.Debug($"Downloaded {establishments.Length} establishments from GIAS");
 
+            // Timestamp
+            var pointInTimeEstablishments = establishments.Select(establishment => establishment.Clone<PointInTimeEstablishment>()).ToArray();
+            foreach (var pointInTimeEstablishment in pointInTimeEstablishments)
+            {
+                pointInTimeEstablishment.PointInTime = pointInTime;
+            }
+
             // Add links
-            foreach (var establishment in establishments)
+            foreach (var establishment in pointInTimeEstablishments)
             {
                 var establishmentGroupLinks = groupLinks.Where(l => l.Urn == establishment.Urn).ToArray();
                 var federationLink = establishmentGroupLinks.FirstOrDefault(l => l.GroupType == "Federation");
-                var trustLink = establishmentGroupLinks.FirstOrDefault(l => l.GroupType == "Trust" || l.GroupType == "Single-academy trust" || l.GroupType == "Multi-academy trust");
+                var trustLink = establishmentGroupLinks.FirstOrDefault(l =>
+                    l.GroupType == "Trust" || l.GroupType == "Single-academy trust" || l.GroupType == "Multi-academy trust");
 
                 if (federationLink != null)
                 {
@@ -208,6 +224,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                     };
                     _logger.Debug($"Set Federations to {federationLink.Uid} from links of establishment {establishment.Urn}");
                 }
+
                 if (trustLink != null)
                 {
                     establishment.Trusts = new CodeNamePair
@@ -219,11 +236,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             }
 
             // Process local authorities
-            await ProcessEstablishmentLocalAuthoritiesToCacheAsync(establishments, cancellationToken);
+            await ProcessEstablishmentLocalAuthoritiesToCacheAsync(pointInTime, pointInTimeEstablishments, cancellationToken);
 
             // Store
-            await _establishmentRepository.StoreInStagingAsync(establishments, cancellationToken);
-            _logger.Debug($"Stored {establishments.Length} establishments in staging");
+            await _establishmentRepository.StoreInStagingAsync(pointInTimeEstablishments, cancellationToken);
+            _logger.Debug($"Stored {pointInTimeEstablishments.Length} establishments in staging");
 
             // Queue diff check
             var position = 0;
@@ -246,7 +263,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _logger.Info("Finished downloading Establishments to cache");
         }
 
-        private async Task ProcessEstablishmentLocalAuthoritiesToCacheAsync(Establishment[] establishments,
+        private async Task ProcessEstablishmentLocalAuthoritiesToCacheAsync(DateTime pointInTime, Establishment[] establishments,
             CancellationToken cancellationToken)
         {
             // Get unique list of local authorities from establishments
@@ -258,9 +275,16 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 .ToArray();
             _logger.Debug($"Found {localAuthorities.Length} local authorities in GIAS establishment data");
 
+            // Timestamp
+            var pointInTimeLocalAuthorities = localAuthorities.Select(localAuthority => localAuthority.Clone<PointInTimeLocalAuthority>()).ToArray();
+            foreach (var pointInTimeLocalAuthority in pointInTimeLocalAuthorities)
+            {
+                pointInTimeLocalAuthority.PointInTime = pointInTime;
+            }
+
             // Store
-            await _localAuthorityRepository.StoreInStagingAsync(localAuthorities, cancellationToken);
-            _logger.Debug($"Stored {localAuthorities.Length} local authorities in staging");
+            await _localAuthorityRepository.StoreInStagingAsync(pointInTimeLocalAuthorities, cancellationToken);
+            _logger.Debug($"Stored {pointInTimeLocalAuthorities.Length} local authorities in staging");
 
             // Queue diff check
             var position = 0;
