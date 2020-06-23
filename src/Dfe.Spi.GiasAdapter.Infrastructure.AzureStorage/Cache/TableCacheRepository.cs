@@ -38,6 +38,38 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             await Table.ExecuteAsync(operation, cancellationToken);
         }
         
+        protected async Task InsertOrUpdateAsync(TModel[] models, CancellationToken cancellationToken)
+        {
+            const int batchSize = 100;
+            
+            await Table.CreateIfNotExistsAsync(cancellationToken);
+            
+            var partitionedEntities = models
+                .Select(ModelToEntity)
+                .GroupBy(entity => entity.PartitionKey)
+                .ToDictionary(g => g.Key, g => g.ToArray());
+            foreach (var partition in partitionedEntities.Values)
+            {
+                var position = 0;
+                while (position < partition.Length)
+                {
+                    var entities = partition.Skip(position).Take(batchSize).ToArray();
+                    var batch = new TableBatchOperation();
+
+                    foreach (var entity in entities)
+                    {
+                        batch.InsertOrReplace(entity);
+                    }
+
+                    Logger.Debug(
+                        $"Inserting {position} to {partition.Length} for partition {entities.First().PartitionKey} of {_logTypeName}");
+                    await Table.ExecuteBatchAsync(batch, cancellationToken);
+
+                    position += batchSize;
+                }
+            }
+        }
+        
         protected async Task InsertOrUpdateStagingAsync(TModel[] models, CancellationToken cancellationToken)
         {
             const int batchSize = 100;
