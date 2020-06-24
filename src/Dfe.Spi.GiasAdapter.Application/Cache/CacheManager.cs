@@ -99,26 +99,26 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         {
             foreach (var uid in uids)
             {
-                var current = await _groupRepository.GetGroupAsync(uid, cancellationToken);
+                var previous = await _groupRepository.GetGroupAsync(uid, pointInTime, cancellationToken);
                 var staging = await _groupRepository.GetGroupFromStagingAsync(uid, pointInTime, cancellationToken);
 
-                if (current == null)
+                if (previous == null)
                 {
-                    _logger.Info($"Group {uid} has not been seen before. Processing as created");
+                    _logger.Info($"Group {uid} has not been seen before {pointInTime}. Processing as created");
 
                     await ProcessGroup(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
                         cancellationToken);
                 }
-                else if (!AreSame(current, staging))
+                else if (!AreSame(previous, staging))
                 {
-                    _logger.Info($"Group {uid} has changed. Processing as updated");
+                    _logger.Info($"Group {uid} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
 
                     await ProcessGroup(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
                         cancellationToken);
                 }
                 else
                 {
-                    _logger.Info($"Group {uid} has not changed. Skipping");
+                    _logger.Info($"Group {uid} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
                 }
             }
         }
@@ -437,7 +437,19 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             Func<ManagementGroup, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
-            await _groupRepository.StoreAsync(staging, cancellationToken);
+            var current = await _groupRepository.GetGroupAsync(staging.Uid, cancellationToken);
+            
+            staging.IsCurrent = current == null || staging.PointInTime > current.PointInTime;
+            if (current != null && staging.IsCurrent)
+            {
+                current.IsCurrent = false;
+            }
+
+            var toStore = current == null || current.IsCurrent
+                ? new[] {staging}
+                : new[] {current, staging};
+            
+            await _groupRepository.StoreAsync(toStore, cancellationToken);
             _logger.Debug($"Stored group {staging.Uid} in repository");
 
             var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);

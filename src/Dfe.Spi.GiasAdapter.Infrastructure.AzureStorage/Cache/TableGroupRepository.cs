@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using Microsoft.Azure.Cosmos.Table;
 using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
@@ -35,7 +37,26 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task<PointInTimeGroup> GetGroupAsync(long uid, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(uid.ToString(), "current", cancellationToken);
+            return await GetGroupAsync(uid, null, cancellationToken);
+        }
+
+        public async Task<PointInTimeGroup> GetGroupAsync(long uid, DateTime? pointInTime, CancellationToken cancellationToken)
+        {
+            if (!pointInTime.HasValue)
+            {
+                return await RetrieveAsync(uid.ToString(), "current", cancellationToken);
+            }
+
+            var query = new TableQuery<GroupEntity>()
+                .Where(TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, uid.ToString()),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThanOrEqual, pointInTime.Value.ToString("yyyyMMdd"))))
+                .OrderByDesc("RowKey")
+                .Take(1);
+            var results = await QueryAsync(query, cancellationToken);
+
+            return results.SingleOrDefault();
         }
 
         public async Task<PointInTimeGroup> GetGroupFromStagingAsync(long uid, DateTime pointInTime, CancellationToken cancellationToken)

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -107,13 +108,13 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _groupRepositoryMock.Verify(
-                r => r.StoreAsync(It.IsAny<PointInTimeGroup>(), It.IsAny<CancellationToken>()),
+                r => r.StoreAsync(It.IsAny<PointInTimeGroup[]>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _groupRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<PointInTimeGroup>(e => e.Uid == uids[0]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeGroup[]>(e => e.First().Uid == uids[0]), _cancellationToken),
                 Times.Once);
             _groupRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<PointInTimeGroup>(e => e.Uid == uids[1]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeGroup[]>(e => e.First().Uid == uids[1]), _cancellationToken),
                 Times.Once);
 
             _mapperMock.Verify(
@@ -132,9 +133,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishCreatedEventIfNoCurrent(long uid, DateTime pointInTime, ManagementGroup managementGroup)
+        public async Task ThenItShouldPublishCreatedEventIfNoPrevious(long uid, DateTime pointInTime, ManagementGroup managementGroup)
         {
-            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((PointInTimeGroup) null);
             _groupRepositoryMock.Setup(r =>
                     r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
@@ -154,9 +155,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(long uid, DateTime pointInTime, ManagementGroup managementGroup)
+        public async Task ThenItShouldPublishUpdatedEventIfHasChangedSincePrevious(long uid, DateTime pointInTime, ManagementGroup managementGroup)
         {
-            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
@@ -180,9 +181,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(long uid, DateTime pointInTime)
+        public async Task ThenItShouldNotPublishAnyEventIfHasNotChangedSincePrevious(long uid, DateTime pointInTime)
         {
-            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,

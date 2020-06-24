@@ -10,6 +10,7 @@ namespace Dfe.Spi.GiasAdapter.Domain.Cache
         Task StoreAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken);
         Task StoreInStagingAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken);
         Task<PointInTimeGroup> GetGroupAsync(long uid, CancellationToken cancellationToken);
+        Task<PointInTimeGroup> GetGroupAsync(long uid, DateTime? pointInTime, CancellationToken cancellationToken);
         Task<PointInTimeGroup> GetGroupFromStagingAsync(long uid, DateTime pointInTime, CancellationToken cancellationToken);
     }
 }

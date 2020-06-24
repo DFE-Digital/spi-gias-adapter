@@ -288,6 +288,11 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return Task.FromResult(group);
         }
 
+        public async Task<PointInTimeGroup> GetGroupAsync(long uid, DateTime? pointInTime, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<PointInTimeGroup> GetGroupFromStagingAsync(long uid, DateTime pointInTime, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
