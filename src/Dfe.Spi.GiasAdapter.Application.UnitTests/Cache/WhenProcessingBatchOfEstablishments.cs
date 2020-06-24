@@ -130,7 +130,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _eventPublisherMock.Verify(
-                p => p.PublishLearningProviderCreatedAsync(It.IsAny<LearningProvider>(), It.IsAny<CancellationToken>()),
+                p => p.PublishLearningProviderCreatedAsync(It.IsAny<LearningProvider>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
         }
 
@@ -144,7 +144,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
-                    EstablishmentName = urn.ToString()
+                    EstablishmentName = urn.ToString(),
+                    PointInTime = pointInTime,
                 }); 
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(learningProvider);
@@ -152,7 +153,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.ProcessBatchOfEstablishments(new[]{urn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishLearningProviderCreatedAsync(learningProvider, It.IsAny<CancellationToken>()),
+                p => p.PublishLearningProviderCreatedAsync(learningProvider, pointInTime, It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -163,14 +164,16 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
-                    EstablishmentName = "old name"
+                    EstablishmentName = "old name",
+                    PointInTime = pointInTime,
                 });
             _establishmentRepositoryMock.Setup(r =>
                     r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
-                    EstablishmentName = urn.ToString()
+                    EstablishmentName = urn.ToString(),
+                    PointInTime = pointInTime,
                 }); 
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(learningProvider);
@@ -178,7 +181,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.ProcessBatchOfEstablishments(new[]{urn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishLearningProviderUpdatedAsync(learningProvider, It.IsAny<CancellationToken>()),
+                p => p.PublishLearningProviderUpdatedAsync(learningProvider, pointInTime, It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -202,10 +205,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.ProcessBatchOfEstablishments(new[]{urn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishLearningProviderCreatedAsync(It.IsAny<LearningProvider>(), It.IsAny<CancellationToken>()),
+                p => p.PublishLearningProviderCreatedAsync(It.IsAny<LearningProvider>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Never);
             _eventPublisherMock.Verify(
-                p => p.PublishLearningProviderUpdatedAsync(It.IsAny<LearningProvider>(), It.IsAny<CancellationToken>()),
+                p => p.PublishLearningProviderUpdatedAsync(It.IsAny<LearningProvider>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
     }

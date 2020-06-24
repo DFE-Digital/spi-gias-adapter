@@ -141,7 +141,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 {
                     _logger.Info($"Local authority {laCode} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
 
-                    await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
+                    await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupUpdatedAsync, 
                         cancellationToken);
                 }
                 else
@@ -408,7 +408,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
         private async Task ProcessEstablishment(
             PointInTimeEstablishment staging,
-            Func<LearningProvider, CancellationToken, Task> publishEvent,
+            Func<LearningProvider, DateTime, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
             var current = await _establishmentRepository.GetEstablishmentAsync(staging.Urn, cancellationToken);
@@ -428,13 +428,13 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(staging, cancellationToken);
             learningProvider._Lineage = null;
-            await publishEvent(learningProvider, cancellationToken);
+            await publishEvent(learningProvider, staging.PointInTime, cancellationToken);
             _logger.Debug($"Sent event for establishment {staging.Urn}");
         }
 
         private async Task ProcessGroup(
             PointInTimeGroup staging,
-            Func<ManagementGroup, CancellationToken, Task> publishEvent,
+            Func<ManagementGroup, DateTime, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
             var current = await _groupRepository.GetGroupAsync(staging.Uid, cancellationToken);
@@ -454,13 +454,13 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);
             managementGroup._Lineage = null;
-            await publishEvent(managementGroup, cancellationToken);
+            await publishEvent(managementGroup, staging.PointInTime, cancellationToken);
             _logger.Debug($"Sent event for group {staging.Uid}");
         }
 
         private async Task ProcessLocalAuthority(
             PointInTimeLocalAuthority staging,
-            Func<ManagementGroup, CancellationToken, Task> publishEvent,
+            Func<ManagementGroup, DateTime, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
             var current = await _localAuthorityRepository.GetLocalAuthorityAsync(staging.Code, cancellationToken);
@@ -480,7 +480,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);
             managementGroup._Lineage = null;
-            await publishEvent(managementGroup, cancellationToken);
+            await publishEvent(managementGroup, staging.PointInTime, cancellationToken);
             _logger.Debug($"Sent event for local authority {staging.Code}");
         }
     }

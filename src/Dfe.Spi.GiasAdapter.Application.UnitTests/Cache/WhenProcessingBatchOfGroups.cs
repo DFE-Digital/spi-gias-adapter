@@ -128,7 +128,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
         }
 
@@ -142,7 +142,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
-                    GroupName = uid.ToString()
+                    GroupName = uid.ToString(),
+                    PointInTime = pointInTime,
                 }); 
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<Group>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
@@ -150,7 +151,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.ProcessBatchOfGroups(new[]{uid}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupCreatedAsync(managementGroup, It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupCreatedAsync(managementGroup, pointInTime, It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -161,14 +162,16 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
-                    GroupName = "old name"
+                    GroupName = "old name",
+                    PointInTime = pointInTime,
                 });
             _groupRepositoryMock.Setup(r =>
                     r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
-                    GroupName = uid.ToString()
+                    GroupName = uid.ToString(),
+                    PointInTime = pointInTime,
                 }); 
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<Group>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
@@ -176,7 +179,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.ProcessBatchOfGroups(new[]{uid}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupUpdatedAsync(managementGroup, It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupUpdatedAsync(managementGroup, pointInTime, It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -200,10 +203,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.ProcessBatchOfGroups(new[]{uid}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Never);
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupUpdatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupUpdatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
     }
