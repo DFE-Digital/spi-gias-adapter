@@ -96,12 +96,19 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return establishments;
         }
 
-        static async Task<Group[]> GetGroups(CancellationToken cancellationToken)
+        static async Task<PointInTimeGroup[]> GetGroups(CancellationToken cancellationToken)
         {
             _logger.Info("Downloading groups...");
             var groups = await _giasApiClient.DownloadGroupsAsync(cancellationToken);
             _logger.Info($"Downloaded {groups.Length} groups");
-            return groups;
+
+            var pointInTimeGroups = groups.Select(group => Clone<PointInTimeGroup>(group)).ToArray();
+            foreach (var pointInTimeGroup in pointInTimeGroups)
+            {
+                pointInTimeGroup.PointInTime = DateTime.UtcNow.Date;
+            }
+
+            return pointInTimeGroups;
         }
 
         static async Task<GroupLink[]> GetGroupLinks(CancellationToken cancellationToken)
@@ -112,13 +119,13 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return groupLinks;
         }
 
-        static void SetRepositoryData(Establishment[] establishments, Group[] groups)
+        static void SetRepositoryData(Establishment[] establishments, PointInTimeGroup[] groups)
         {
             _groupRepository.SetData(groups);
 
             var localAuthorities = establishments
                 .Where(e => e.LA != null)
-                .Select(e => new LocalAuthority {Code = int.Parse(e.LA.Code), Name = e.LA.DisplayName})
+                .Select(e => new PointInTimeLocalAuthority {Code = int.Parse(e.LA.Code), Name = e.LA.DisplayName, PointInTime = DateTime.UtcNow.Date})
                 .GroupBy(la => la.Code)
                 .Select(grp => grp.First())
                 .ToArray();
@@ -194,6 +201,37 @@ namespace ConvertEstablishmentFileToLearningProviderFile
         }
 
 
+        static TDestination Clone<TDestination>(object source, Func<TDestination> activator = null)
+        {
+            // TODO: This could be more efficient with some caching of properties
+            var sourceProperties = source.GetType().GetProperties();
+            var destinationProperties = source.GetType().GetProperties();
+
+            TDestination destination;
+            if (activator != null)
+            {
+                destination = activator();
+            }
+            else
+            {
+                destination = Activator.CreateInstance<TDestination>();
+            }
+
+            foreach (var destinationProperty in destinationProperties)
+            {
+                var sourceProperty = sourceProperties.SingleOrDefault(p => p.Name == destinationProperty.Name);
+                if (sourceProperty != null)
+                {
+                    // TODO: This assumes the property types are the same. If this is not true then handling will be required
+                    var sourceValue = sourceProperty.GetValue(source);
+                    destinationProperty.SetValue(destination, sourceValue);
+                }
+            }
+
+            return destination;
+        }
+
+
         static void Main(string[] args)
         {
             _logger = new Logger();
@@ -217,24 +255,29 @@ namespace ConvertEstablishmentFileToLearningProviderFile
 
     class InProcGroupRepository : IGroupRepository
     {
-        private Group[] _groups;
+        private PointInTimeGroup[] _groups;
 
-        public void SetData(Group[] groups)
+        public void SetData(PointInTimeGroup[] groups)
         {
             _groups = groups;
         }
 
-        public Task StoreAsync(Group @group, CancellationToken cancellationToken)
+        public Task StoreAsync(PointInTimeGroup @group, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task StoreInStagingAsync(Group[] groups, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Group> GetGroupAsync(long uid, CancellationToken cancellationToken)
+        public async Task StoreInStagingAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PointInTimeGroup> GetGroupAsync(long uid, CancellationToken cancellationToken)
         {
             if (_groups == null)
             {
@@ -245,7 +288,12 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return Task.FromResult(group);
         }
 
-        public Task<Group> GetGroupFromStagingAsync(long uid, CancellationToken cancellationToken)
+        public async Task<PointInTimeGroup> GetGroupAsync(long uid, DateTime? pointInTime, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PointInTimeGroup> GetGroupFromStagingAsync(long uid, DateTime pointInTime, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -253,24 +301,29 @@ namespace ConvertEstablishmentFileToLearningProviderFile
 
     class InProcLocalAuthorityRepository : ILocalAuthorityRepository
     {
-        private LocalAuthority[] _localAuthorities;
+        private PointInTimeLocalAuthority[] _localAuthorities;
 
-        public void SetData(LocalAuthority[] localAuthorities)
+        public void SetData(PointInTimeLocalAuthority[] localAuthorities)
         {
             _localAuthorities = localAuthorities;
         }
 
-        public Task StoreAsync(LocalAuthority localAuthority, CancellationToken cancellationToken)
+        public Task StoreAsync(PointInTimeLocalAuthority localAuthority, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task StoreInStagingAsync(LocalAuthority[] localAuthorities, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeLocalAuthority[] localAuthorities, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<LocalAuthority> GetLocalAuthorityAsync(int laCode, CancellationToken cancellationToken)
+        public Task StoreInStagingAsync(PointInTimeLocalAuthority[] localAuthorities, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PointInTimeLocalAuthority> GetLocalAuthorityAsync(int laCode, CancellationToken cancellationToken)
         {
             if (_localAuthorities == null)
             {
@@ -281,7 +334,12 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return Task.FromResult(localAuthority);
         }
 
-        public Task<LocalAuthority> GetLocalAuthorityFromStagingAsync(int laCode, CancellationToken cancellationToken)
+        public async Task<PointInTimeLocalAuthority> GetLocalAuthorityAsync(int laCode, DateTime? pointInTime, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PointInTimeLocalAuthority> GetLocalAuthorityFromStagingAsync(int laCode, DateTime pointInTime, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

@@ -1,17 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
-using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Microsoft.Azure.Cosmos.Table;
 using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    public class TableEstablishmentRepository : TableCacheRepository<Establishment, EstablishmentEntity>, IEstablishmentRepository
+    public class TableEstablishmentRepository : TableCacheRepository<PointInTimeEstablishment, EstablishmentEntity>, IEstablishmentRepository
     {
         
         public TableEstablishmentRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
@@ -21,57 +21,106 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         
         
 
-        public async Task StoreAsync(Establishment establishment, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeEstablishment establishment, CancellationToken cancellationToken)
         {
-            await InsertOrUpdateAsync(establishment, cancellationToken);
+            await StoreAsync(new[] {establishment}, cancellationToken);
         }
 
-        public async Task StoreInStagingAsync(Establishment[] establishments, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeEstablishment[] establishments, CancellationToken cancellationToken)
+        {
+            await InsertOrUpdateAsync(establishments, cancellationToken);
+        }
+
+        public async Task StoreInStagingAsync(PointInTimeEstablishment[] establishments, CancellationToken cancellationToken)
         {
             await InsertOrUpdateStagingAsync(establishments, cancellationToken);
         }
 
-        public async Task<Establishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken)
+        public async Task<PointInTimeEstablishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(urn.ToString(), "current", cancellationToken);
+            return await GetEstablishmentAsync(urn, null, cancellationToken);
         }
 
-        public async Task<Establishment> GetEstablishmentFromStagingAsync(long urn, CancellationToken cancellationToken)
+        public async Task<PointInTimeEstablishment> GetEstablishmentAsync(long urn, DateTime? pointInTime, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(GetStagingPartitionKey(urn), urn.ToString(), cancellationToken);
+            if (!pointInTime.HasValue)
+            {
+                return await RetrieveAsync(urn.ToString(), "current", cancellationToken);
+            }
+
+            var query = new TableQuery<EstablishmentEntity>()
+                .Where(TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, urn.ToString()),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThanOrEqual, pointInTime.Value.ToString("yyyyMMdd"))))
+                .OrderByDesc("RowKey")
+                .Take(1);
+            var results = await QueryAsync(query, cancellationToken);
+
+            return results.SingleOrDefault();
+        }
+
+        public async Task<PointInTimeEstablishment> GetEstablishmentFromStagingAsync(long urn, DateTime pointInTime, CancellationToken cancellationToken)
+        {
+            return await RetrieveAsync(GetStagingPartitionKey(pointInTime), urn.ToString(), cancellationToken);
         }
         
         
 
-        protected override EstablishmentEntity ModelToEntity(Establishment model)
+        protected override EstablishmentEntity ModelToEntity(PointInTimeEstablishment model)
         {
-            return ModelToEntity(model.Urn.ToString(), "current", model);
+            return ModelToEntity(model.Urn.ToString(), model.PointInTime.ToString("yyyyMMdd"), model);
         }
 
-        protected override EstablishmentEntity ModelToEntityForStaging(Establishment model)
+        protected override EstablishmentEntity ModelToEntityForStaging(PointInTimeEstablishment model)
         {
-            return ModelToEntity(GetStagingPartitionKey(model.Urn), model.Urn.ToString(), model);
+            return ModelToEntity(GetStagingPartitionKey(model.PointInTime), model.Urn.ToString(), model);
         }
 
-        private EstablishmentEntity ModelToEntity(string partitionKey, string rowKey, Establishment establishment)
+        private EstablishmentEntity ModelToEntity(string partitionKey, string rowKey, PointInTimeEstablishment establishment)
         {
             return new EstablishmentEntity
             {
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
                 Establishment = JsonConvert.SerializeObject(establishment),
+                PointInTime = establishment.PointInTime,
+                IsCurrent = establishment.IsCurrent,
             };
         }
 
-        protected override Establishment EntityToModel(EstablishmentEntity entity)
+        protected override PointInTimeEstablishment EntityToModel(EstablishmentEntity entity)
         {
-            return JsonConvert.DeserializeObject<Establishment>(
+            return JsonConvert.DeserializeObject<PointInTimeEstablishment>(
                 entity.Establishment);
         }
-        
-        private string GetStagingPartitionKey(long urn)
+
+        protected override EstablishmentEntity[] ProcessEntitiesBeforeStoring(EstablishmentEntity[] entities)
         {
-            return $"staging{Math.Floor(urn / 5000d) * 5000}";
+            var processedEntities = new List<EstablishmentEntity>();
+            
+            foreach (var entity in entities)
+            {
+                if (entity.IsCurrent)
+                {
+                    processedEntities.Add(new EstablishmentEntity
+                    {
+                        PartitionKey = entity.PartitionKey,
+                        RowKey = "current",
+                        Establishment = entity.Establishment,
+                        PointInTime = entity.PointInTime,
+                        IsCurrent = entity.IsCurrent,
+                    });
+                }
+                processedEntities.Add(entity);
+            }
+
+            return processedEntities.ToArray();
+        }
+
+        private string GetStagingPartitionKey(DateTime pointInTime)
+        {
+            return $"staging{pointInTime:yyyyMMdd}";
         }
     }
 }

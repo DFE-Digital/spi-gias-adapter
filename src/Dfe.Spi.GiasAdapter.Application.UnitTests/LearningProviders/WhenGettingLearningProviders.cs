@@ -97,7 +97,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
         [TestCase(false)]
         public async Task ThenItShouldMapEstablishmentsToLearningProviders(bool readFromLive)
         {
-            var establishments = _fixture.Create<Establishment[]>();
+            var establishments = _fixture.Create<PointInTimeEstablishment[]>();
             var urns = establishments.Select(x => x.Urn).ToArray();
             for (var i = 0; i < establishments.Length; i++)
             {
@@ -126,7 +126,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
             var urns = learningProviders.Select(x => x.Urn.Value).ToArray();
             for (var i = 0; i < learningProviders.Length; i++)
             {
-                var establishment = new Establishment
+                var establishment = new PointInTimeEstablishment()
                 {
                     Urn = learningProviders[i].Urn.Value,
                 };

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -90,7 +91,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
 
             await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
 
-            _establishmentRepositoryMock.Verify(r => r.StoreInStagingAsync(establishments, _cancellationToken),
+            _establishmentRepositoryMock.Verify(r => r.StoreInStagingAsync(
+                    It.Is<PointInTimeEstablishment[]>(storedEstablishments => AreEqual(establishments, DateTime.UtcNow.Date, storedEstablishments)), 
+                    _cancellationToken),
                 Times.Once);
         }
 
@@ -114,10 +117,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             var expectedBatch1 = establishments.Take(100).Select(e => e.Urn).ToArray();
             var expectedBatch2 = establishments.Skip(100).Take(100).Select(e => e.Urn).ToArray();
             _establishmentProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<long[]>(urns => AreEqual(expectedBatch1, urns)), _cancellationToken),
+                    It.Is<StagingBatchQueueItem<long>>(queueItem => AreEqual(expectedBatch1, queueItem.Identifiers)), _cancellationToken),
                 Times.Once);
             _establishmentProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<long[]>(urns => AreEqual(expectedBatch2, urns)), _cancellationToken),
+                    It.Is<StagingBatchQueueItem<long>>(queueItem => AreEqual(expectedBatch2, queueItem.Identifiers)), _cancellationToken),
                 Times.Once);
         }
 
@@ -142,7 +145,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
 
             _localAuthorityRepositoryMock.Verify(r => r.StoreInStagingAsync(
-                    It.Is<LocalAuthority[]>(las => las.Length == 2),
+                    It.Is<PointInTimeLocalAuthority[]>(las => las.Length == 2),
                     _cancellationToken),
                 Times.Once);
         }
@@ -169,10 +172,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             var expectedBatch1 = establishments.Take(100).Select(e => int.Parse(e.LA.Code)).ToArray();
             var expectedBatch2 = establishments.Skip(100).Take(100).Select(e => int.Parse(e.LA.Code)).ToArray();
             _localAuthorityProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<int[]>(laCodes => AreEqual(expectedBatch1, laCodes)), _cancellationToken),
+                    It.Is<StagingBatchQueueItem<int>>(queueItem => AreEqual(expectedBatch1, queueItem.Identifiers)), _cancellationToken),
                 Times.Once);
             _localAuthorityProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<int[]>(laCodes => AreEqual(expectedBatch2, laCodes)), _cancellationToken),
+                    It.Is<StagingBatchQueueItem<int>>(queueItem => AreEqual(expectedBatch2, queueItem.Identifiers)), _cancellationToken),
                 Times.Once);
         }
 
@@ -194,7 +197,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
 
             await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
 
-            _groupRepositoryMock.Verify(r => r.StoreInStagingAsync(groups, _cancellationToken),
+            _groupRepositoryMock.Verify(r => r.StoreInStagingAsync(
+                    It.Is<PointInTimeGroup[]>(storedGroups => AreEqual(groups, DateTime.UtcNow.Date, storedGroups)), 
+                    _cancellationToken),
                 Times.Once);
         }
 
@@ -218,10 +223,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             var expectedBatch1 = groups.Take(100).Select(e => e.Uid).ToArray();
             var expectedBatch2 = groups.Skip(100).Take(100).Select(e => e.Uid).ToArray();
             _groupProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<long[]>(uids => AreEqual(expectedBatch1, uids)), _cancellationToken),
+                    It.Is<StagingBatchQueueItem<long>>(queueItem => AreEqual(expectedBatch1, queueItem.Identifiers)), _cancellationToken),
                 Times.Once);
             _groupProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<long[]>(uids => AreEqual(expectedBatch2, uids)), _cancellationToken),
+                    It.Is<StagingBatchQueueItem<long>>(queueItem => AreEqual(expectedBatch2, queueItem.Identifiers)), _cancellationToken),
                 Times.Once);
         }
 
@@ -286,6 +291,52 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             }
 
             // All good
+            return true;
+        }
+        private bool AreEqual(Establishment[] expectedEstablishments, DateTime expectedPointInTime, PointInTimeEstablishment[] actual)
+        {
+            if (expectedEstablishments.Length != actual.Length)
+            {
+                return false;
+            }
+
+            foreach (var expectedEstablishment in expectedEstablishments)
+            {
+                var actualGroup = actual.SingleOrDefault(x => x.Urn == expectedEstablishment.Urn);
+                if (actualGroup == null)
+                {
+                    return false;
+                }
+
+                if (actualGroup.PointInTime != expectedPointInTime)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        private bool AreEqual(Group[] expectedGroups, DateTime expectedPointInTime, PointInTimeGroup[] actual)
+        {
+            if (expectedGroups.Length != actual.Length)
+            {
+                return false;
+            }
+
+            foreach (var expectedGroup in expectedGroups)
+            {
+                var actualGroup = actual.SingleOrDefault(x => x.Uid == expectedGroup.Uid);
+                if (actualGroup == null)
+                {
+                    return false;
+                }
+
+                if (actualGroup.PointInTime != expectedPointInTime)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
     }

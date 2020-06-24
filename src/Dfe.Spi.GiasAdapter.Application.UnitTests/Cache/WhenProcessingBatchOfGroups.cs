@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -37,13 +39,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             
             _groupRepositoryMock = new Mock<IGroupRepository>();
             _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Group) null);
+                .ReturnsAsync((PointInTimeGroup) null);
             _groupRepositoryMock.Setup(r =>
-                    r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((long uid, CancellationToken cancellationToken) => new Group
+                    r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((long uid, DateTime pointInTime, CancellationToken cancellationToken) => new PointInTimeGroup
                 {
                     Uid = uid,
-                    GroupName = uid.ToString()
+                    GroupName = uid.ToString(),
+                    PointInTime = pointInTime,
                 });
             
             _localAuthorityRepositoryMock = new Mock<ILocalAuthorityRepository>();
@@ -84,8 +87,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         public async Task ThenItShouldProcessEveryUid()
         {
             var uids = new[] {100001L, 100002L};
+            var pointInTime = DateTime.Now.Date;
 
-            await _manager.ProcessBatchOfGroups(uids, _cancellationToken);
+            await _manager.ProcessBatchOfGroups(uids, pointInTime, _cancellationToken);
 
             _groupRepositoryMock.Verify(
                 r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()),
@@ -96,21 +100,21 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _groupRepositoryMock.Verify(
-                r => r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()),
+                r => r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _groupRepositoryMock.Verify(r => r.GetGroupFromStagingAsync(uids[0], _cancellationToken),
+            _groupRepositoryMock.Verify(r => r.GetGroupFromStagingAsync(uids[0], pointInTime, _cancellationToken),
                 Times.Once);
-            _groupRepositoryMock.Verify(r => r.GetGroupFromStagingAsync(uids[1], _cancellationToken),
+            _groupRepositoryMock.Verify(r => r.GetGroupFromStagingAsync(uids[1], pointInTime, _cancellationToken),
                 Times.Once);
 
             _groupRepositoryMock.Verify(
-                r => r.StoreAsync(It.IsAny<Group>(), It.IsAny<CancellationToken>()),
+                r => r.StoreAsync(It.IsAny<PointInTimeGroup[]>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _groupRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<Group>(e => e.Uid == uids[0]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeGroup[]>(e => e.First().Uid == uids[0]), _cancellationToken),
                 Times.Once);
             _groupRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<Group>(e => e.Uid == uids[1]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeGroup[]>(e => e.First().Uid == uids[1]), _cancellationToken),
                 Times.Once);
 
             _mapperMock.Verify(
@@ -129,13 +133,13 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishCreatedEventIfNoCurrent(long uid, ManagementGroup managementGroup)
+        public async Task ThenItShouldPublishCreatedEventIfNoPrevious(long uid, DateTime pointInTime, ManagementGroup managementGroup)
         {
-            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Group) null);
+            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((PointInTimeGroup) null);
             _groupRepositoryMock.Setup(r =>
-                    r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Group
+                    r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
                     GroupName = uid.ToString()
@@ -143,7 +147,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<Group>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
             
-            await _manager.ProcessBatchOfGroups(new[]{uid}, _cancellationToken);
+            await _manager.ProcessBatchOfGroups(new[]{uid}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishManagementGroupCreatedAsync(managementGroup, It.IsAny<CancellationToken>()),
@@ -151,17 +155,17 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(long uid, ManagementGroup managementGroup)
+        public async Task ThenItShouldPublishUpdatedEventIfHasChangedSincePrevious(long uid, DateTime pointInTime, ManagementGroup managementGroup)
         {
-            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Group
+            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
                     GroupName = "old name"
                 });
             _groupRepositoryMock.Setup(r =>
-                    r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Group
+                    r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
                     GroupName = uid.ToString()
@@ -169,7 +173,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<Group>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
             
-            await _manager.ProcessBatchOfGroups(new[]{uid}, _cancellationToken);
+            await _manager.ProcessBatchOfGroups(new[]{uid}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishManagementGroupUpdatedAsync(managementGroup, It.IsAny<CancellationToken>()),
@@ -177,23 +181,23 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(long uid)
+        public async Task ThenItShouldNotPublishAnyEventIfHasNotChangedSincePrevious(long uid, DateTime pointInTime)
         {
-            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Group
+            _groupRepositoryMock.Setup(r => r.GetGroupAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
                     GroupName = uid.ToString()
                 });
             _groupRepositoryMock.Setup(r =>
-                    r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Group
+                    r.GetGroupFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeGroup
                 {
                     Uid = uid,
                     GroupName = uid.ToString()
                 }); 
             
-            await _manager.ProcessBatchOfGroups(new[]{uid}, _cancellationToken);
+            await _manager.ProcessBatchOfGroups(new[]{uid}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<CancellationToken>()),

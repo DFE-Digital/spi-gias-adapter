@@ -88,7 +88,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
         public async Task ThenItShouldReturnNullIfEstablishmentNotFoundInCacheIfNotReadFromLive(int urn, string fields)
         {
             _establishmentRepository.Setup(c => c.GetEstablishmentAsync(urn, _cancellationToken))
-                .ReturnsAsync((Establishment) null);
+                .ReturnsAsync((PointInTimeEstablishment) null);
 
             var actual = await _manager.GetLearningProviderAsync(urn.ToString(), fields, true, _cancellationToken);
 
@@ -108,7 +108,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
         public async Task ThenItShouldMapEstablishmentToLearningProvider(bool readFromLive)
         {
             var urn = _fixture.Create<int>();
-            var establishment = _fixture.Create<Establishment>();
+            var establishment = _fixture.Create<PointInTimeEstablishment>();
             
             _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(urn, _cancellationToken))
                 .ReturnsAsync(establishment);
@@ -131,7 +131,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
             _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(urn, _cancellationToken))
                 .ReturnsAsync(new Establishment());
             _establishmentRepository.Setup(c => c.GetEstablishmentAsync(urn, _cancellationToken))
-                .ReturnsAsync(new Establishment());
+                .ReturnsAsync(new PointInTimeEstablishment());
             _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), _cancellationToken))
                 .ReturnsAsync(learningProvider);
 

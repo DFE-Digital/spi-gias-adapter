@@ -39,7 +39,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
             _localAuthorityRepositoryMock = new Mock<ILocalAuthorityRepository>();
             _localAuthorityRepositoryMock.Setup(r =>
                     r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority());
+                .ReturnsAsync(new PointInTimeLocalAuthority());
 
             _mapperMock = new Mock<IMapper>();
             _mapperMock.Setup(m => m.MapAsync<ManagementGroup>(It.IsAny<object>(), It.IsAny<CancellationToken>()))
@@ -154,7 +154,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         public async Task ThenItShouldMapManagementGroupToLAIfNoLinks(Establishment source, int laCode)
         {
             EnsureManagmentGroupCodes(source, laCode: laCode);
-            var localAuthority = new LocalAuthority();
+            var localAuthority = new PointInTimeLocalAuthority();
             var managementGroup = new ManagementGroup();
             _localAuthorityRepositoryMock.Setup(r =>
                     r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -177,7 +177,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         public async Task ThenItShouldMapManagementGroupToTrustIfAvailable(Establishment source, long uid)
         {
             EnsureManagmentGroupCodes(source, trustUid: uid);
-            var trust = new Group();
+            var trust = new PointInTimeGroup();
             var managementGroup = new ManagementGroup();
             _groupRepositoryMock.Setup(r =>
                     r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
@@ -200,7 +200,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
         public async Task ThenItShouldMapManagementGroupToFederationIfAvailable(Establishment source, long uid)
         {
             EnsureManagmentGroupCodes(source, federationUid: uid);
-            var federation = new Group();
+            var federation = new PointInTimeGroup();
             var managementGroup = new ManagementGroup();
             _groupRepositoryMock.Setup(r =>
                     r.GetGroupAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))

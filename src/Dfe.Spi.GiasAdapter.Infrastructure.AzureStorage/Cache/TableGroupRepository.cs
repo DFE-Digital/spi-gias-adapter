@@ -1,15 +1,18 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
+using Microsoft.Azure.Cosmos.Table;
 using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
-    public class TableGroupRepository : TableCacheRepository<Group, GroupEntity>,  IGroupRepository
+    public class TableGroupRepository : TableCacheRepository<PointInTimeGroup, GroupEntity>,  IGroupRepository
     {
         public TableGroupRepository(CacheConfiguration configuration, ILoggerWrapper logger) 
             : base(configuration.TableStorageConnectionString, configuration.GroupTableName, logger, "groups")
@@ -17,55 +20,104 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         }
 
 
-        public async Task StoreAsync(Group @group, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeGroup group, CancellationToken cancellationToken)
         {
-            await InsertOrUpdateAsync(group, cancellationToken);
+            await StoreAsync(new[] {group}, cancellationToken);
         }
 
-        public async Task StoreInStagingAsync(Group[] groups, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
+        {
+            await InsertOrUpdateAsync(groups, cancellationToken);
+        }
+
+        public async Task StoreInStagingAsync(PointInTimeGroup[] groups, CancellationToken cancellationToken)
         {
             await InsertOrUpdateStagingAsync(groups, cancellationToken);
         }
 
-        public async Task<Group> GetGroupAsync(long uid, CancellationToken cancellationToken)
+        public async Task<PointInTimeGroup> GetGroupAsync(long uid, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(uid.ToString(), "current", cancellationToken);
+            return await GetGroupAsync(uid, null, cancellationToken);
         }
 
-        public async Task<Group> GetGroupFromStagingAsync(long uid, CancellationToken cancellationToken)
+        public async Task<PointInTimeGroup> GetGroupAsync(long uid, DateTime? pointInTime, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(GetStagingPartitionKey(uid), uid.ToString(), cancellationToken);
+            if (!pointInTime.HasValue)
+            {
+                return await RetrieveAsync(uid.ToString(), "current", cancellationToken);
+            }
+
+            var query = new TableQuery<GroupEntity>()
+                .Where(TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, uid.ToString()),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThanOrEqual, pointInTime.Value.ToString("yyyyMMdd"))))
+                .OrderByDesc("RowKey")
+                .Take(1);
+            var results = await QueryAsync(query, cancellationToken);
+
+            return results.SingleOrDefault();
+        }
+
+        public async Task<PointInTimeGroup> GetGroupFromStagingAsync(long uid, DateTime pointInTime, CancellationToken cancellationToken)
+        {
+            return await RetrieveAsync(GetStagingPartitionKey(pointInTime), uid.ToString(), cancellationToken);
         }
 
 
-        protected override GroupEntity ModelToEntity(Group model)
+        protected override GroupEntity ModelToEntity(PointInTimeGroup model)
         {
-            return ModelToEntity(model.Uid.ToString(), "current", model);
+            return ModelToEntity(model.Uid.ToString(), model.PointInTime.ToString("yyyyMMdd"), model);
         }
 
-        protected override GroupEntity ModelToEntityForStaging(Group model)
+        protected override GroupEntity ModelToEntityForStaging(PointInTimeGroup model)
         {
-            return ModelToEntity(GetStagingPartitionKey(model.Uid), model.Uid.ToString(), model);
+            return ModelToEntity(GetStagingPartitionKey(model.PointInTime), model.Uid.ToString(), model);
         }
 
-        protected override Group EntityToModel(GroupEntity entity)
+        protected override PointInTimeGroup EntityToModel(GroupEntity entity)
         {
-            return JsonConvert.DeserializeObject<Group>(entity.Group);
+            return JsonConvert.DeserializeObject<PointInTimeGroup>(entity.Group);
         }
 
-        private GroupEntity ModelToEntity(string partitionKey, string rowKey, Group group)
+        private GroupEntity ModelToEntity(string partitionKey, string rowKey, PointInTimeGroup group)
         {
             return new GroupEntity
             {
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
                 Group = JsonConvert.SerializeObject(group),
+                PointInTime = group.PointInTime,
+                IsCurrent = group.IsCurrent,
             };
         }
-        
-        private string GetStagingPartitionKey(long uid)
+
+        protected override GroupEntity[] ProcessEntitiesBeforeStoring(GroupEntity[] entities)
         {
-            return $"staging{Math.Floor(uid / 5000d) * 5000}";
+            var processedEntities = new List<GroupEntity>();
+            
+            foreach (var entity in entities)
+            {
+                if (entity.IsCurrent)
+                {
+                    processedEntities.Add(new GroupEntity
+                    {
+                        PartitionKey = entity.PartitionKey,
+                        RowKey = "current",
+                        Group = entity.Group,
+                        PointInTime = entity.PointInTime,
+                        IsCurrent = entity.IsCurrent,
+                    });
+                }
+                processedEntities.Add(entity);
+            }
+
+            return processedEntities.ToArray();
+        }
+        
+        private string GetStagingPartitionKey(DateTime pointInTime)
+        {
+            return $"staging{pointInTime:yyyMMdd}";
         }
     }
 }

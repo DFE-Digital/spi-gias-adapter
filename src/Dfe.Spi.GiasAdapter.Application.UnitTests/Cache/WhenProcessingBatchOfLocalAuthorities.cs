@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -39,10 +41,10 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             
             _localAuthorityRepositoryMock = new Mock<ILocalAuthorityRepository>();
             _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((LocalAuthority) null);
+                .ReturnsAsync((PointInTimeLocalAuthority) null);
             _localAuthorityRepositoryMock.Setup(r =>
-                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((int laCode, CancellationToken cancellationToken) => new LocalAuthority
+                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((int laCode, DateTime pointInTime, CancellationToken cancellationToken) => new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
@@ -84,8 +86,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         public async Task ThenItShouldProcessEveryLaCode()
         {
             var laCode = new[] {101, 202};
+            var pointInTime = DateTime.Now.Date;
 
-            await _manager.ProcessBatchOfLocalAuthorities(laCode, _cancellationToken);
+            await _manager.ProcessBatchOfLocalAuthorities(laCode, pointInTime, _cancellationToken);
 
             _localAuthorityRepositoryMock.Verify(
                 r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()),
@@ -96,21 +99,21 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _localAuthorityRepositoryMock.Verify(
-                r => r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()),
+                r => r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _localAuthorityRepositoryMock.Verify(r => r.GetLocalAuthorityFromStagingAsync(laCode[0], _cancellationToken),
+            _localAuthorityRepositoryMock.Verify(r => r.GetLocalAuthorityFromStagingAsync(laCode[0], pointInTime, _cancellationToken),
                 Times.Once);
-            _localAuthorityRepositoryMock.Verify(r => r.GetLocalAuthorityFromStagingAsync(laCode[1], _cancellationToken),
+            _localAuthorityRepositoryMock.Verify(r => r.GetLocalAuthorityFromStagingAsync(laCode[1], pointInTime, _cancellationToken),
                 Times.Once);
 
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.IsAny<LocalAuthority>(), It.IsAny<CancellationToken>()),
+                r => r.StoreAsync(It.IsAny<PointInTimeLocalAuthority[]>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<LocalAuthority>(e => e.Code == laCode[0]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeLocalAuthority[]>(e => e.First().Code == laCode[0]), _cancellationToken),
                 Times.Once);
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<LocalAuthority>(e => e.Code == laCode[1]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeLocalAuthority[]>(e => e.First().Code == laCode[1]), _cancellationToken),
                 Times.Once);
 
             _mapperMock.Verify(
@@ -129,13 +132,13 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishCreatedEventIfNoCurrent(int laCode, ManagementGroup managementGroup)
+        public async Task ThenItShouldPublishCreatedEventIfNoPrevious(int laCode, DateTime pointInTime, ManagementGroup managementGroup)
         {
-            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((LocalAuthority) null);
+            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((PointInTimeLocalAuthority) null);
             _localAuthorityRepositoryMock.Setup(r =>
-                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
@@ -143,7 +146,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<LocalAuthority>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
             
-            await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, _cancellationToken);
+            await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishManagementGroupCreatedAsync(managementGroup, It.IsAny<CancellationToken>()),
@@ -151,17 +154,17 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(int laCode, ManagementGroup managementGroup)
+        public async Task ThenItShouldPublishUpdatedEventIfHasChangedSincePrevious(int laCode, DateTime pointInTime, ManagementGroup managementGroup)
         {
-            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = "old name"
                 });
             _localAuthorityRepositoryMock.Setup(r =>
-                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
@@ -169,7 +172,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<LocalAuthority>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
             
-            await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, _cancellationToken);
+            await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishManagementGroupUpdatedAsync(managementGroup, It.IsAny<CancellationToken>()),
@@ -177,23 +180,23 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(int laCode)
+        public async Task ThenItShouldNotPublishAnyEventIfHasNotChangedSincePrevious(int laCode, DateTime pointInTime)
         {
-            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
                 });
             _localAuthorityRepositoryMock.Setup(r =>
-                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LocalAuthority
+                    r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
                     Name = laCode.ToString()
                 }); 
             
-            await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, _cancellationToken);
+            await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<CancellationToken>()),

@@ -19,11 +19,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             _queue = queueClient.GetQueueReference(CacheQueueNames.LocalAuthorityProcessingQueue);
         }
         
-        public async Task EnqueueBatchOfStagingAsync(int[] laCodes, CancellationToken cancellationToken)
+        public async Task EnqueueBatchOfStagingAsync(StagingBatchQueueItem<int> queueItem, CancellationToken cancellationToken)
         {
             await _queue.CreateIfNotExistsAsync(cancellationToken);
                 
-            var message = new CloudQueueMessage(JsonConvert.SerializeObject(laCodes));
+            var message = new CloudQueueMessage(JsonConvert.SerializeObject(queueItem));
             await _queue.AddMessageAsync(message, cancellationToken);
         }
     }

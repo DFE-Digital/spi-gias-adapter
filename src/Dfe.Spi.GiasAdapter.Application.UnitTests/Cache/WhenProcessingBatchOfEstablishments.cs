@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,13 +54,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
 
             _establishmentProcessingQueueMock = new Mock<IEstablishmentProcessingQueue>();
             _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Establishment) null);
+                .ReturnsAsync((PointInTimeEstablishment) null);
             _establishmentRepositoryMock.Setup(r =>
-                    r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((long urn, CancellationToken cancellationToken) => new Establishment
+                    r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((long urn, DateTime pointInTime, CancellationToken cancellationToken) => new PointInTimeEstablishment
                 {
                     Urn = urn,
-                    EstablishmentName = urn.ToString()
+                    EstablishmentName = urn.ToString(),
+                    PointInTime = pointInTime,
                 });
             
             _groupProcessingQueueMock = new Mock<IGroupProcessingQueue>();
@@ -86,8 +89,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         public async Task ThenItShouldProcessEveryUrn()
         {
             var urns = new[] {100001L, 100002L};
+            var pointInTime = DateTime.Now.Date;
 
-            await _manager.ProcessBatchOfEstablishments(urns, _cancellationToken);
+            await _manager.ProcessBatchOfEstablishments(urns, pointInTime, _cancellationToken);
 
             _establishmentRepositoryMock.Verify(
                 r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()),
@@ -98,21 +102,21 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _establishmentRepositoryMock.Verify(
-                r => r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()),
+                r => r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _establishmentRepositoryMock.Verify(r => r.GetEstablishmentFromStagingAsync(urns[0], _cancellationToken),
+            _establishmentRepositoryMock.Verify(r => r.GetEstablishmentFromStagingAsync(urns[0], pointInTime, _cancellationToken),
                 Times.Once);
-            _establishmentRepositoryMock.Verify(r => r.GetEstablishmentFromStagingAsync(urns[1], _cancellationToken),
+            _establishmentRepositoryMock.Verify(r => r.GetEstablishmentFromStagingAsync(urns[1], pointInTime, _cancellationToken),
                 Times.Once);
 
             _establishmentRepositoryMock.Verify(
-                r => r.StoreAsync(It.IsAny<Establishment>(), It.IsAny<CancellationToken>()),
+                r => r.StoreAsync(It.IsAny<PointInTimeEstablishment[]>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _establishmentRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<Establishment>(e => e.Urn == urns[0]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeEstablishment[]>(e => e.First().Urn == urns[0]), _cancellationToken),
                 Times.Once);
             _establishmentRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<Establishment>(e => e.Urn == urns[1]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeEstablishment[]>(e => e.First().Urn == urns[1]), _cancellationToken),
                 Times.Once);
 
             _mapperMock.Verify(
@@ -131,13 +135,13 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishCreatedEventIfNoCurrent(long urn, LearningProvider learningProvider)
+        public async Task ThenItShouldPublishCreatedEventIfNoPrevious(long urn, DateTime pointInTime, LearningProvider learningProvider)
         {
-            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Establishment) null);
+            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((PointInTimeEstablishment) null);
             _establishmentRepositoryMock.Setup(r =>
-                    r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Establishment
+                    r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
                     EstablishmentName = urn.ToString()
@@ -145,7 +149,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(learningProvider);
             
-            await _manager.ProcessBatchOfEstablishments(new[]{urn}, _cancellationToken);
+            await _manager.ProcessBatchOfEstablishments(new[]{urn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishLearningProviderCreatedAsync(learningProvider, It.IsAny<CancellationToken>()),
@@ -153,17 +157,17 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(long urn, LearningProvider learningProvider)
+        public async Task ThenItShouldPublishUpdatedEventIfHasChangedSincePrevious(long urn, DateTime pointInTime, LearningProvider learningProvider)
         {
-            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Establishment
+            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
                     EstablishmentName = "old name"
                 });
             _establishmentRepositoryMock.Setup(r =>
-                    r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Establishment
+                    r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
                     EstablishmentName = urn.ToString()
@@ -171,7 +175,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(learningProvider);
             
-            await _manager.ProcessBatchOfEstablishments(new[]{urn}, _cancellationToken);
+            await _manager.ProcessBatchOfEstablishments(new[]{urn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishLearningProviderUpdatedAsync(learningProvider, It.IsAny<CancellationToken>()),
@@ -179,23 +183,23 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(long urn)
+        public async Task ThenItShouldNotPublishAnyEventIfHasNotChangedSincePrevious(long urn, DateTime pointInTime)
         {
-            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Establishment
+            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
                     EstablishmentName = urn.ToString()
                 });
             _establishmentRepositoryMock.Setup(r =>
-                    r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Establishment
+                    r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
                     EstablishmentName = urn.ToString()
                 }); 
             
-            await _manager.ProcessBatchOfEstablishments(new[]{urn}, _cancellationToken);
+            await _manager.ProcessBatchOfEstablishments(new[]{urn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishLearningProviderCreatedAsync(It.IsAny<LearningProvider>(), It.IsAny<CancellationToken>()),
