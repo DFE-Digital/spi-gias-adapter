@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Configuration;
-using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Microsoft.Azure.Cosmos.Table;
-using Microsoft.Azure.Documents.Spatial;
 using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
@@ -40,7 +38,26 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task<PointInTimeEstablishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken)
         {
-            return await RetrieveAsync(urn.ToString(), "current", cancellationToken);
+            return await GetEstablishmentAsync(urn, null, cancellationToken);
+        }
+
+        public async Task<PointInTimeEstablishment> GetEstablishmentAsync(long urn, DateTime? pointInTime, CancellationToken cancellationToken)
+        {
+            if (!pointInTime.HasValue)
+            {
+                return await RetrieveAsync(urn.ToString(), "current", cancellationToken);
+            }
+
+            var query = new TableQuery<EstablishmentEntity>()
+                .Where(TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, urn.ToString()),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThanOrEqual, pointInTime.Value.ToString("yyyyMMdd"))))
+                .OrderByDesc("RowKey")
+                .Take(1);
+            var results = await QueryAsync(query, cancellationToken);
+
+            return results.SingleOrDefault();
         }
 
         public async Task<PointInTimeEstablishment> GetEstablishmentFromStagingAsync(long urn, DateTime pointInTime, CancellationToken cancellationToken)

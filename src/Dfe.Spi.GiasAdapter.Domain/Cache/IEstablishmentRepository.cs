@@ -10,6 +10,7 @@ namespace Dfe.Spi.GiasAdapter.Domain.Cache
         Task StoreAsync(PointInTimeEstablishment[] establishments, CancellationToken cancellationToken);
         Task StoreInStagingAsync(PointInTimeEstablishment[] establishments, CancellationToken cancellationToken);
         Task<PointInTimeEstablishment> GetEstablishmentAsync(long urn, CancellationToken cancellationToken);
+        Task<PointInTimeEstablishment> GetEstablishmentAsync(long urn, DateTime? pointInTime, CancellationToken cancellationToken);
         Task<PointInTimeEstablishment> GetEstablishmentFromStagingAsync(long urn, DateTime pointInTime, CancellationToken cancellationToken);
     }
 }

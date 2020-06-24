@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 {
     public abstract class TableCacheRepository<TModel, TEntity>
         where TModel : class
-        where TEntity : TableEntity
+        where TEntity : TableEntity, new()
     {
         private readonly string _logTypeName;
 
@@ -115,6 +116,23 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             var entity = (TEntity) operationResult.Result;
 
             return entity == null ? null : EntityToModel(entity);
+        }
+
+        protected async Task<TModel[]> QueryAsync(TableQuery<TEntity> query, CancellationToken cancellationToken)
+        {
+            TableContinuationToken continuationToken = default;
+            var results = new List<TEntity>();
+            
+            do
+            {
+                var segment = await Table.ExecuteQuerySegmentedAsync(query, continuationToken, cancellationToken);
+                continuationToken = segment.ContinuationToken;
+                results.AddRange(segment.Results);
+            } while (continuationToken != null);
+
+            return results
+                .Select(EntityToModel)
+                .ToArray();
         }
     }
 }

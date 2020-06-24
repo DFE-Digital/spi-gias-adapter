@@ -71,26 +71,26 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         {
             foreach (var urn in urns)
             {
-                var current = await _establishmentRepository.GetEstablishmentAsync(urn, cancellationToken);
+                var previous = await _establishmentRepository.GetEstablishmentAsync(urn, pointInTime, cancellationToken);
                 var staging = await _establishmentRepository.GetEstablishmentFromStagingAsync(urn, pointInTime, cancellationToken);
 
-                if (current == null)
+                if (previous == null)
                 {
-                    _logger.Info($"Establishment {urn} has not been seen before. Processing as created");
+                    _logger.Info($"Establishment {urn} has not been seen before {pointInTime}. Processing as created");
 
-                    await ProcessEstablishment(null, staging, _eventPublisher.PublishLearningProviderCreatedAsync,
+                    await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderCreatedAsync,
                         cancellationToken);
                 }
-                else if (!AreSame(current, staging))
+                else if (!AreSame(previous, staging))
                 {
-                    _logger.Info($"Establishment {urn} has changed. Processing as updated");
+                    _logger.Info($"Establishment {urn} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
 
-                    await ProcessEstablishment(current, staging, _eventPublisher.PublishLearningProviderUpdatedAsync,
+                    await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderUpdatedAsync,
                         cancellationToken);
                 }
                 else
                 {
-                    _logger.Info($"Establishment {urn} has not changed. Skipping");
+                    _logger.Info($"Establishment {urn} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
                 }
             }
         }
@@ -407,11 +407,12 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         }
 
         private async Task ProcessEstablishment(
-            PointInTimeEstablishment current,
             PointInTimeEstablishment staging,
             Func<LearningProvider, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
+            var current = await _establishmentRepository.GetEstablishmentAsync(staging.Urn, cancellationToken);
+            
             staging.IsCurrent = current == null || staging.PointInTime > current.PointInTime;
             if (current != null && staging.IsCurrent)
             {

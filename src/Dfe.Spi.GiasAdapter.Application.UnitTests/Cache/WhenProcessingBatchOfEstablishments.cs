@@ -135,9 +135,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishCreatedEventIfNoCurrent(long urn, DateTime pointInTime, LearningProvider learningProvider)
+        public async Task ThenItShouldPublishCreatedEventIfNoPrevious(long urn, DateTime pointInTime, LearningProvider learningProvider)
         {
-            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((PointInTimeEstablishment) null);
             _establishmentRepositoryMock.Setup(r =>
                     r.GetEstablishmentFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
@@ -157,9 +157,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(long urn, DateTime pointInTime, LearningProvider learningProvider)
+        public async Task ThenItShouldPublishUpdatedEventIfHasChangedSincePrevious(long urn, DateTime pointInTime, LearningProvider learningProvider)
         {
-            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
@@ -183,9 +183,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(long urn, DateTime pointInTime)
+        public async Task ThenItShouldNotPublishAnyEventIfHasNotChangedSincePrevious(long urn, DateTime pointInTime)
         {
-            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            _establishmentRepositoryMock.Setup(r => r.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeEstablishment
                 {
                     Urn = urn,
