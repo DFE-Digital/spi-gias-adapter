@@ -127,7 +127,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
         }
 
@@ -141,7 +141,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
-                    Name = laCode.ToString()
+                    Name = laCode.ToString(),
+                    PointInTime = pointInTime,
                 }); 
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<LocalAuthority>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
@@ -149,7 +150,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupCreatedAsync(managementGroup, It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupCreatedAsync(managementGroup, pointInTime, It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -160,14 +161,16 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
-                    Name = "old name"
+                    Name = "old name",
+                    PointInTime = pointInTime,
                 });
             _localAuthorityRepositoryMock.Setup(r =>
                     r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
-                    Name = laCode.ToString()
+                    Name = laCode.ToString(),
+                    PointInTime = pointInTime,
                 }); 
             _mapperMock.Setup(m=>m.MapAsync<ManagementGroup>(It.IsAny<LocalAuthority>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
@@ -175,7 +178,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupUpdatedAsync(managementGroup, It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupUpdatedAsync(managementGroup, pointInTime, It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -186,23 +189,25 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
-                    Name = laCode.ToString()
+                    Name = laCode.ToString(),
+                    PointInTime = pointInTime,
                 });
             _localAuthorityRepositoryMock.Setup(r =>
                     r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
-                    Name = laCode.ToString()
+                    Name = laCode.ToString(),
+                    PointInTime = pointInTime,
                 }); 
             
             await _manager.ProcessBatchOfLocalAuthorities(new[]{laCode}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupCreatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Never);
             _eventPublisherMock.Verify(
-                p => p.PublishManagementGroupUpdatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<CancellationToken>()),
+                p => p.PublishManagementGroupUpdatedAsync(It.IsAny<ManagementGroup>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
     }

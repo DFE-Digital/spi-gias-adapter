@@ -40,32 +40,48 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.SpiMiddleware
         }
 
         
-        public async Task PublishLearningProviderCreatedAsync(LearningProvider learningProvider,
-            CancellationToken cancellationToken)
+        public async Task PublishLearningProviderCreatedAsync(LearningProvider learningProvider, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            await SendEventToMiddleware("learning-provider-created", learningProvider, cancellationToken);
+            var @event = new PointInTimeMiddlewareEvent<LearningProvider>
+            {
+                Details = learningProvider,
+                PointInTime = pointInTime,
+            };
+            await SendEventToMiddleware("learning-provider-created", @event, cancellationToken);
             _logger.Debug($"Published learning provider created: {JsonConvert.SerializeObject(learningProvider)}");
         }
 
-        public async Task PublishLearningProviderUpdatedAsync(LearningProvider learningProvider,
-            CancellationToken cancellationToken)
+        public async Task PublishLearningProviderUpdatedAsync(LearningProvider learningProvider, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            await SendEventToMiddleware("learning-provider-updated", learningProvider, cancellationToken);
+            var @event = new PointInTimeMiddlewareEvent<LearningProvider>
+            {
+                Details = learningProvider,
+                PointInTime = pointInTime,
+            };
+            await SendEventToMiddleware("learning-provider-updated", @event, cancellationToken);
             _logger.Debug($"Published learning provider updated: {JsonConvert.SerializeObject(learningProvider)}");
         }
 
         
-        public async Task PublishManagementGroupCreatedAsync(ManagementGroup managementGroup,
-            CancellationToken cancellationToken)
+        public async Task PublishManagementGroupCreatedAsync(ManagementGroup managementGroup, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            await SendEventToMiddleware("management-group-created", managementGroup, cancellationToken);
+            var @event = new PointInTimeMiddlewareEvent<ManagementGroup>
+            {
+                Details = managementGroup,
+                PointInTime = pointInTime,
+            };
+            await SendEventToMiddleware("management-group-created", @event, cancellationToken);
             _logger.Debug($"Published management group created: {JsonConvert.SerializeObject(managementGroup)}");
         }
 
-        public async Task PublishManagementGroupUpdatedAsync(ManagementGroup managementGroup,
-            CancellationToken cancellationToken)
+        public async Task PublishManagementGroupUpdatedAsync(ManagementGroup managementGroup, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            await SendEventToMiddleware("management-group-updated", managementGroup, cancellationToken);
+            var @event = new PointInTimeMiddlewareEvent<ManagementGroup>
+            {
+                Details = managementGroup,
+                PointInTime = pointInTime,
+            };
+            await SendEventToMiddleware("management-group-updated", @event, cancellationToken);
             _logger.Debug($"Published management group updated: {JsonConvert.SerializeObject(managementGroup)}");
         }
         

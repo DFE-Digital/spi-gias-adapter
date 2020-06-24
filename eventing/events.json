@@ -9,29 +9,40 @@
     "learning-provider-created": {
       "description": "New learning provider has been detected",
       "schema": {
-        "$ref": "#/definitions/learning-provider"
+        "$ref": "#/definitions/learning-provider-event"
       }
     },
     "learning-provider-updated": {
       "description": "Update to learning provider has been detected",
       "schema": {
-        "$ref": "#/definitions/learning-provider"
+        "$ref": "#/definitions/learning-provider-event"
       }
     },
     "management-group-created": {
       "description": "New management group has been detected",
       "schema": {
-        "$ref": "#/definitions/management-group"
+        "$ref": "#/definitions/management-group-event"
       }
     },
     "management-group-updated": {
       "description": "Update to management group has been detected",
       "schema": {
-        "$ref": "#/definitions/management-group"
+        "$ref": "#/definitions/management-group-event"
       }
     }
   },
   "definitions": {
+    "learning-provider-event": {
+      "type": "object",
+      "properties": {
+        "details": {
+          "$ref": "#/definitions/learning-provider"
+        },
+        "pointInTime": {
+          "type": "string"
+        }
+      }
+    },
     "learning-provider": {
       "type": "object",
       "properties": {
@@ -54,6 +65,17 @@
       "required": [
         "name"
       ]
+    },
+    "management-group-event": {
+      "type": "object",
+      "properties": {
+        "details": {
+          "$ref": "#/definitions/management-group"
+        },
+        "pointInTime": {
+          "type": "string"
+        }
+      }
     },
     "management-group": {
       "type": "object",
