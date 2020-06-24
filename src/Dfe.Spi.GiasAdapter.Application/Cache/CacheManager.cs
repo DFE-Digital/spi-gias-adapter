@@ -127,26 +127,26 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         {
             foreach (var laCode in laCodes)
             {
-                var current = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, cancellationToken);
+                var previous = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, pointInTime, cancellationToken);
                 var staging = await _localAuthorityRepository.GetLocalAuthorityFromStagingAsync(laCode, pointInTime, cancellationToken);
 
-                if (current == null)
+                if (previous == null)
                 {
-                    _logger.Info($"Local authority {laCode} has not been seen before. Processing as created");
+                    _logger.Info($"Local authority {laCode} has not been seen before {pointInTime}. Processing as created");
 
                     await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
                         cancellationToken);
                 }
-                else if (!AreSame(current, staging))
+                else if (!AreSame(previous, staging))
                 {
-                    _logger.Info($"Local authority {laCode} has changed. Processing as updated");
+                    _logger.Info($"Local authority {laCode} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
 
                     await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
                         cancellationToken);
                 }
                 else
                 {
-                    _logger.Info($"Local authority {laCode} has not changed. Skipping");
+                    _logger.Info($"Local authority {laCode} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
                 }
             }
         }
@@ -463,7 +463,19 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             Func<ManagementGroup, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
-            await _localAuthorityRepository.StoreAsync(staging, cancellationToken);
+            var current = await _localAuthorityRepository.GetLocalAuthorityAsync(staging.Code, cancellationToken);
+            
+            staging.IsCurrent = current == null || staging.PointInTime > current.PointInTime;
+            if (current != null && staging.IsCurrent)
+            {
+                current.IsCurrent = false;
+            }
+
+            var toStore = current == null || current.IsCurrent
+                ? new[] {staging}
+                : new[] {current, staging};
+            
+            await _localAuthorityRepository.StoreAsync(toStore, cancellationToken);
             _logger.Debug($"Stored local authority {staging.Code} in repository");
 
             var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -106,13 +107,13 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.IsAny<PointInTimeLocalAuthority>(), It.IsAny<CancellationToken>()),
+                r => r.StoreAsync(It.IsAny<PointInTimeLocalAuthority[]>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<PointInTimeLocalAuthority>(e => e.Code == laCode[0]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeLocalAuthority[]>(e => e.First().Code == laCode[0]), _cancellationToken),
                 Times.Once);
             _localAuthorityRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<PointInTimeLocalAuthority>(e => e.Code == laCode[1]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeLocalAuthority[]>(e => e.First().Code == laCode[1]), _cancellationToken),
                 Times.Once);
 
             _mapperMock.Verify(
@@ -131,9 +132,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishCreatedEventIfNoCurrent(int laCode, DateTime pointInTime, ManagementGroup managementGroup)
+        public async Task ThenItShouldPublishCreatedEventIfNoPrevious(int laCode, DateTime pointInTime, ManagementGroup managementGroup)
         {
-            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((PointInTimeLocalAuthority) null);
             _localAuthorityRepositoryMock.Setup(r =>
                     r.GetLocalAuthorityFromStagingAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
@@ -153,9 +154,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(int laCode, DateTime pointInTime, ManagementGroup managementGroup)
+        public async Task ThenItShouldPublishUpdatedEventIfHasChangedSincePrevious(int laCode, DateTime pointInTime, ManagementGroup managementGroup)
         {
-            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,
@@ -179,9 +180,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(int laCode, DateTime pointInTime)
+        public async Task ThenItShouldNotPublishAnyEventIfHasNotChangedSincePrevious(int laCode, DateTime pointInTime)
         {
-            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            _localAuthorityRepositoryMock.Setup(r => r.GetLocalAuthorityAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeLocalAuthority
                 {
                     Code = laCode,

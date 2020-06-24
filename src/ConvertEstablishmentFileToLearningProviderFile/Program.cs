@@ -334,6 +334,11 @@ namespace ConvertEstablishmentFileToLearningProviderFile
             return Task.FromResult(localAuthority);
         }
 
+        public async Task<PointInTimeLocalAuthority> GetLocalAuthorityAsync(int laCode, DateTime? pointInTime, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<PointInTimeLocalAuthority> GetLocalAuthorityFromStagingAsync(int laCode, DateTime pointInTime, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
