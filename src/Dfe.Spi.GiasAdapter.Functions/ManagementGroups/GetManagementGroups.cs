@@ -60,22 +60,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.ManagementGroups
         {
             var providers = await _managementGroupManager.GetManagementGroupsAsync(request.Identifiers, request.Fields, cancellationToken);
             
-            if (JsonConvert.DefaultSettings != null)
-            {
-                return new JsonResult(
-                    providers,
-                    JsonConvert.DefaultSettings())
-                {
-                    StatusCode = 200,
-                };
-            }
-            else
-            {
-                return new JsonResult(providers)
-                {
-                    StatusCode = 200,
-                };
-            }
+            return new FormattedJsonResult(providers);
         }
     }
 

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.ManagementGroups;
@@ -54,16 +55,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.ManagementGroups
                 }
 
                 _logger.Info($"{FunctionName} found management group with id {id}. Returning ok");
-                if (JsonConvert.DefaultSettings != null)
-                {
-                    return new JsonResult(
-                        managementGroup,
-                        JsonConvert.DefaultSettings());
-                }
-                else
-                {
-                    return new JsonResult(managementGroup);
-                }
+                return new FormattedJsonResult(managementGroup);
             }
             catch (ArgumentException ex)
             {

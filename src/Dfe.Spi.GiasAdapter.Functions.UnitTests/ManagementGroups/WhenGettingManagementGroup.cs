@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
@@ -52,8 +53,8 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.ManagementGroups
                 _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.IsInstanceOf<JsonResult>(actual);
-            Assert.AreSame(managementGroup, ((JsonResult) actual).Value);
+            Assert.IsInstanceOf<FormattedJsonResult>(actual);
+            Assert.AreSame(managementGroup, ((FormattedJsonResult) actual).Value);
         }
 
         [Test]
