@@ -57,7 +57,11 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 .Take(1);
             var results = await QueryAsync(query, cancellationToken);
 
-            return results.SingleOrDefault();
+            // Appears to be a bug in the library that does not honor the order or the take.
+            // Will reprocess here
+            return results
+                .OrderByDescending(r => r.PointInTime)
+                .FirstOrDefault();
         }
 
         public async Task<PointInTimeLocalAuthority> GetLocalAuthorityFromStagingAsync(int laCode, DateTime pointInTime, CancellationToken cancellationToken)

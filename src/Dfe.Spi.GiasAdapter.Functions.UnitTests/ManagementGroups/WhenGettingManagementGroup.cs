@@ -43,10 +43,10 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.ManagementGroups
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldReturnLearningProviderIfFound(string code, ManagementGroup managementGroup)
+        public async Task ThenItShouldReturnLearningProviderIfFound(string code, DateTime? pointInTime, ManagementGroup managementGroup)
         {
             _managementGroupManagerMock.Setup(x =>
-                    x.GetManagementGroupAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+                    x.GetManagementGroupAsync(It.IsAny<string>(), null, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
 
             var actual = await _function.RunAsync(new DefaultHttpRequest(new DefaultHttpContext()), code,
@@ -61,7 +61,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.ManagementGroups
         public async Task ThenItShouldReturnNotFoundResultIfNotFound()
         {
             _managementGroupManagerMock.Setup(x =>
-                    x.GetManagementGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    x.GetManagementGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((ManagementGroup) null);
 
             var actual = await _function.RunAsync(new DefaultHttpRequest(new DefaultHttpContext()), "LA-123",
@@ -75,7 +75,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.ManagementGroups
         public async Task ThenItShouldReturnBadRequestResultIfArgumentExceptionThrown(string message)
         {
             _managementGroupManagerMock.Setup(x =>
-                    x.GetManagementGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    x.GetManagementGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new ArgumentException(message));
 
             var actual = await _function.RunAsync(new DefaultHttpRequest(new DefaultHttpContext()), "LA-123",

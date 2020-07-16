@@ -42,11 +42,11 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
             var fields = (string)req.Query["fields"];
             var live = ((string) req.Query["live"] ?? "").ToLower();
             var readFromLive = live == "true" || live == "yes" || live == "1";
-            var pointInTimeString = (string) req.Query["pointInTime"];
             DateTime? pointInTime;
 
             try
             {
+                var pointInTimeString = (string) req.Query["pointInTime"];
                 pointInTime = string.IsNullOrEmpty(pointInTimeString)
                     ? null
                     : (DateTime?) pointInTimeString.ToDateTime();

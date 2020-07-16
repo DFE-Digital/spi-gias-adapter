@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Extensions;
 using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -39,14 +41,29 @@ namespace Dfe.Spi.GiasAdapter.Functions.ManagementGroups
             CancellationToken cancellationToken)
         {
             _httpSpiExecutionContextManager.SetContext(req.Headers);
-
-
+            
             _logger.Info($"{FunctionName} triggered at {DateTime.Now} with id {id}");
+            
+            var fields = req.Query["fields"];
+            DateTime? pointInTime;
+            try
+            {
+                var pointInTimeString = (string) req.Query["pointInTime"];
+                pointInTime = string.IsNullOrEmpty(pointInTimeString)
+                    ? null
+                    : (DateTime?) pointInTimeString.ToDateTime();
+            }
+            catch (InvalidDateTimeFormatException ex)
+            {
+                return new HttpErrorBodyResult(
+                    HttpStatusCode.BadRequest,
+                    Errors.InvalidQueryParameter.Code,
+                    ex.Message);
+            }
 
             try
             {
-                var fields = req.Query["fields"];
-                var managementGroup = await _managementGroupManager.GetManagementGroupAsync(id, fields, cancellationToken);
+                var managementGroup = await _managementGroupManager.GetManagementGroupAsync(id, fields, pointInTime, cancellationToken);
 
                 if (managementGroup == null)
                 {

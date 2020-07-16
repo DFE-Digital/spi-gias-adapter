@@ -15,8 +15,8 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
 {
     public interface IManagementGroupManager
     {
-        Task<ManagementGroup> GetManagementGroupAsync(string id, string fields, CancellationToken cancellationToken);
-        Task<ManagementGroup[]> GetManagementGroupsAsync(string[] ids, string[] fields, CancellationToken cancellationToken);
+        Task<ManagementGroup> GetManagementGroupAsync(string id, string fields, DateTime? pointInTime, CancellationToken cancellationToken);
+        Task<ManagementGroup[]> GetManagementGroupsAsync(string[] ids, string[] fields, DateTime? pointInTime, CancellationToken cancellationToken);
     }
     
     public class ManagementGroupManager : IManagementGroupManager
@@ -41,13 +41,13 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
             _logger = logger;
         }
         
-        public async Task<ManagementGroup> GetManagementGroupAsync(string id, string fields, CancellationToken cancellationToken)
+        public async Task<ManagementGroup> GetManagementGroupAsync(string id, string fields, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             var typeAndId = SplitCode(id);
             var isLocalAuthority = await IsLocalAuthorityAsync(typeAndId.Key, cancellationToken);
             var managementGroup = isLocalAuthority
-                ? await GetLocalAuthorityAsManagementGroupAsync(typeAndId.Value, cancellationToken)
-                : await GetGroupAsManagementGroupAsync(typeAndId.Value, cancellationToken);
+                ? await GetLocalAuthorityAsManagementGroupAsync(typeAndId.Value, pointInTime, cancellationToken)
+                : await GetGroupAsManagementGroupAsync(typeAndId.Value, pointInTime, cancellationToken);
 
             if (managementGroup == null)
             {
@@ -69,11 +69,11 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
             return managementGroup;
         }
 
-        public async Task<ManagementGroup[]> GetManagementGroupsAsync(string[] ids, string[] fields, CancellationToken cancellationToken)
+        public async Task<ManagementGroup[]> GetManagementGroupsAsync(string[] ids, string[] fields, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             var fieldsString = fields == null || fields.Length == 0 ? null : fields.Aggregate((x, y) => $"{x},{y}");
 
-            var managementGroups = await Task.WhenAll(ids.Select(id => GetManagementGroupAsync(id, fieldsString, cancellationToken)));
+            var managementGroups = await Task.WhenAll(ids.Select(id => GetManagementGroupAsync(id, fieldsString, pointInTime, cancellationToken)));
 
             return managementGroups;
         }
@@ -98,8 +98,7 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
             return type.Equals(localAuthorityType, StringComparison.InvariantCultureIgnoreCase);
         }
 
-        private async Task<ManagementGroup> GetLocalAuthorityAsManagementGroupAsync(string id,
-            CancellationToken cancellationToken)
+        private async Task<ManagementGroup> GetLocalAuthorityAsManagementGroupAsync(string id, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             int laCode;
             if (!int.TryParse(id, out laCode))
@@ -108,7 +107,7 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
                     nameof(id));
             }
 
-            var localAuthority = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, cancellationToken);
+            var localAuthority = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, pointInTime, cancellationToken);
             if (localAuthority == null)
             {
                 return null;
@@ -118,8 +117,7 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
             return managementGroup;
         }
 
-        private async Task<ManagementGroup> GetGroupAsManagementGroupAsync(string id,
-            CancellationToken cancellationToken)
+        private async Task<ManagementGroup> GetGroupAsManagementGroupAsync(string id, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             long uid;
             if (!long.TryParse(id, out uid))
@@ -128,7 +126,7 @@ namespace Dfe.Spi.GiasAdapter.Application.ManagementGroups
                     nameof(id));
             }
 
-            var group = await _groupRepository.GetGroupAsync(uid, cancellationToken);
+            var group = await _groupRepository.GetGroupAsync(uid, pointInTime, cancellationToken);
             if (group == null)
             {
                 return null;
