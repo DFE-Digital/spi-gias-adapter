@@ -54,7 +54,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
         [Test, AutoData]
         public async Task ThenItShouldGetEstablishmentsFromApiIfReadFromLive(int[] urns)
         {
-            await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, true, _cancellationToken);
+            await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, true, null, _cancellationToken);
 
             _giasApiClientMock.Verify(c => c.GetEstablishmentAsync(It.IsAny<long>(), _cancellationToken),
                 Times.Exactly(urns.Length));
@@ -70,7 +70,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
         [Test, AutoData]
         public async Task ThenItShouldGetEstablishmentsFromCacheIfNotReadFromLive(int[] urns)
         {
-            await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, false, _cancellationToken);
+            await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, false, null, _cancellationToken);
 
             _establishmentRepository.Verify(c => c.GetEstablishmentAsync(
                     It.IsAny<long>(), It.IsAny<DateTime?>(), _cancellationToken),
@@ -84,18 +84,22 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
                 Times.Never);
         }
         
-        [TestCase(true)]
-        [TestCase(false)]
-        public void ThenItShouldThrowExceptionIfIdIsNotNumeric(bool readFromLive)
+        [TestCase(true, null)]
+        [TestCase(false, null)]
+        [TestCase(true, "2020-07-16")]
+        [TestCase(false, "2020-07-16")]
+        public void ThenItShouldThrowExceptionIfIdIsNotNumeric(bool readFromLive, DateTime? pointInTime)
         {
             var ids = new[] {"12345678", "NotANumber", "98765432"};
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _manager.GetLearningProvidersAsync(ids, null, readFromLive, _cancellationToken));
+                await _manager.GetLearningProvidersAsync(ids, null, readFromLive, pointInTime, _cancellationToken));
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public async Task ThenItShouldMapEstablishmentsToLearningProviders(bool readFromLive)
+        [TestCase(true, null)]
+        [TestCase(false, null)]
+        [TestCase(true, "2020-07-16")]
+        [TestCase(false, "2020-07-16")]
+        public async Task ThenItShouldMapEstablishmentsToLearningProviders(bool readFromLive, DateTime? pointInTime)
         {
             var establishments = _fixture.Create<PointInTimeEstablishment[]>();
             var urns = establishments.Select(x => x.Urn).ToArray();
@@ -103,11 +107,11 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
             {
                 _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(establishments[i].Urn, _cancellationToken))
                     .ReturnsAsync(establishments[i]);
-                _establishmentRepository.Setup(c => c.GetEstablishmentAsync(establishments[i].Urn, It.IsAny<DateTime?>(), _cancellationToken))
+                _establishmentRepository.Setup(c => c.GetEstablishmentAsync(establishments[i].Urn, pointInTime, _cancellationToken))
                     .ReturnsAsync(establishments[i]);
             }
 
-            await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, readFromLive, _cancellationToken);
+            await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, readFromLive, pointInTime, _cancellationToken);
 
             _mapperMock.Verify(m => m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), _cancellationToken),
                 Times.Exactly(establishments.Length));
@@ -118,9 +122,11 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
             }
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public async Task ThenItShouldReturnMappedLearningProviders(bool readFromLive)
+        [TestCase(true, null)]
+        [TestCase(false, null)]
+        [TestCase(true, "2020-07-16")]
+        [TestCase(false, "2020-07-16")]
+        public async Task ThenItShouldReturnMappedLearningProviders(bool readFromLive, DateTime? pointInTime)
         {
             var learningProviders = _fixture.Create<LearningProvider[]>();
             var urns = learningProviders.Select(x => x.Urn.Value).ToArray();
@@ -133,13 +139,13 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
                 
                 _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(establishment.Urn, _cancellationToken))
                     .ReturnsAsync(establishment);
-                _establishmentRepository.Setup(c => c.GetEstablishmentAsync(establishment.Urn, It.IsAny<DateTime?>(), _cancellationToken))
+                _establishmentRepository.Setup(c => c.GetEstablishmentAsync(establishment.Urn, pointInTime, _cancellationToken))
                     .ReturnsAsync(establishment);
                 _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), _cancellationToken))
                     .ReturnsAsync((Establishment e, CancellationToken ct) => learningProviders.Single(x => x.Urn == e.Urn));
             }
             
-            var actual = await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, readFromLive, _cancellationToken);
+            var actual = await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, readFromLive, pointInTime, _cancellationToken);
             
             Assert.AreEqual(learningProviders.Length, actual.Length);
             for (var i = 0; i < learningProviders.Length; i++)

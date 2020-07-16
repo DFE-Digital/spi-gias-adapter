@@ -17,7 +17,7 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
     public interface ILearningProviderManager
     {
         Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken);
-        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken);
+        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken);
     }
 
     public class LearningProviderManager : ILearningProviderManager
@@ -54,9 +54,8 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             return await GetLearningProviderFromEstablishment(establishment, fields, cancellationToken);
         }
 
-        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken)
+        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken)
         {
-            var pointInTime = (DateTime?) null;
             var establishments = readFromLive
                 ? await GetEstablishmentsAsync(ids, pointInTime, GetEstablishmentFromApiAsync, cancellationToken)
                 : await GetEstablishmentsAsync(ids, pointInTime, GetEstablishmentFromCacheAsync, cancellationToken);
