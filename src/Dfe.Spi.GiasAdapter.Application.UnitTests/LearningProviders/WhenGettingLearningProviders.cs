@@ -73,11 +73,11 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
             await _manager.GetLearningProvidersAsync(urns.Select(x => x.ToString()).ToArray(), null, false, _cancellationToken);
 
             _establishmentRepository.Verify(c => c.GetEstablishmentAsync(
-                    It.IsAny<long>(), _cancellationToken),
+                    It.IsAny<long>(), It.IsAny<DateTime?>(), _cancellationToken),
                 Times.Exactly(urns.Length));
             for (var i = 0; i < urns.Length; i++)
             {
-                _establishmentRepository.Verify(c => c.GetEstablishmentAsync(urns[i], _cancellationToken),
+                _establishmentRepository.Verify(c => c.GetEstablishmentAsync(urns[i], null, _cancellationToken),
                     Times.Once, $"Expected call for urn {i}");
             }
             _giasApiClientMock.Verify(c => c.GetEstablishmentAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()),
@@ -103,7 +103,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
             {
                 _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(establishments[i].Urn, _cancellationToken))
                     .ReturnsAsync(establishments[i]);
-                _establishmentRepository.Setup(c => c.GetEstablishmentAsync(establishments[i].Urn, _cancellationToken))
+                _establishmentRepository.Setup(c => c.GetEstablishmentAsync(establishments[i].Urn, It.IsAny<DateTime?>(), _cancellationToken))
                     .ReturnsAsync(establishments[i]);
             }
 
@@ -133,7 +133,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.LearningProviders
                 
                 _giasApiClientMock.Setup(c => c.GetEstablishmentAsync(establishment.Urn, _cancellationToken))
                     .ReturnsAsync(establishment);
-                _establishmentRepository.Setup(c => c.GetEstablishmentAsync(establishment.Urn, _cancellationToken))
+                _establishmentRepository.Setup(c => c.GetEstablishmentAsync(establishment.Urn, It.IsAny<DateTime?>(), _cancellationToken))
                     .ReturnsAsync(establishment);
                 _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Establishment>(), _cancellationToken))
                     .ReturnsAsync((Establishment e, CancellationToken ct) => learningProviders.Single(x => x.Urn == e.Urn));

@@ -16,7 +16,7 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 {
     public interface ILearningProviderManager
     {
-        Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, CancellationToken cancellationToken);
+        Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken);
         Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken);
     }
 
@@ -39,11 +39,11 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             _logger = logger;
         }
 
-        public async Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, CancellationToken cancellationToken)
+        public async Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             var establishment = readFromLive
-                ? await GetEstablishmentFromApiAsync(id, cancellationToken)
-                : await GetEstablishmentFromCacheAsync(id, cancellationToken);
+                ? await GetEstablishmentFromApiAsync(id, pointInTime, cancellationToken)
+                : await GetEstablishmentFromCacheAsync(id, pointInTime, cancellationToken);
             if (establishment == null)
             {
                 return null;
@@ -56,9 +56,10 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 
         public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken)
         {
+            var pointInTime = (DateTime?) null;
             var establishments = readFromLive
-                ? await GetEstablishmentsAsync(ids, GetEstablishmentFromApiAsync, cancellationToken)
-                : await GetEstablishmentsAsync(ids, GetEstablishmentFromCacheAsync, cancellationToken);
+                ? await GetEstablishmentsAsync(ids, pointInTime, GetEstablishmentFromApiAsync, cancellationToken)
+                : await GetEstablishmentsAsync(ids, pointInTime, GetEstablishmentFromCacheAsync, cancellationToken);
 
             var fieldsString = fields == null || fields.Length == 0 ? null : fields.Aggregate((x, y) => $"{x},{y}");
             var providers = new LearningProvider[establishments.Length];
@@ -79,7 +80,8 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 
         private async Task<Establishment[]> GetEstablishmentsAsync(
             string[] ids,
-            Func<string, CancellationToken, Task<Establishment>> readerFunc,
+            DateTime? pointInTime,
+            Func<string, DateTime?, CancellationToken, Task<Establishment>> readerFunc,
             CancellationToken cancellationToken)
         {
             var tasks = new Task<Establishment[]>[5];
@@ -87,7 +89,7 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             for (var i = 0; i < tasks.Length; i++)
             {
                 var batch = ids.Skip(i * batchSize).Take(batchSize).ToArray();
-                tasks[i] = GetBatchOfEstablishmentsAsync(batch, readerFunc, cancellationToken);
+                tasks[i] = GetBatchOfEstablishmentsAsync(batch, pointInTime, readerFunc, cancellationToken);
             }
 
             var taskResults = await Task.WhenAll(tasks);
@@ -98,7 +100,8 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
 
         private async Task<Establishment[]> GetBatchOfEstablishmentsAsync(
             string[] batch,
-            Func<string, CancellationToken, Task<Establishment>> readerFunc,
+            DateTime? pointInTime,
+            Func<string, DateTime?, CancellationToken, Task<Establishment>> readerFunc,
             CancellationToken cancellationToken)
         {
             var establishments = new Establishment[batch.Length];
@@ -107,13 +110,13 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             {
                 var id = batch[i];
 
-                establishments[i] = await readerFunc(id, cancellationToken);
+                establishments[i] = await readerFunc(id, pointInTime, cancellationToken);
             }
 
             return establishments;
         }
 
-        private async Task<Establishment> GetEstablishmentFromApiAsync(string id, CancellationToken cancellationToken)
+        private async Task<Establishment> GetEstablishmentFromApiAsync(string id, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             if (!int.TryParse(id, out var urn))
             {
@@ -125,14 +128,14 @@ namespace Dfe.Spi.GiasAdapter.Application.LearningProviders
             return establishment;
         }
 
-        private async Task<Establishment> GetEstablishmentFromCacheAsync(string id, CancellationToken cancellationToken)
+        private async Task<Establishment> GetEstablishmentFromCacheAsync(string id, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             if (!int.TryParse(id, out var urn))
             {
                 throw new ArgumentException($"id must be a number (urn) but received {id}", nameof(id));
             }
 
-            var establishment = await _establishmentRepository.GetEstablishmentAsync(urn, cancellationToken);
+            var establishment = await _establishmentRepository.GetEstablishmentAsync(urn, pointInTime, cancellationToken);
 
             return establishment;
         }

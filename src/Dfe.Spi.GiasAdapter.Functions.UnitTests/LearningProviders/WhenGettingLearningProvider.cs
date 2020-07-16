@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
@@ -45,7 +46,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnLearningProviderIfFound(int urn, LearningProvider provider)
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(provider);
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), urn.ToString(),
@@ -60,7 +61,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnNotFoundResultIfNotFound()
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((LearningProvider) null);
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), "123",
@@ -74,15 +75,16 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnBadRequestResultIfArgumentExceptionThrown(string message)
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new ArgumentException(message));
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), "123",
                 _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.IsInstanceOf<BadRequestObjectResult>(actual);
-            Assert.AreSame(message, ((BadRequestObjectResult) actual).Value);
+            Assert.IsInstanceOf<HttpErrorBodyResult>(actual);
+            var errorBodyResult = (HttpErrorBodyResult) actual;
+            Assert.AreEqual(400, errorBodyResult.StatusCode);
         }
     }
 }
