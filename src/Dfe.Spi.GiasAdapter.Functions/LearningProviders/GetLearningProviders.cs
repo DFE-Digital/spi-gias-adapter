@@ -62,24 +62,9 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
         protected override async Task<IActionResult> ProcessWellFormedRequestAsync(GetLearningProvidersRequest request, FunctionRunContext runContext,
             CancellationToken cancellationToken)
         {
-            var providers = await _learningProviderManager.GetLearningProvidersAsync(request.Identifiers, request.Fields, request.Live, cancellationToken);
+            var providers = await _learningProviderManager.GetLearningProvidersAsync(request.Identifiers, request.Fields, request.Live, request.PointInTime, cancellationToken);
             
-            if (JsonConvert.DefaultSettings != null)
-            {
-                return new JsonResult(
-                    providers,
-                    JsonConvert.DefaultSettings())
-                {
-                    StatusCode = 200,
-                };
-            }
-            else
-            {
-                return new JsonResult(providers)
-                {
-                    StatusCode = 200,
-                };
-            }
+            return new FormattedJsonResult(providers);
         }
     }
 
@@ -88,5 +73,6 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
         public string[] Identifiers { get; set; }
         public string[] Fields { get; set; }
         public bool Live { get; set; }
+        public DateTime? PointInTime { get; set; }
     }
 }

@@ -244,6 +244,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "live": {
+          "type": "boolean"
+        },
+        "pointInTime": {
+          "type": "string"
         }
       },
       "required": ["identifiers"]

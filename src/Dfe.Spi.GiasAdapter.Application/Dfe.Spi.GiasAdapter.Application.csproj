@@ -14,7 +14,7 @@
       <PackageReference Include="Dfe.Spi.Common.WellKnownIdentifiers" Version="1.2.1" />
       <PackageReference Include="Dfe.Spi.Models" Version="2.1.0" />
       <PackageReference Include="Dfe.Spi.Models.Extensions" Version="1.0.2" />
-      <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+      <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     </ItemGroup>
 
 </Project>

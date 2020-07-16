@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,24 +59,9 @@ namespace Dfe.Spi.GiasAdapter.Functions.ManagementGroups
         protected override async Task<IActionResult> ProcessWellFormedRequestAsync(GetManagementGroupsRequest request, FunctionRunContext runContext,
             CancellationToken cancellationToken)
         {
-            var providers = await _managementGroupManager.GetManagementGroupsAsync(request.Identifiers, request.Fields, cancellationToken);
+            var providers = await _managementGroupManager.GetManagementGroupsAsync(request.Identifiers, request.Fields, request.PointInTime, cancellationToken);
             
-            if (JsonConvert.DefaultSettings != null)
-            {
-                return new JsonResult(
-                    providers,
-                    JsonConvert.DefaultSettings())
-                {
-                    StatusCode = 200,
-                };
-            }
-            else
-            {
-                return new JsonResult(providers)
-                {
-                    StatusCode = 200,
-                };
-            }
+            return new FormattedJsonResult(providers);
         }
     }
 
@@ -83,5 +69,6 @@ namespace Dfe.Spi.GiasAdapter.Functions.ManagementGroups
     {
         public string[] Identifiers { get; set; }
         public string[] Fields { get; set; }
+        public DateTime? PointInTime { get; set; }
     }
 }

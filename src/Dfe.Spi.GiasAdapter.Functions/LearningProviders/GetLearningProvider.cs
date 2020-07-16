@@ -1,6 +1,9 @@
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Extensions;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.LearningProviders;
 using Microsoft.AspNetCore.Mvc;
@@ -39,12 +42,28 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
             var fields = (string)req.Query["fields"];
             var live = ((string) req.Query["live"] ?? "").ToLower();
             var readFromLive = live == "true" || live == "yes" || live == "1";
+            DateTime? pointInTime;
+
+            try
+            {
+                var pointInTimeString = (string) req.Query["pointInTime"];
+                pointInTime = string.IsNullOrEmpty(pointInTimeString)
+                    ? null
+                    : (DateTime?) pointInTimeString.ToDateTime();
+            }
+            catch (InvalidDateTimeFormatException ex)
+            {
+                return new HttpErrorBodyResult(
+                    HttpStatusCode.BadRequest,
+                    Errors.InvalidQueryParameter.Code,
+                    ex.Message);
+            }
 
             _logger.Info($"{FunctionName} triggered at {DateTime.Now} with id {id}");
 
             try
             {
-                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, fields, readFromLive, cancellationToken);
+                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, fields, readFromLive, pointInTime, cancellationToken);
 
                 if (learningProvider == null)
                 {
@@ -53,21 +72,15 @@ namespace Dfe.Spi.GiasAdapter.Functions.LearningProviders
                 }
 
                 _logger.Info($"{FunctionName} found learning provider with id {id}. Returning ok");
-                if (JsonConvert.DefaultSettings != null)
-                {
-                    return new JsonResult(
-                        learningProvider,
-                        JsonConvert.DefaultSettings());
-                }
-                else
-                {
-                    return new JsonResult(learningProvider);
-                }
+                return new FormattedJsonResult(learningProvider);
             }
             catch (ArgumentException ex)
             {
                 _logger.Info($"{FunctionName} returning bad request: {ex.Message}");
-                return new BadRequestObjectResult(ex.Message);
+                return new HttpErrorBodyResult(
+                    HttpStatusCode.BadRequest,
+                    Errors.GenericInvalidRequest.Code,
+                    ex.Message);
             }
         }
     }

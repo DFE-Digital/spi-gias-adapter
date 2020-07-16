@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
@@ -42,25 +43,25 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.ManagementGroups
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldReturnLearningProviderIfFound(string code, ManagementGroup managementGroup)
+        public async Task ThenItShouldReturnLearningProviderIfFound(string code, DateTime? pointInTime, ManagementGroup managementGroup)
         {
             _managementGroupManagerMock.Setup(x =>
-                    x.GetManagementGroupAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+                    x.GetManagementGroupAsync(It.IsAny<string>(), null, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(managementGroup);
 
             var actual = await _function.RunAsync(new DefaultHttpRequest(new DefaultHttpContext()), code,
                 _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.IsInstanceOf<JsonResult>(actual);
-            Assert.AreSame(managementGroup, ((JsonResult) actual).Value);
+            Assert.IsInstanceOf<FormattedJsonResult>(actual);
+            Assert.AreSame(managementGroup, ((FormattedJsonResult) actual).Value);
         }
 
         [Test]
         public async Task ThenItShouldReturnNotFoundResultIfNotFound()
         {
             _managementGroupManagerMock.Setup(x =>
-                    x.GetManagementGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    x.GetManagementGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((ManagementGroup) null);
 
             var actual = await _function.RunAsync(new DefaultHttpRequest(new DefaultHttpContext()), "LA-123",
@@ -74,7 +75,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.ManagementGroups
         public async Task ThenItShouldReturnBadRequestResultIfArgumentExceptionThrown(string message)
         {
             _managementGroupManagerMock.Setup(x =>
-                    x.GetManagementGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    x.GetManagementGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new ArgumentException(message));
 
             var actual = await _function.RunAsync(new DefaultHttpRequest(new DefaultHttpContext()), "LA-123",
