@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
@@ -8,20 +7,18 @@ using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
 using Dfe.Spi.GiasAdapter.Functions.Cache;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Timers;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
 {
-    public class WhenProcesingABatchOfEstablishments
+    public class WhenProcessingAStagingGroup
     {
         private Mock<ICacheManager> _cacheManagerMock;
         private Mock<IHttpSpiExecutionContextManager> _httpSpiExecutionContextManagerMock;
         private Mock<ILoggerWrapper> _loggerMock;
-        private ProcessBatchOfEstablishments _function;
+        private ProcessStagingGroup _function;
         private CancellationToken _cancellationToken;
 
         [SetUp]
@@ -33,7 +30,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
 
             _loggerMock = new Mock<ILoggerWrapper>();
 
-            _function = new ProcessBatchOfEstablishments(
+            _function = new ProcessStagingGroup(
                 _cacheManagerMock.Object,
                 _httpSpiExecutionContextManagerMock.Object,
                 _loggerMock.Object);
@@ -41,18 +38,20 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
             _cancellationToken = default(CancellationToken);
         }
 
-        [Test, AutoData, Ignore("Function to be deleted")]
-        public async Task ThenItShouldCallCacheManagerWithDeserializedUrns(long[] urns, DateTime pointInTime)
+        [Test, AutoData]
+        public async Task ThenItShouldCallCacheManagerWithDeserializedUidAndUrns(long uid, long[] urns, DateTime pointInTime)
         {
             var queueItem = new StagingBatchQueueItem<long>
             {
+                ParentIdentifier = uid,
                 Urns = urns,
                 PointInTime = pointInTime,
             };
             
             await _function.Run(JsonConvert.SerializeObject(queueItem), _cancellationToken);
 
-            _cacheManagerMock.Verify(m => m.ProcessBatchOfEstablishments(
+            _cacheManagerMock.Verify(m => m.ProcessGroupAsync(
+                uid,
                 It.Is<long[]>(actual => AreEqual(urns, actual)),
                 pointInTime,
                 _cancellationToken), Times.Once);
