@@ -39,18 +39,20 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldCallCacheManagerWithDeserializedUids(long[] uids, DateTime pointInTime)
+        public async Task ThenItShouldCallCacheManagerWithDeserializedUidAndUrns(long uid, long[] urns, DateTime pointInTime)
         {
             var queueItem = new StagingBatchQueueItem<long>
             {
-                Identifiers = uids,
+                ParentIdentifier = uid,
+                Urns = urns,
                 PointInTime = pointInTime,
             };
             
             await _function.Run(JsonConvert.SerializeObject(queueItem), _cancellationToken);
 
-            _cacheManagerMock.Verify(m => m.ProcessBatchOfGroups(
-                It.Is<long[]>(actual => AreEqual(uids, actual)),
+            _cacheManagerMock.Verify(m => m.ProcessGroupAsync(
+                uid,
+                It.Is<long[]>(actual => AreEqual(urns, actual)),
                 pointInTime,
                 _cancellationToken), Times.Once);
         }

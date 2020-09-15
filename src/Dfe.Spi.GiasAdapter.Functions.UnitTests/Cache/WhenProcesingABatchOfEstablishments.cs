@@ -41,12 +41,12 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
             _cancellationToken = default(CancellationToken);
         }
 
-        [Test, AutoData]
+        [Test, AutoData, Ignore("Function to be deleted")]
         public async Task ThenItShouldCallCacheManagerWithDeserializedUrns(long[] urns, DateTime pointInTime)
         {
             var queueItem = new StagingBatchQueueItem<long>
             {
-                Identifiers = urns,
+                Urns = urns,
                 PointInTime = pointInTime,
             };
             

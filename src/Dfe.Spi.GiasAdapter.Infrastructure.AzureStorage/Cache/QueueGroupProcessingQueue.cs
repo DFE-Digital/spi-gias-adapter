@@ -19,7 +19,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
             _queue = queueClient.GetQueueReference(CacheQueueNames.GroupProcessingQueue);
         }
         
-        public async Task EnqueueBatchOfStagingAsync(StagingBatchQueueItem<long> queueItem, CancellationToken cancellationToken)
+        public async Task EnqueueStagingAsync(StagingBatchQueueItem<long> queueItem, CancellationToken cancellationToken)
         {
             await _queue.CreateIfNotExistsAsync(cancellationToken);
                 

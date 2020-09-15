@@ -37,9 +37,9 @@ namespace Dfe.Spi.GiasAdapter.Functions.Cache
             _logger.Info($"{FunctionName} trigger with: {queueContent}");
 
             var queueItem = JsonConvert.DeserializeObject<StagingBatchQueueItem<int>>(queueContent);
-            _logger.Debug($"Deserialized to {queueItem.Identifiers.Length} laCodes on {queueItem.PointInTime}");
+            _logger.Debug($"Deserialized to {queueItem.Urns.Length} laCodes on {queueItem.PointInTime}");
 
-            await _cacheManager.ProcessBatchOfLocalAuthorities(queueItem.Identifiers, queueItem.PointInTime, cancellationToken);
+            await _cacheManager.ProcessLocalAuthorityAsync(queueItem.ParentIdentifier, queueItem.Urns, queueItem.PointInTime, cancellationToken);
         }
     }
 }

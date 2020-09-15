@@ -5,6 +5,6 @@ namespace Dfe.Spi.GiasAdapter.Domain.Cache
 {
     public interface ILocalAuthorityProcessingQueue
     {
-        Task EnqueueBatchOfStagingAsync(StagingBatchQueueItem<int> queueItem, CancellationToken cancellationToken);
+        Task EnqueueStagingAsync(StagingBatchQueueItem<int> queueItem, CancellationToken cancellationToken);
     }
 }
