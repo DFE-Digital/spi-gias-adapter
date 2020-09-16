@@ -49,7 +49,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _establishmentProcessingQueueMock = new Mock<IEstablishmentProcessingQueue>();
 
             _groupProcessingQueueMock = new Mock<IGroupProcessingQueue>();
-            
+
             _localAuthorityProcessingQueueMock = new Mock<ILocalAuthorityProcessingQueue>();
 
             _loggerMock = new Mock<ILoggerWrapper>();
@@ -86,41 +86,15 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             {
                 establishment.LA.Code = "123";
             }
+
             _giasApiClientMock.Setup(c => c.DownloadEstablishmentsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(establishments);
 
             await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
 
             _establishmentRepositoryMock.Verify(r => r.StoreInStagingAsync(
-                    It.Is<PointInTimeEstablishment[]>(storedEstablishments => AreEqual(establishments, DateTime.UtcNow.Date, storedEstablishments)), 
+                    It.Is<PointInTimeEstablishment[]>(storedEstablishments => AreEqual(establishments, DateTime.UtcNow.Date, storedEstablishments)),
                     _cancellationToken),
-                Times.Once);
-        }
-
-        [Test]
-        public async Task ThenItShouldQueueBatchesOfUrnsForProcessing()
-        {
-            var establishments = new Establishment[150];
-            for (var i = 0; i < establishments.Length; i++)
-            {
-                establishments[i] = new Establishment
-                {
-                    Urn = 1000001 + i,
-                };
-            }
-
-            _giasApiClientMock.Setup(c => c.DownloadEstablishmentsAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(establishments);
-
-            await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
-
-            var expectedBatch1 = establishments.Take(100).Select(e => e.Urn).ToArray();
-            var expectedBatch2 = establishments.Skip(100).Take(100).Select(e => e.Urn).ToArray();
-            _establishmentProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<StagingBatchQueueItem<long>>(queueItem => AreEqual(expectedBatch1, queueItem.Identifiers)), _cancellationToken),
-                Times.Once);
-            _establishmentProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<StagingBatchQueueItem<long>>(queueItem => AreEqual(expectedBatch2, queueItem.Identifiers)), _cancellationToken),
                 Times.Once);
         }
 
@@ -150,35 +124,6 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
         }
 
-        [Test]
-        public async Task ThenItShouldQueueBatchesOfLaCodesForProcessing()
-        {
-            var establishments = new Establishment[150];
-            for (var i = 0; i < establishments.Length; i++)
-            {
-                establishments[i] = new Establishment
-                {
-                    LA = new CodeNamePair
-                    {
-                        Code = (1000001 + i).ToString()
-                    }
-                };
-            }
-            _giasApiClientMock.Setup(c => c.DownloadEstablishmentsAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(establishments);
-
-            await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
-
-            var expectedBatch1 = establishments.Take(100).Select(e => int.Parse(e.LA.Code)).ToArray();
-            var expectedBatch2 = establishments.Skip(100).Take(100).Select(e => int.Parse(e.LA.Code)).ToArray();
-            _localAuthorityProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<StagingBatchQueueItem<int>>(queueItem => AreEqual(expectedBatch1, queueItem.Identifiers)), _cancellationToken),
-                Times.Once);
-            _localAuthorityProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<StagingBatchQueueItem<int>>(queueItem => AreEqual(expectedBatch2, queueItem.Identifiers)), _cancellationToken),
-                Times.Once);
-        }
-
 
         [Test]
         public async Task ThenItShouldGetGroupsFromGias()
@@ -198,35 +143,104 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
 
             _groupRepositoryMock.Verify(r => r.StoreInStagingAsync(
-                    It.Is<PointInTimeGroup[]>(storedGroups => AreEqual(groups, DateTime.UtcNow.Date, storedGroups)), 
+                    It.Is<PointInTimeGroup[]>(storedGroups => AreEqual(groups, DateTime.UtcNow.Date, storedGroups)),
                     _cancellationToken),
                 Times.Once);
         }
 
-        [Test]
-        public async Task ThenItShouldQueueBatchesOfUidsForProcessing()
+        [Test, AutoData]
+        public async Task ThenItShouldQueueGroupsWithChildEstablishments(
+            long group1Uid, long group1Urn1, long group1Urn2,
+            long group2Uid, long group2Urn1, long group2Urn2)
         {
-            var groups = new Group[150];
-            for (var i = 0; i < groups.Length; i++)
-            {
-                groups[i] = new Group
-                {
-                    Uid = 1000001 + i,
-                };
-            }
-
+            // Arrange
             _giasApiClientMock.Setup(c => c.DownloadGroupsAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(groups);
+                .ReturnsAsync(new[]
+                {
+                    new Group {Uid = group1Uid},
+                    new Group {Uid = group2Uid},
+                });
+            _giasApiClientMock.Setup(c => c.DownloadEstablishmentsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[]
+                {
+                    new Establishment {Urn = group1Urn1},
+                    new Establishment {Urn = group1Urn2},
+                    new Establishment {Urn = group2Urn1},
+                    new Establishment {Urn = group2Urn2},
+                });
+            _giasApiClientMock.Setup(c => c.DownloadGroupLinksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[]
+                {
+                    new GroupLink {GroupType = "Federation", Uid = group1Uid, Urn = group1Urn1},
+                    new GroupLink {GroupType = "Trust", Uid = group1Uid, Urn = group1Urn2},
+                    new GroupLink {GroupType = "Single-academy trust", Uid = group2Uid, Urn = group2Urn1},
+                    new GroupLink {GroupType = "Multi-academy trust", Uid = group2Uid, Urn = group2Urn2},
+                });
 
+            // Act
             await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
 
-            var expectedBatch1 = groups.Take(100).Select(e => e.Uid).ToArray();
-            var expectedBatch2 = groups.Skip(100).Take(100).Select(e => e.Uid).ToArray();
-            _groupProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<StagingBatchQueueItem<long>>(queueItem => AreEqual(expectedBatch1, queueItem.Identifiers)), _cancellationToken),
+            // Assert
+            _groupProcessingQueueMock.Verify(q => q.EnqueueStagingAsync(
+                    It.IsAny<StagingBatchQueueItem<long>>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Exactly(2));
+            _groupProcessingQueueMock.Verify(q => q.EnqueueStagingAsync(
+                    It.Is<StagingBatchQueueItem<long>>(item =>
+                        item.ParentIdentifier == group1Uid &&
+                        item.Urns.Length == 2 &&
+                        item.Urns.Any(urn => urn == group1Urn1) &&
+                        item.Urns.Any(urn => urn == group1Urn2)),
+                    It.IsAny<CancellationToken>()),
                 Times.Once);
-            _groupProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<StagingBatchQueueItem<long>>(queueItem => AreEqual(expectedBatch2, queueItem.Identifiers)), _cancellationToken),
+            _groupProcessingQueueMock.Verify(q => q.EnqueueStagingAsync(
+                    It.Is<StagingBatchQueueItem<long>>(item =>
+                        item.ParentIdentifier == group2Uid &&
+                        item.Urns.Length == 2 &&
+                        item.Urns.Any(urn => urn == group2Urn1) &&
+                        item.Urns.Any(urn => urn == group2Urn2)),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test, AutoData]
+        public async Task ThenItShouldQueueLocalAuthoritiesWithChildEstablishments(
+            int la1Code, long la1Urn1, long la1Urn2,
+            int la2Code, long la2Urn1, long la2Urn2)
+        {
+            // Arrange
+            _giasApiClientMock.Setup(c => c.DownloadEstablishmentsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[]
+                {
+                    new Establishment {Urn = la1Urn1, LA = new CodeNamePair { Code = la1Code.ToString()}},
+                    new Establishment {Urn = la1Urn2, LA = new CodeNamePair { Code = la1Code.ToString()}},
+                    new Establishment {Urn = la2Urn1, LA = new CodeNamePair { Code = la2Code.ToString()}},
+                    new Establishment {Urn = la2Urn2, LA = new CodeNamePair { Code = la2Code.ToString()}},
+                });
+
+            // Act
+            await _manager.DownloadAllGiasDataToCacheAsync(_cancellationToken);
+
+            // Assert
+            _localAuthorityProcessingQueueMock.Verify(q => q.EnqueueStagingAsync(
+                    It.IsAny<StagingBatchQueueItem<int>>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Exactly(2));
+            _localAuthorityProcessingQueueMock.Verify(q => q.EnqueueStagingAsync(
+                    It.Is<StagingBatchQueueItem<int>>(item =>
+                        item.ParentIdentifier == la1Code &&
+                        item.Urns.Length == 2 &&
+                        item.Urns.Any(urn => urn == la1Urn1) &&
+                        item.Urns.Any(urn => urn == la1Urn2)),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+            _localAuthorityProcessingQueueMock.Verify(q => q.EnqueueStagingAsync(
+                    It.Is<StagingBatchQueueItem<int>>(item =>
+                        item.ParentIdentifier == la2Code &&
+                        item.Urns.Length == 2 &&
+                        item.Urns.Any(urn => urn == la2Urn1) &&
+                        item.Urns.Any(urn => urn == la2Urn2)),
+                    It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -262,6 +276,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             // All good
             return true;
         }
+
         private bool AreEqual(int[] expected, int[] actual)
         {
             // Null check
@@ -293,6 +308,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             // All good
             return true;
         }
+
         private bool AreEqual(Establishment[] expectedEstablishments, DateTime expectedPointInTime, PointInTimeEstablishment[] actual)
         {
             if (expectedEstablishments.Length != actual.Length)
@@ -316,6 +332,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
 
             return true;
         }
+
         private bool AreEqual(Group[] expectedGroups, DateTime expectedPointInTime, PointInTimeGroup[] actual)
         {
             if (expectedGroups.Length != actual.Length)

@@ -13,12 +13,12 @@ using NUnit.Framework;
 
 namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
 {
-    public class WhenProcesingABatchOfGroups
+    public class WhenProcessingAStagingGroup
     {
         private Mock<ICacheManager> _cacheManagerMock;
         private Mock<IHttpSpiExecutionContextManager> _httpSpiExecutionContextManagerMock;
         private Mock<ILoggerWrapper> _loggerMock;
-        private ProcessBatchOfGroups _function;
+        private ProcessStagingGroup _function;
         private CancellationToken _cancellationToken;
 
         [SetUp]
@@ -30,7 +30,7 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
 
             _loggerMock = new Mock<ILoggerWrapper>();
 
-            _function = new ProcessBatchOfGroups(
+            _function = new ProcessStagingGroup(
                 _cacheManagerMock.Object,
                 _httpSpiExecutionContextManagerMock.Object,
                 _loggerMock.Object);
@@ -39,18 +39,20 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests.Cache
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldCallCacheManagerWithDeserializedUids(long[] uids, DateTime pointInTime)
+        public async Task ThenItShouldCallCacheManagerWithDeserializedUidAndUrns(long uid, long[] urns, DateTime pointInTime)
         {
             var queueItem = new StagingBatchQueueItem<long>
             {
-                Identifiers = uids,
+                ParentIdentifier = uid,
+                Urns = urns,
                 PointInTime = pointInTime,
             };
             
             await _function.Run(JsonConvert.SerializeObject(queueItem), _cancellationToken);
 
-            _cacheManagerMock.Verify(m => m.ProcessBatchOfGroups(
-                It.Is<long[]>(actual => AreEqual(uids, actual)),
+            _cacheManagerMock.Verify(m => m.ProcessGroupAsync(
+                uid,
+                It.Is<long[]>(actual => AreEqual(urns, actual)),
                 pointInTime,
                 _cancellationToken), Times.Once);
         }

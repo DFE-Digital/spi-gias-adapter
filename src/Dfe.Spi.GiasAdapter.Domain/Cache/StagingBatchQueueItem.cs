@@ -2,9 +2,10 @@ using System;
 
 namespace Dfe.Spi.GiasAdapter.Domain.Cache
 {
-    public class StagingBatchQueueItem<TIdentifier>
+    public class StagingBatchQueueItem<TParentIdentifier>
     {
-        public TIdentifier[] Identifiers { get; set; }
+        public TParentIdentifier ParentIdentifier { get; set; }
+        public long[] Urns { get; set; }
         public DateTime PointInTime { get; set; }
     }
 }

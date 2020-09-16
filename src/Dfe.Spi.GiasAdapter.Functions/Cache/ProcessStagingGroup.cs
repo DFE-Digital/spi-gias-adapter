@@ -10,15 +10,15 @@ using Newtonsoft.Json;
 
 namespace Dfe.Spi.GiasAdapter.Functions.Cache
 {
-    public class ProcessBatchOfGroups
+    public class ProcessStagingGroup
     {
-        private const string FunctionName = nameof(ProcessBatchOfGroups);
+        private const string FunctionName = nameof(ProcessStagingGroup);
 
         private readonly ICacheManager _cacheManager;
         private readonly IHttpSpiExecutionContextManager _httpSpiExecutionContextManager;
         private readonly ILoggerWrapper _logger;
 
-        public ProcessBatchOfGroups(ICacheManager cacheManager, IHttpSpiExecutionContextManager httpSpiExecutionContextManager, ILoggerWrapper logger)
+        public ProcessStagingGroup(ICacheManager cacheManager, IHttpSpiExecutionContextManager httpSpiExecutionContextManager, ILoggerWrapper logger)
         {
             _cacheManager = cacheManager;
             _httpSpiExecutionContextManager = httpSpiExecutionContextManager;
@@ -37,9 +37,9 @@ namespace Dfe.Spi.GiasAdapter.Functions.Cache
             _logger.Info($"{FunctionName} trigger with: {queueContent}");
 
             var queueItem = JsonConvert.DeserializeObject<StagingBatchQueueItem<long>>(queueContent);
-            _logger.Debug($"Deserialized to {queueItem.Identifiers.Length} uids on {queueItem.PointInTime}");
+            _logger.Debug($"Deserialized to {queueItem.Urns.Length} urns for group {queueItem.ParentIdentifier} on {queueItem.PointInTime}");
 
-            await _cacheManager.ProcessBatchOfGroups(queueItem.Identifiers, queueItem.PointInTime, cancellationToken);
+            await _cacheManager.ProcessGroupAsync(queueItem.ParentIdentifier, queueItem.Urns, queueItem.PointInTime, cancellationToken);
         }
     }
 }

@@ -14,9 +14,8 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
     public interface ICacheManager
     {
         Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken);
-        Task ProcessBatchOfEstablishments(long[] urns, DateTime pointInTime, CancellationToken cancellationToken);
-        Task ProcessBatchOfGroups(long[] uids, DateTime pointInTime, CancellationToken cancellationToken);
-        Task ProcessBatchOfLocalAuthorities(int[] laCodes, DateTime pointInTime, CancellationToken cancellationToken);
+        Task ProcessGroupAsync(long uid, long[] urns, DateTime pointInTime, CancellationToken cancellationToken);
+        Task ProcessLocalAuthorityAsync(int laCode, long[] urns, DateTime pointInTime, CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
@@ -63,96 +62,76 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
 
             var groupLinks = await _giasApiClient.DownloadGroupLinksAsync(cancellationToken);
 
-            await DownloadGroupsToCacheAsync(pointInTime, cancellationToken);
-            await DownloadEstablishmentsToCacheAsync(pointInTime, groupLinks, cancellationToken);
+            var groups = await DownloadGroupsToCacheAsync(pointInTime, cancellationToken);
+            var establishments = await DownloadEstablishmentsToCacheAsync(pointInTime, groupLinks, cancellationToken);
+            var localAuthorities = await ProcessEstablishmentLocalAuthoritiesToCacheAsync(pointInTime, establishments, cancellationToken);
+
+            await EnqueueGroupsAsync(groups, establishments, cancellationToken);
+            await EnqueueLocalAuthoritiesAsync(localAuthorities, establishments, cancellationToken);
         }
 
-        public async Task ProcessBatchOfEstablishments(long[] urns, DateTime pointInTime, CancellationToken cancellationToken)
+        public async Task ProcessGroupAsync(long uid, long[] urns, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            foreach (var urn in urns)
+            // Check if group changed
+            var previous = await _groupRepository.GetGroupAsync(uid, pointInTime, cancellationToken);
+            var staging = await _groupRepository.GetGroupFromStagingAsync(uid, pointInTime, cancellationToken);
+            var groupChanged = false;
+
+            if (previous == null)
             {
-                var previous = await _establishmentRepository.GetEstablishmentAsync(urn, pointInTime, cancellationToken);
-                var staging = await _establishmentRepository.GetEstablishmentFromStagingAsync(urn, pointInTime, cancellationToken);
+                _logger.Info($"Group {uid} has not been seen before {pointInTime}. Processing as created");
 
-                if (previous == null)
-                {
-                    _logger.Info($"Establishment {urn} has not been seen before {pointInTime}. Processing as created");
-
-                    await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderCreatedAsync,
-                        cancellationToken);
-                }
-                else if (!AreSame(previous, staging))
-                {
-                    _logger.Info($"Establishment {urn} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
-
-                    await ProcessEstablishment(staging, _eventPublisher.PublishLearningProviderUpdatedAsync,
-                        cancellationToken);
-                }
-                else
-                {
-                    _logger.Info($"Establishment {urn} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
-                }
+                await StoreGroupAndRaiseEventAsync(staging, false, cancellationToken);
+                groupChanged = true;
             }
+            else if (!AreSame(previous, staging))
+            {
+                _logger.Info($"Group {uid} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
+
+                await StoreGroupAndRaiseEventAsync(staging, true, cancellationToken);
+                groupChanged = true;
+            }
+            else
+            {
+                _logger.Info($"Group {uid} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
+            }
+
+            // Check establishments for change
+            await ProcessEstablishmentsAsync(urns, pointInTime, groupChanged, cancellationToken);
         }
 
-        public async Task ProcessBatchOfGroups(long[] uids, DateTime pointInTime, CancellationToken cancellationToken)
+        public async Task ProcessLocalAuthorityAsync(int laCode, long[] urns, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            foreach (var uid in uids)
+            // Check if local authority changed
+            var previous = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, pointInTime, cancellationToken);
+            var staging = await _localAuthorityRepository.GetLocalAuthorityFromStagingAsync(laCode, pointInTime, cancellationToken);
+            var localAuthorityChanged = false;
+
+            if (previous == null)
             {
-                var previous = await _groupRepository.GetGroupAsync(uid, pointInTime, cancellationToken);
-                var staging = await _groupRepository.GetGroupFromStagingAsync(uid, pointInTime, cancellationToken);
+                _logger.Info($"Local authority {laCode} has not been seen before {pointInTime}. Processing as created");
 
-                if (previous == null)
-                {
-                    _logger.Info($"Group {uid} has not been seen before {pointInTime}. Processing as created");
-
-                    await ProcessGroup(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
-                        cancellationToken);
-                }
-                else if (!AreSame(previous, staging))
-                {
-                    _logger.Info($"Group {uid} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
-
-                    await ProcessGroup(staging, _eventPublisher.PublishManagementGroupUpdatedAsync,
-                        cancellationToken);
-                }
-                else
-                {
-                    _logger.Info($"Group {uid} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
-                }
+                await StoreLocalAuthorityAndRaiseEventAsync(staging, false, cancellationToken);
+                localAuthorityChanged = true;
             }
-        }
-
-        public async Task ProcessBatchOfLocalAuthorities(int[] laCodes, DateTime pointInTime, CancellationToken cancellationToken)
-        {
-            foreach (var laCode in laCodes)
+            else if (!AreSame(previous, staging))
             {
-                var previous = await _localAuthorityRepository.GetLocalAuthorityAsync(laCode, pointInTime, cancellationToken);
-                var staging = await _localAuthorityRepository.GetLocalAuthorityFromStagingAsync(laCode, pointInTime, cancellationToken);
+                _logger.Info($"Local authority {laCode} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
 
-                if (previous == null)
-                {
-                    _logger.Info($"Local authority {laCode} has not been seen before {pointInTime}. Processing as created");
-
-                    await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupCreatedAsync,
-                        cancellationToken);
-                }
-                else if (!AreSame(previous, staging))
-                {
-                    _logger.Info($"Local authority {laCode} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
-
-                    await ProcessLocalAuthority(staging, _eventPublisher.PublishManagementGroupUpdatedAsync, 
-                        cancellationToken);
-                }
-                else
-                {
-                    _logger.Info($"Local authority {laCode} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
-                }
+                await StoreLocalAuthorityAndRaiseEventAsync(staging, true, cancellationToken);
+                localAuthorityChanged = true;
             }
+            else
+            {
+                _logger.Info($"Local authority {laCode} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
+            }
+
+            // Check establishments for change
+            await ProcessEstablishmentsAsync(urns, pointInTime, localAuthorityChanged, cancellationToken);
         }
 
 
-        private async Task DownloadGroupsToCacheAsync(DateTime pointInTime, CancellationToken cancellationToken)
+        private async Task<PointInTimeGroup[]> DownloadGroupsToCacheAsync(DateTime pointInTime, CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring groups file from GIAS...");
 
@@ -171,33 +150,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             await _groupRepository.StoreInStagingAsync(pointInTimeGroups, cancellationToken);
             _logger.Debug($"Stored {pointInTimeGroups.Length} groups in staging");
 
-            // Queue diff check
-            var position = 0;
-            const int batchSize = 100;
-            while (position < groups.Length)
-            {
-                var batch = groups
-                    .Skip(position)
-                    .Take(batchSize)
-                    .Select(e => e.Uid)
-                    .ToArray();
-                var queueItem = new StagingBatchQueueItem<long>
-                {
-                    Identifiers = batch,
-                    PointInTime = pointInTime,
-                };
-
-                _logger.Debug(
-                    $"Queuing {position} to {position + batch.Length} of groups for processing");
-                await _groupProcessingQueue.EnqueueBatchOfStagingAsync(queueItem, cancellationToken);
-
-                position += batchSize;
-            }
-
             _logger.Info("Finished downloading groups to cache");
+            return pointInTimeGroups;
         }
 
-        private async Task DownloadEstablishmentsToCacheAsync(DateTime pointInTime, GroupLink[] groupLinks,
+        private async Task<PointInTimeEstablishment[]> DownloadEstablishmentsToCacheAsync(DateTime pointInTime, GroupLink[] groupLinks,
             CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring establishments file from GIAS...");
@@ -240,40 +197,15 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 }
             }
 
-            // Process local authorities
-            await ProcessEstablishmentLocalAuthoritiesToCacheAsync(pointInTime, pointInTimeEstablishments, cancellationToken);
-
             // Store
             await _establishmentRepository.StoreInStagingAsync(pointInTimeEstablishments, cancellationToken);
             _logger.Debug($"Stored {pointInTimeEstablishments.Length} establishments in staging");
 
-            // Queue diff check
-            var position = 0;
-            const int batchSize = 100;
-            while (position < establishments.Length)
-            {
-                var batch = establishments
-                    .Skip(position)
-                    .Take(batchSize)
-                    .Select(e => e.Urn)
-                    .ToArray();
-                var queueItem = new StagingBatchQueueItem<long>
-                {
-                    Identifiers = batch,
-                    PointInTime = pointInTime,
-                };
-
-                _logger.Debug(
-                    $"Queuing {position} to {position + batch.Length} of establishments for processing");
-                await _establishmentProcessingQueue.EnqueueBatchOfStagingAsync(queueItem, cancellationToken);
-
-                position += batchSize;
-            }
-
             _logger.Info("Finished downloading Establishments to cache");
+            return pointInTimeEstablishments;
         }
 
-        private async Task ProcessEstablishmentLocalAuthoritiesToCacheAsync(DateTime pointInTime, Establishment[] establishments,
+        private async Task<PointInTimeLocalAuthority[]> ProcessEstablishmentLocalAuthoritiesToCacheAsync(DateTime pointInTime, Establishment[] establishments,
             CancellationToken cancellationToken)
         {
             // Get unique list of local authorities from establishments
@@ -296,30 +228,54 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             await _localAuthorityRepository.StoreInStagingAsync(pointInTimeLocalAuthorities, cancellationToken);
             _logger.Debug($"Stored {pointInTimeLocalAuthorities.Length} local authorities in staging");
 
-            // Queue diff check
-            var position = 0;
-            const int batchSize = 100;
-            while (position < localAuthorities.Length)
-            {
-                var batch = localAuthorities
-                    .Skip(position)
-                    .Take(batchSize)
-                    .Select(e => e.Code)
-                    .ToArray();
-                var queueItem = new StagingBatchQueueItem<int>
-                {
-                    Identifiers = batch,
-                    PointInTime = pointInTime,
-                };
-
-                _logger.Debug(
-                    $"Queuing {position} to {position + batch.Length} of local authorities for processing");
-                await _localAuthorityProcessingQueue.EnqueueBatchOfStagingAsync(queueItem, cancellationToken);
-
-                position += batchSize;
-            }
-
             _logger.Info("Finished processing local authorities to cache");
+            return pointInTimeLocalAuthorities;
+        }
+
+        private async Task EnqueueGroupsAsync(PointInTimeGroup[] groups, PointInTimeEstablishment[] establishments, CancellationToken cancellationToken)
+        {
+            foreach (var group in groups)
+            {
+                var urns = establishments
+                    .Where(e => e.Trusts?.Code == group.Uid.ToString() ||
+                                e.Federations?.Code == group.Uid.ToString())
+                    .Select(e => e.Urn)
+                    .ToArray();
+
+                await _groupProcessingQueue.EnqueueStagingAsync(
+                    new StagingBatchQueueItem<long>
+                    {
+                        ParentIdentifier = group.Uid,
+                        Urns = urns,
+                        PointInTime = group.PointInTime,
+                    },
+                    cancellationToken);
+                _logger.Debug($"Queued group {group.Uid} at {group.PointInTime} with {urns.Length} child urns");
+            }
+        }
+
+        private async Task EnqueueLocalAuthoritiesAsync(PointInTimeLocalAuthority[] localAuthorities, PointInTimeEstablishment[] establishments,
+            CancellationToken cancellationToken)
+        {
+            foreach (var localAuthority in localAuthorities)
+            {
+                var urns = establishments
+                    .Where(e => string.IsNullOrEmpty(e.Trusts?.Code) &&
+                                string.IsNullOrEmpty(e.Federations?.Code) &&
+                                e.LA.Code == localAuthority.Code.ToString())
+                    .Select(e => e.Urn)
+                    .ToArray();
+
+                await _localAuthorityProcessingQueue.EnqueueStagingAsync(
+                    new StagingBatchQueueItem<int>
+                    {
+                        ParentIdentifier = localAuthority.Code,
+                        Urns = urns,
+                        PointInTime = localAuthority.PointInTime,
+                    },
+                    cancellationToken);
+                _logger.Debug($"Queued local authority {localAuthority.Code} at {localAuthority.PointInTime} with {urns.Length} child urns");
+            }
         }
 
         private bool AreSame(Establishment current, Establishment staging)
@@ -406,13 +362,49 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             return current.Name == staging.Name;
         }
 
-        private async Task ProcessEstablishment(
+        private async Task ProcessEstablishmentsAsync(
+            long[] urns,
+            DateTime pointInTime,
+            bool managementGroupHasChanged,
+            CancellationToken cancellationToken)
+        {
+            foreach (var urn in urns)
+            {
+                var previous = await _establishmentRepository.GetEstablishmentAsync(urn, pointInTime, cancellationToken);
+                var staging = await _establishmentRepository.GetEstablishmentFromStagingAsync(urn, pointInTime, cancellationToken);
+
+                if (previous == null)
+                {
+                    _logger.Info($"Establishment {urn} has not been seen before {pointInTime}. Processing as created");
+
+                    await StoreEstablishmentAndRaiseEventAsync(staging, false, cancellationToken);
+                }
+                else if (managementGroupHasChanged)
+                {
+                    _logger.Info($"Management group of establishment {urn} on {pointInTime} has changed. Processing as updated");
+
+                    await StoreEstablishmentAndRaiseEventAsync(staging, true, cancellationToken);
+                }
+                else if (!AreSame(previous, staging))
+                {
+                    _logger.Info($"Establishment {urn} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
+
+                    await StoreEstablishmentAndRaiseEventAsync(staging, true, cancellationToken);
+                }
+                else
+                {
+                    _logger.Info($"Establishment {urn} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
+                }
+            }
+        }
+
+        private async Task StoreEstablishmentAndRaiseEventAsync(
             PointInTimeEstablishment staging,
-            Func<LearningProvider, DateTime, CancellationToken, Task> publishEvent,
+            bool isUpdate,
             CancellationToken cancellationToken)
         {
             var current = await _establishmentRepository.GetEstablishmentAsync(staging.Urn, cancellationToken);
-            
+
             staging.IsCurrent = current == null || staging.PointInTime > current.PointInTime;
             if (current != null && staging.IsCurrent)
             {
@@ -422,23 +414,32 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             var toStore = current == null || current.IsCurrent
                 ? new[] {staging}
                 : new[] {current, staging};
-            
+
             await _establishmentRepository.StoreAsync(toStore, cancellationToken);
             _logger.Debug($"Stored establishment {staging.Urn} in repository");
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(staging, cancellationToken);
             learningProvider._Lineage = null;
-            await publishEvent(learningProvider, staging.PointInTime, cancellationToken);
+
+            if (isUpdate)
+            {
+                await _eventPublisher.PublishLearningProviderUpdatedAsync(learningProvider, staging.PointInTime, cancellationToken);
+            }
+            else
+            {
+                await _eventPublisher.PublishLearningProviderCreatedAsync(learningProvider, staging.PointInTime, cancellationToken);
+            }
+
             _logger.Debug($"Sent event for establishment {staging.Urn}");
         }
 
-        private async Task ProcessGroup(
+        private async Task StoreGroupAndRaiseEventAsync(
             PointInTimeGroup staging,
-            Func<ManagementGroup, DateTime, CancellationToken, Task> publishEvent,
+            bool isUpdate,
             CancellationToken cancellationToken)
         {
             var current = await _groupRepository.GetGroupAsync(staging.Uid, cancellationToken);
-            
+
             staging.IsCurrent = current == null || staging.PointInTime > current.PointInTime;
             if (current != null && staging.IsCurrent)
             {
@@ -448,23 +449,32 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             var toStore = current == null || current.IsCurrent
                 ? new[] {staging}
                 : new[] {current, staging};
-            
+
             await _groupRepository.StoreAsync(toStore, cancellationToken);
             _logger.Debug($"Stored group {staging.Uid} in repository");
 
             var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);
             managementGroup._Lineage = null;
-            await publishEvent(managementGroup, staging.PointInTime, cancellationToken);
+
+            if (isUpdate)
+            {
+                await _eventPublisher.PublishManagementGroupUpdatedAsync(managementGroup, staging.PointInTime, cancellationToken);
+            }
+            else
+            {
+                await _eventPublisher.PublishManagementGroupCreatedAsync(managementGroup, staging.PointInTime, cancellationToken);
+            }
+
             _logger.Debug($"Sent event for group {staging.Uid}");
         }
 
-        private async Task ProcessLocalAuthority(
+        private async Task StoreLocalAuthorityAndRaiseEventAsync(
             PointInTimeLocalAuthority staging,
-            Func<ManagementGroup, DateTime, CancellationToken, Task> publishEvent,
+            bool isUpdate,
             CancellationToken cancellationToken)
         {
             var current = await _localAuthorityRepository.GetLocalAuthorityAsync(staging.Code, cancellationToken);
-            
+
             staging.IsCurrent = current == null || staging.PointInTime > current.PointInTime;
             if (current != null && staging.IsCurrent)
             {
@@ -474,13 +484,22 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             var toStore = current == null || current.IsCurrent
                 ? new[] {staging}
                 : new[] {current, staging};
-            
+
             await _localAuthorityRepository.StoreAsync(toStore, cancellationToken);
             _logger.Debug($"Stored local authority {staging.Code} in repository");
 
             var managementGroup = await _mapper.MapAsync<ManagementGroup>(staging, cancellationToken);
             managementGroup._Lineage = null;
-            await publishEvent(managementGroup, staging.PointInTime, cancellationToken);
+
+            if (isUpdate)
+            {
+                await _eventPublisher.PublishManagementGroupUpdatedAsync(managementGroup, staging.PointInTime, cancellationToken);
+            }
+            else
+            {
+                await _eventPublisher.PublishManagementGroupCreatedAsync(managementGroup, staging.PointInTime, cancellationToken);
+            }
+
             _logger.Debug($"Sent event for local authority {staging.Code}");
         }
     }
