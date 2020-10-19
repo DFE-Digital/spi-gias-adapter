@@ -49,8 +49,11 @@ namespace Dfe.Spi.GiasAdapter.Functions.UnitTests
                     new KeyValuePair<string, string>("Cache:EstablishmentTableName", "unit-tests-est"),
                     new KeyValuePair<string, string>("Cache:GroupTableName", "unit-tests-grp"),
                     new KeyValuePair<string, string>("Cache:LocalAuthorityTableName", "unit-tests-la"),
+                    new KeyValuePair<string, string>("Cache:StateTableName", "unit-tests-state"),
                     new KeyValuePair<string, string>("Cache:ProcessingQueueConnectionString", "UseDevelopmentStorage=true"),
                     new KeyValuePair<string, string>("Cache:DownloadSchedule", "0 0 5 * * *"),
+                    new KeyValuePair<string, string>("Cache:TidyCacheSchedule", "0 0 5 * * *"),
+                    new KeyValuePair<string, string>("Cache:NumberOfDaysToRetainStagingData", "1"),
                     new KeyValuePair<string, string>("Middleware:BaseUrl", "https://middleware.unit.tests"),
                     new KeyValuePair<string, string>("Translator:BaseUrl", "https://translator.unit.tests"),
                 }).Build();

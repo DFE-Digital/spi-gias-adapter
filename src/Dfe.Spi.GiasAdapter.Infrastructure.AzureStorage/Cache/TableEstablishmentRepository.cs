@@ -68,8 +68,14 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         {
             return await RetrieveAsync(GetStagingPartitionKey(pointInTime), urn.ToString(), cancellationToken);
         }
-        
-        
+
+        public async Task<int> ClearStagingDataForDateAsync(DateTime date, CancellationToken cancellationToken)
+        {
+            var partitionKey = GetStagingPartitionKey(date);
+
+            return await DeleteAllRowsInPartitionAsync(partitionKey, cancellationToken);
+        }
+
 
         protected override EstablishmentEntity ModelToEntity(PointInTimeEstablishment model)
         {

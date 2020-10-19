@@ -297,6 +297,11 @@ namespace ConvertEstablishmentFileToLearningProviderFile
         {
             throw new NotImplementedException();
         }
+
+        public async Task<int> ClearStagingDataForDateAsync(DateTime date, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     class InProcLocalAuthorityRepository : ILocalAuthorityRepository
@@ -340,6 +345,11 @@ namespace ConvertEstablishmentFileToLearningProviderFile
         }
 
         public Task<PointInTimeLocalAuthority> GetLocalAuthorityFromStagingAsync(int laCode, DateTime pointInTime, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<int> ClearStagingDataForDateAsync(DateTime date, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

@@ -6,6 +6,7 @@ using AutoFixture.NUnit3;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Application.Cache;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
+using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.Events;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
@@ -17,6 +18,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
     public class WhenDownloadingAllGiasDataToCache
     {
         private Mock<IGiasApiClient> _giasApiClientMock;
+        private Mock<IStateRepository> _stateRepositoryMock;
         private Mock<IEstablishmentRepository> _establishmentRepositoryMock;
         private Mock<IGroupRepository> _groupRepositoryMock;
         private Mock<ILocalAuthorityRepository> _localAuthorityRepositoryMock;
@@ -25,6 +27,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         private Mock<IEstablishmentProcessingQueue> _establishmentProcessingQueueMock;
         private Mock<IGroupProcessingQueue> _groupProcessingQueueMock;
         private Mock<ILocalAuthorityProcessingQueue> _localAuthorityProcessingQueueMock;
+        private CacheConfiguration _configuration;
         private Mock<ILoggerWrapper> _loggerMock;
         private CacheManager _manager;
         private CancellationToken _cancellationToken;
@@ -36,6 +39,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _giasApiClientMock.Setup(c => c.DownloadEstablishmentsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Establishment[0]);
 
+            _stateRepositoryMock = new Mock<IStateRepository>();
+            
             _establishmentRepositoryMock = new Mock<IEstablishmentRepository>();
 
             _groupRepositoryMock = new Mock<IGroupRepository>();
@@ -52,10 +57,13 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
 
             _localAuthorityProcessingQueueMock = new Mock<ILocalAuthorityProcessingQueue>();
 
+            _configuration = new CacheConfiguration();
+
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _manager = new CacheManager(
                 _giasApiClientMock.Object,
+                _stateRepositoryMock.Object,
                 _establishmentRepositoryMock.Object,
                 _groupRepositoryMock.Object,
                 _localAuthorityRepositoryMock.Object,
@@ -64,6 +72,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 _establishmentProcessingQueueMock.Object,
                 _groupProcessingQueueMock.Object,
                 _localAuthorityProcessingQueueMock.Object,
+                _configuration,
                 _loggerMock.Object);
 
             _cancellationToken = new CancellationToken();
