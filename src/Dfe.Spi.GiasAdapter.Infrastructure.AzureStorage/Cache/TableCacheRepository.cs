@@ -30,28 +30,55 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
         protected abstract TEntity ModelToEntity(TModel model);
         protected abstract TEntity ModelToEntityForStaging(TModel model);
         protected abstract TModel EntityToModel(TEntity entity);
+
         protected virtual TEntity[] ProcessEntitiesBeforeStoring(TEntity[] entities)
         {
             return entities;
         }
 
+
+        protected async Task<int> DeleteAllRowsInPartitionAsync(string partitionKey, CancellationToken cancellationToken)
+        {
+            var query = new TableQuery<TableEntity>()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey))
+                .Select(new[] {"PartitionKey", "RowKey"});
+            var rows = await QueryTableAsync(query, cancellationToken);
+            
+            var index = 0;
+            while (index < rows.Length)
+            {
+                var batchOfRows = rows.Skip(index).Take(100).ToArray();
+                var batchOperation = new TableBatchOperation();
+            
+                foreach (var row in batchOfRows)
+                {
+                    batchOperation.Delete(row);
+                }
+            
+                await Table.ExecuteBatchAsync(batchOperation, cancellationToken);
+                index += batchOfRows.Length;
+            }
+            
+            return rows.Length;
+        }
+
         protected async Task InsertOrUpdateAsync(TModel model, CancellationToken cancellationToken)
         {
             await Table.CreateIfNotExistsAsync(cancellationToken);
-            
+
             var operation = TableOperation.InsertOrReplace(ModelToEntity(model));
             await Table.ExecuteAsync(operation, cancellationToken);
         }
-        
+
         protected async Task InsertOrUpdateAsync(TModel[] models, CancellationToken cancellationToken)
         {
             const int batchSize = 100;
-            
+
             await Table.CreateIfNotExistsAsync(cancellationToken);
 
             var entities = models.Select(ModelToEntity).ToArray();
             var processedEntities = ProcessEntitiesBeforeStoring(entities);
-            
+
             var partitionedEntities = processedEntities
                 .GroupBy(entity => entity.PartitionKey)
                 .ToDictionary(g => g.Key, g => g.ToArray());
@@ -76,13 +103,13 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 }
             }
         }
-        
+
         protected async Task InsertOrUpdateStagingAsync(TModel[] models, CancellationToken cancellationToken)
         {
             const int batchSize = 100;
-            
+
             await Table.CreateIfNotExistsAsync(cancellationToken);
-            
+
             var partitionedEntities = models
                 .Select(ModelToEntityForStaging)
                 .GroupBy(entity => entity.PartitionKey)
@@ -111,7 +138,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         protected async Task<TModel> RetrieveAsync(string partitionKey, string rowKey, CancellationToken cancellationToken)
         {
-            var operation = TableOperation.Retrieve<TEntity>(partitionKey,rowKey);
+            var operation = TableOperation.Retrieve<TEntity>(partitionKey, rowKey);
             var operationResult = await Table.ExecuteAsync(operation, cancellationToken);
             var entity = (TEntity) operationResult.Result;
 
@@ -120,19 +147,29 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         protected async Task<TModel[]> QueryAsync(TableQuery<TEntity> query, CancellationToken cancellationToken)
         {
-            TableContinuationToken continuationToken = default;
-            var results = new List<TEntity>();
-            
-            do
-            {
-                var segment = await Table.ExecuteQuerySegmentedAsync(query, continuationToken, cancellationToken);
-                continuationToken = segment.ContinuationToken;
-                results.AddRange(segment.Results);
-            } while (continuationToken != null);
+            var results = await QueryTableAsync(query, cancellationToken);
 
             return results
                 .Select(EntityToModel)
                 .ToArray();
+        }
+
+        private async Task<T[]> QueryTableAsync<T>(TableQuery<T> query, CancellationToken cancellationToken) where T : TableEntity, new()
+        {
+            var nextQuery = query;
+            var continuationToken = default(TableContinuationToken);
+            var results = new List<T>();
+
+            do
+            {
+                var result = await Table.ExecuteQuerySegmentedAsync(nextQuery, continuationToken, cancellationToken);
+
+                results.AddRange(result.Results);
+
+                continuationToken = result.ContinuationToken;
+            } while (continuationToken != null && !cancellationToken.IsCancellationRequested);
+
+            return results.ToArray();
         }
     }
 }

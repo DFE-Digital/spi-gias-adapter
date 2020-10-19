@@ -239,8 +239,20 @@
               "value": "localauthorities"
             },
             {
+              "name": "SPI_Cache__StateTableName",
+              "value": "status"
+            },
+            {
               "name": "SPI_Cache__ProcessingQueueConnectionString",
               "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "SPI_Cache__TidyCacheSchedule",
+              "value": "0 0 22 * * *"
+            },
+            {
+              "name": "SPI_Cache__NumberOfDaysToRetainStagingData",
+              "value": "14"
             },
             {
               "name": "SPI_Middleware__BaseUrl",

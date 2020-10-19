@@ -122,6 +122,7 @@ namespace Dfe.Spi.GiasAdapter.Functions
 
         private void AddRepositories(IServiceCollection services)
         {
+            services.AddScoped<IStateRepository, TableStateRepository>();
             services.AddScoped<IEstablishmentRepository, TableEstablishmentRepository>();
             services.AddScoped<IGroupRepository, TableGroupRepository>();
             services.AddScoped<ILocalAuthorityRepository, TableLocalAuthorityRepository>();

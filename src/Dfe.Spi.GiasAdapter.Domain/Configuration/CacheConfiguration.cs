@@ -6,7 +6,10 @@ namespace Dfe.Spi.GiasAdapter.Domain.Configuration
         public string EstablishmentTableName { get; set; }
         public string GroupTableName { get; set; }
         public string LocalAuthorityTableName { get; set; }
+        public string StateTableName { get; set; }
         
         public string ProcessingQueueConnectionString { get; set; }
+        
+        public int NumberOfDaysToRetainStagingData { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.GiasAdapter.Domain.Cache;
+using Dfe.Spi.GiasAdapter.Domain.Configuration;
 using Dfe.Spi.GiasAdapter.Domain.Events;
 using Dfe.Spi.GiasAdapter.Domain.GiasApi;
 using Dfe.Spi.GiasAdapter.Domain.Mapping;
@@ -16,11 +17,14 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         Task DownloadAllGiasDataToCacheAsync(CancellationToken cancellationToken);
         Task ProcessGroupAsync(long uid, long[] urns, DateTime pointInTime, CancellationToken cancellationToken);
         Task ProcessLocalAuthorityAsync(int laCode, long[] urns, DateTime pointInTime, CancellationToken cancellationToken);
+
+        Task TidyCacheAsync(CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
     {
         private readonly IGiasApiClient _giasApiClient;
+        private readonly IStateRepository _stateRepository;
         private readonly IEstablishmentRepository _establishmentRepository;
         private readonly IGroupRepository _groupRepository;
         private readonly ILocalAuthorityRepository _localAuthorityRepository;
@@ -29,10 +33,12 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
         private readonly IEstablishmentProcessingQueue _establishmentProcessingQueue;
         private readonly IGroupProcessingQueue _groupProcessingQueue;
         private readonly ILocalAuthorityProcessingQueue _localAuthorityProcessingQueue;
+        private readonly CacheConfiguration _configuration;
         private readonly ILoggerWrapper _logger;
 
         public CacheManager(
             IGiasApiClient giasApiClient,
+            IStateRepository stateRepository,
             IEstablishmentRepository establishmentRepository,
             IGroupRepository groupRepository,
             ILocalAuthorityRepository localAuthorityRepository,
@@ -41,9 +47,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             IEstablishmentProcessingQueue establishmentProcessingQueue,
             IGroupProcessingQueue groupProcessingQueue,
             ILocalAuthorityProcessingQueue localAuthorityProcessingQueue,
+            CacheConfiguration configuration,
             ILoggerWrapper logger)
         {
             _giasApiClient = giasApiClient;
+            _stateRepository = stateRepository;
             _establishmentRepository = establishmentRepository;
             _groupRepository = groupRepository;
             _localAuthorityRepository = localAuthorityRepository;
@@ -52,6 +60,7 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             _establishmentProcessingQueue = establishmentProcessingQueue;
             _groupProcessingQueue = groupProcessingQueue;
             _localAuthorityProcessingQueue = localAuthorityProcessingQueue;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -129,8 +138,45 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
             // Check establishments for change
             await ProcessEstablishmentsAsync(urns, pointInTime, localAuthorityChanged, cancellationToken);
         }
+        
+        public async Task TidyCacheAsync(CancellationToken cancellationToken)
+        {
+            await TidyCacheForEntityTypeAsync("establishments", _establishmentRepository.ClearStagingDataForDateAsync, cancellationToken);
+            await TidyCacheForEntityTypeAsync("groups", _groupRepository.ClearStagingDataForDateAsync, cancellationToken);
+            await TidyCacheForEntityTypeAsync("local-authorities", _localAuthorityRepository.ClearStagingDataForDateAsync, cancellationToken);
+        }
 
 
+        private async Task TidyCacheForEntityTypeAsync(
+            string entityType, 
+            Func<DateTime, CancellationToken, Task<int>> repoClearStagingDataForDateAsync, 
+            CancellationToken cancellationToken)
+        {
+            var lastCleared = await _stateRepository.GetLastStagingDateClearedAsync(entityType, cancellationToken);
+            var retentionDate = DateTime.Today.AddDays(-_configuration.NumberOfDaysToRetainStagingData);
+            
+            _logger.Info($"Tidying {entityType} cache staging data between {lastCleared} and {retentionDate}");
+
+            try
+            {
+                while (lastCleared < retentionDate)
+                {
+                    lastCleared = lastCleared.AddDays(1);
+
+                    var numberOfRowsDeleted = await repoClearStagingDataForDateAsync(lastCleared, cancellationToken);
+
+                    await _stateRepository.SetLastStagingDateClearedAsync(entityType, lastCleared, cancellationToken);
+                    _logger.Info($"Cleared {numberOfRowsDeleted} {entityType} rows for {lastCleared}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Errored when clearing {entityType} data for {lastCleared} - {ex.Message}", ex);
+            }
+            
+            _logger.Info($"Finished tidying {entityType} cache staging data upto {lastCleared}");
+        }
+        
         private async Task<PointInTimeGroup[]> DownloadGroupsToCacheAsync(DateTime pointInTime, CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring groups file from GIAS...");
