@@ -56,7 +56,9 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
                 .Take(1);
             var results = await QueryAsync(query, cancellationToken);
 
-            return results.SingleOrDefault();
+            //Bug in the library that does not honour the order or the take
+            //Will reporocess here
+            return results.OrderByDescending(r => r.PointInTime).FirstOrDefault();
         }
 
         public async Task<PointInTimeGroup> GetGroupFromStagingAsync(long uid, DateTime pointInTime, CancellationToken cancellationToken)
