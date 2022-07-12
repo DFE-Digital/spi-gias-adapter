@@ -133,7 +133,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasSoapApi
                     Locality = root.GetValueFromChildElement("Locality"),
                     Address3 = root.GetValueFromChildElement("Address3"),
                     Town = root.GetValueFromChildElement("Town"),
-                    County = root.GetValueFromChildElement("County"),
+                    County = root.GetCodeNamePairFromChildElement("County"),
                     Federations = root.GetCodeNamePairFromChildElement("Federations"),
                 };
 

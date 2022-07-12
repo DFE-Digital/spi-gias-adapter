@@ -111,7 +111,8 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.GiasCsvParsing
                 Map(x => x.Locality).Name("Locality");
                 Map(x => x.Address3).Name("Address3");
                 Map(x => x.Town).Name("Town");
-                Map(x => x.County).Name("County");
+                Map(x => x.County).ConvertUsing(
+                    x=> this.BuildCodeNamePair(x, "County"));
                 Map(x => x.Federations).Name("Federations");
             }
 
