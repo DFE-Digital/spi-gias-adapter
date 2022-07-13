@@ -386,6 +386,11 @@ namespace Dfe.Spi.GiasAdapter.Application.Cache
                 return false;
             }
 
+            if (current.County?.DisplayName != staging.County?.DisplayName)
+            {
+                return false;
+            }
+
             return true;
         }
 
