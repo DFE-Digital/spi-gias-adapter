@@ -2,6 +2,36 @@
   "IsEncrypted": false,
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet"
-  }
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "AzureWebJobsDashboard": "UseDevelopmentStorage=true",
+    "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "UseDevelopmentStorage=true",
+    "WEBSITE_CONTENTSHARE": "s139d01-giasadpt-fa-01",
+    "SPI_GiasApi__Url": "https://ea-edubase-api-prod.azurewebsites.net/edubase/service",
+    "SPI_GiasApi__Username": "eapimsupport",
+    "SPI_GiasApi__Password": "7JeR8Nqs",
+    "SPI_GiasApi__ExtractId": "13894",
+    "SPI_GiasApi__ExtractEstablishmentsFileName": "Eapim_Daily_Download.csv",
+    "SPI_GiasApi__ExtractGroupsFileName": "groups.csv",
+    "SPI_GiasApi__ExtractGroupLinksFileName": "groupLinks.csv",
+    "SPI_Cache__DownloadSchedule": "0 0 7 * * *",
+    "SPI_Cache__TableStorageConnectionString": "UseDevelopmentStorage=true",
+    "SPI_Cache__EstablishmentTableName": "establishments",
+    "SPI_Cache__GroupTableName": "groups",
+    "SPI_Cache__LocalAuthorityTableName": "localauthorities",
+    "SPI_Cache__StateTableName": "status",
+    "SPI_Cache__ProcessingQueueConnectionString": "UseDevelopmentStorage=true",
+    "SPI_Cache__TidyCacheSchedule": "0 0 22 * * *",
+    "SPI_Cache__NumberOfDaysToRetainStagingData": "14",
+    "SPI_Middleware__BaseUrl": "http://localhost:7072/publish/spi-gias-events/",
+    "SPI_Middleware__SubscriptionKey": "9060ad85ca15464281b22897f7ab105d",
+    "SPI_Translator__BaseUrl": "http://localhost:7073/api/",
+    "SPI_Translator__SubscriptionKey": "9060ad85ca15464281b22897f7ab105d",
+    "SPI_Authentication__TokenEndpoint": "https://login.microsoftonline.com/9c7d9dd3-840c-4b3f-818e-552865082e16/oauth2/token",
+    "SPI_Authentication__ClientId": "6a53ac78-3e60-4293-8026-d55de01d2076",
+    "SPI_Authentication__ClientSecret": "c45ChoBf@lsLBBQ67gHaCEZBaS-hGb/-",
+    "SPI_Authentication__Resource": "https://platform.education.gov.uk/663a7316-f745-47ce-bd49-0fe7f9603419",
+    "WEBSITE_RUN_FROM_PACKAGE": "1",
+    "WEBSITE_ENABLE_SYNC_UPDATE_SITE": "true"
+  },
+  "ConnectionStrings": {}
 }
