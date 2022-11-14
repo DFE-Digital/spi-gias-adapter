@@ -331,3 +331,7 @@ ASALocalRun/
 
 # Mac OS files
 .DS_Store
+
+# Settings
+local.settings.json
+launchSettings.json
