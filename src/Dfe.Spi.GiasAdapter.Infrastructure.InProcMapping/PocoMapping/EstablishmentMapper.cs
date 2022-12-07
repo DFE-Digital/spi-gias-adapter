@@ -173,7 +173,7 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.InProcMapping.PocoMapping
                 AddressLine2 = establishment.Locality,
                 AddressLine3 = establishment.Address3,
                 Town = establishment.Town,
-                County = establishment.County,
+                County = establishment.County?.DisplayName,
             };
 
             DateTime readDate = DateTime.UtcNow;
