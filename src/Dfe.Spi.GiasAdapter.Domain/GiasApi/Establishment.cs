@@ -80,7 +80,7 @@ namespace Dfe.Spi.GiasAdapter.Domain.GiasApi
         public string Locality { get; set; }
         public string Address3 { get; set; }
         public string Town { get; set; }
-        public string County { get; set; }
+        public CodeNamePair County { get; set; }
 
         // Used by Management Group syncing, so needs to remain.
         // Not mapped up to spi-models.
