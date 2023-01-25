@@ -101,15 +101,10 @@ namespace Dfe.Spi.GiasAdapter.Infrastructure.AzureStorage.Cache
 
         protected override PointInTimeEstablishment EntityToModel(EstablishmentEntity entity)
         {
-            try
-            {
-                return JsonConvert.DeserializeObject<PointInTimeEstablishment>(
-                    entity.Establishment);
-            }
-            catch (Exception ex)
-            {
-                return new PointInTimeEstablishment();
-            }
+            
+            return JsonConvert.DeserializeObject<PointInTimeEstablishment>(
+                entity.Establishment);
+            
         }
 
         protected override EstablishmentEntity[] ProcessEntitiesBeforeStoring(EstablishmentEntity[] entities)
